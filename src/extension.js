@@ -53,9 +53,9 @@ class Resolver {
 
             Promise.all(textDocuments).then(docs => {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
-
+                
                 if (parsedNamespaces.length === 0) {
-                    return this.showMessage(`$(circle-slash)  Class ' ${resolving} ' not found.`, true);
+                    return this.showMessage(`$(circle-slash)  Class not found.`, true);
                 }
 
                 resolve(parsedNamespaces);
