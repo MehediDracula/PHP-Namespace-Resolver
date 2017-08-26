@@ -2,7 +2,7 @@
     "name": "php-namespace-resolver",
     "displayName": "PHP Namespace Resolver",
     "description": "Sort Expand Import PHP Namespace.",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "publisher": "MehediDracula",
     "author": "Mehedi Hassan <MehediDracula@gmail.com>",
     "license": "SEE LICENSE IN LICENSE",
