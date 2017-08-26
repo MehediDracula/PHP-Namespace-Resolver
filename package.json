@@ -4,6 +4,8 @@
     "description": "Sort Expand Import PHP Namespace.",
     "version": "0.0.1",
     "publisher": "MehediDracula",
+    "author": "Mehedi Hassan <MehediDracula@gmail.com>",
+    "license": "MIT",
     "engines": {
         "vscode": "^1.15.0"
     },
@@ -16,7 +18,7 @@
         "onCommand:namespaceResolver.sort"
     ],
     "main": "./src/extension",
-    "icon": "./images/icon.png",
+    "icon": "images/icon.png",
     "contributes": {
         "menus": {
             "editor/context": [
@@ -84,6 +86,13 @@
                 "key": "f3"
             }
         ]
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/MehediDracula/PHP-Namespace-Resolver"
+    },
+    "bugs": {
+        "url": "https://github.com/MehediDracula/PHP-Namespace-Resolver/issues"
     },
     "scripts": {
         "postinstall": "node ./node_modules/vscode/bin/install"
