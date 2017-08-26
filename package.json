@@ -5,7 +5,7 @@
     "version": "0.0.1",
     "publisher": "MehediDracula",
     "author": "Mehedi Hassan <MehediDracula@gmail.com>",
-    "license": "MIT",
+    "license": "SEE LICENSE IN LICENSE",
     "engines": {
         "vscode": "^1.15.0"
     },
