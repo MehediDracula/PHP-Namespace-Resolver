@@ -1,0 +1,94 @@
+{
+    "name": "php-namespace-resolver",
+    "displayName": "PHP Namespace Resolver",
+    "description": "Sort Expand Import PHP Namespace.",
+    "version": "0.0.1",
+    "publisher": "MehediDracula",
+    "engines": {
+        "vscode": "^1.15.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:namespaceResolver.import",
+        "onCommand:namespaceResolver.expand",
+        "onCommand:namespaceResolver.sort"
+    ],
+    "main": "./src/extension",
+    "icon": "./images/icon.png",
+    "contributes": {
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "namespaceResolver.import",
+                    "group": "navigation",
+                    "when": "!editorHasSelection"
+                },
+                {
+                    "command": "namespaceResolver.expand",
+                    "group": "navigation"
+                },
+                {
+                    "command": "namespaceResolver.sort",
+                    "group": "navigation"
+                }
+            ]
+        },
+        "configuration": {
+            "type": "object",
+            "title": "Resolve PHP Namespace ectension configuration.",
+            "properties": {
+                "namespaceResolver.autoSort": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Auto sort use statements by line length after imports."
+                },
+                "namespaceResolver.leadingSeparator": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Expand with leading namespace separator."
+                },
+                "namespaceResolver.messagesOnStatusBar": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show messages on status bar."
+                }
+            }
+        },
+        "commands": [
+            {
+                "title": "Import Namespace",
+                "command": "namespaceResolver.import"
+            },
+            {
+                "title": "Expand Namespace",
+                "command": "namespaceResolver.expand"
+            },
+            {
+                "title": "Sort Namespaces",
+                "command": "namespaceResolver.sort"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "namespaceResolver.import",
+                "key": "f1"
+            },
+            {
+                "command": "namespaceResolver.expand",
+                "key": "f2"
+            },
+            {
+                "command": "namespaceResolver.sort",
+                "key": "f3"
+            }
+        ]
+    },
+    "scripts": {
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "vscode": "^1.0.0"
+    }
+}
