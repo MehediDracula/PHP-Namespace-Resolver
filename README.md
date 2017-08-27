@@ -8,7 +8,7 @@ Press <kbd>ctrl+p</kbd> in VS Code, then type `ext install php-namespace-resolve
 
 ## Demo
 
-![](http://i.imgur.com/upEGtPa.gif)
+![](https://i.imgur.com/upEGtPa.gif)
 
 ## Commands
 
