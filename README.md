@@ -2,6 +2,10 @@
 
 PHP Namespace Resolver can import, expand and sort your namespaces.
 
+## Demo
+
+![](http://i.imgur.com/upEGtPa.gif)
+
 ## Commands
 
 Search these commands by the title on command palette.
