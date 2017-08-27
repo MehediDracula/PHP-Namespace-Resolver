@@ -43,7 +43,7 @@ class Resolver {
 
             Promise.all(textDocuments).then(docs => {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
-
+                
                 if (parsedNamespaces.length === 0) {
                     return this.showMessage(`$(circle-slash)  Class ' ${resolving} ' not found.`, true);
                 }
@@ -92,7 +92,7 @@ class Resolver {
     pickNamespace(namespaces) {
         return new Promise((resolve, reject) => {
             if (namespaces.length === 1) {
-                // There is only one namespace found so show return the first namespace.
+                // There is only one namespace found so return with the first namespace.
                 return resolve(namespaces[0]);
             }
 
@@ -127,7 +127,7 @@ class Resolver {
 
                 let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
 
-                if (!config.get('autoSort', true)) {
+                if (! config.get('autoSort', true)) {
                     // Auto sort is disabled so import the picked namespace.
                     textEdit.replace(
                         new vscode.Position((insertLine), 0),
@@ -165,7 +165,7 @@ class Resolver {
                 return a.text.length - b.text.length;
             }
         });
-        
+
         if (config.get('autoSort', true)) {
             sorted[sorted.length - 1].text += '\n';
         }
@@ -184,10 +184,10 @@ class Resolver {
         });
 
         if (config.get('autSort', true)) {
-            return this.showMessage('$(check)  Namespace sorted.');
+            return this.showMessage('$(check)  Namespace imported.');
         }
-
-        return this.showMessage('$(check)  Namespace imported.');
+        
+        this.showMessage('$(check)  Namespace sorted.');
     }
 
     getDeclarations(pickedNamespace = null) {
@@ -203,9 +203,8 @@ class Resolver {
             let text = editor.document.lineAt(line).text;
 
             if (pickedNamespace !== null && text === `use ${pickedNamespace};`) {
-                // If namespace is already imported no need to determine declarations.
-                // simply throw a error with the reason.
-                throw new Error('$(issue-opened)  Namespace already imported.');
+                // If namespace is already imported no need to get declarations.
+                throw new Error('$(issue-opened)  Namespace is already imported.');
             }
 
             if (text.startsWith('<?php')) {
@@ -277,7 +276,7 @@ class Resolver {
         if (config.get('messagesOnStatusBar', false)) {
             return vscode.window.setStatusBarMessage(message, 3000);
         } else {
-            message = message.replace(/\$\(check\)\s\s/, '');
+            message = message.replace(/\$\(.+?\)\s\s/, '');
         }
 
         let notifier = vscode.window.showInformationMessage;
