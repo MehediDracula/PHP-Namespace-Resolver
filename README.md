@@ -77,16 +77,15 @@ You can override these default keybindings on your `keybindings.json`.
 [
     {
         "command": "namespaceResolver.import",
-        "group": "navigation",
-        "when": "!editorHasSelection"
+        "group": "1_modification"
     },
     {
         "command": "namespaceResolver.expand",
-        "group": "navigation"
+        "group": "1_modification"
     },
     {
         "command": "namespaceResolver.sort",
-        "group": "navigation"
+        "group": "1_modification"
     }
 ]
 ```
