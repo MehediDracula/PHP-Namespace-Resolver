@@ -2,6 +2,10 @@
 
 PHP Namespace Resolver can import, expand and sort your namespaces.
 
+# Install
+
+Press <kbd>ctrl+p</kbd> in VS Code, then typing `ext install php-namespace-resolver`
+
 ## Demo
 
 ![](http://i.imgur.com/upEGtPa.gif)
