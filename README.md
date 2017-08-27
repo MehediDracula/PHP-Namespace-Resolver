@@ -67,12 +67,12 @@ You can override these default keybindings on your `keybindings.json`.
     "namespaceResolver.autoSort": {
         "type": "boolean",
         "default": true,
-        "description": "Auto sort namespaces by line length after imports."
+        "description": "Auto sort namespaces after imports."
     },
     "namespaceResolver.sortAlphabetically": {
         "type": "boolean",
-        "default": true,
-        "description": "Sort namespaces in alphabetical order."
+        "default": false,
+        "description": "Sort namespaces in alphabetical order instead of line length."
     },
     "namespaceResolver.leadingSeparator": {
         "type": "boolean",
