@@ -41,20 +41,25 @@
             "type": "object",
             "title": "Resolve PHP Namespace ectension configuration.",
             "properties": {
+                "namespaceResolver.messagesOnStatusBar": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show messages on status bar."
+                },
                 "namespaceResolver.autoSort": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Auto sort use statements by line length after imports."
+                    "description": "Auto sort namespaces by line length after imports."
+                },
+                "namespaceResolver.sortAlphabetically": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Sort namespaces in alphabetical order."
                 },
                 "namespaceResolver.leadingSeparator": {
                     "type": "boolean",
                     "default": true,
                     "description": "Expand with leading namespace separator."
-                },
-                "namespaceResolver.messagesOnStatusBar": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Show messages on status bar."
                 }
             }
         },

@@ -146,9 +146,15 @@ class Resolver {
 
     sortImports(useStatements) {
         let sorted = useStatements.slice().sort((a, b) => {
-            return a.text.length - b.text.length;
+            if (config.get('sortAlphabetically', false)) {
+                if (a.text < b.text) return -1;
+                if (a.text > b.text) return 1;
+                return 0;
+            } else {
+                return a.text.length - b.text.length;
+            }
         });
-
+        
         editor.edit(textEdit => {
             for (let i = 0; i < sorted.length; i++) {
                 textEdit.replace(
