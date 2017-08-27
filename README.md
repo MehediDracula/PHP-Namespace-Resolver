@@ -4,7 +4,7 @@ PHP Namespace Resolver can import, expand and sort your namespaces.
 
 # Install
 
-Press <kbd>ctrl+p</kbd> in VS Code, then typing `ext install php-namespace-resolver`
+Press <kbd>ctrl+p</kbd> in VS Code, then type `ext install php-namespace-resolver`
 
 ## Demo
 
