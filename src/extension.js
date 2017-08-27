@@ -137,11 +137,17 @@ class Resolver {
                     return this.showMessage('$(check)  Namespace imported.');
                 }
 
-                // Auto sort is enabled so push resolved namespace to the useStatements array.
+                let line = insertLine;
+                
+                if (useStatements.length !== 0) {
+                    line = useStatements[useStatements.length - 1].line + 1;
+                }
+
+                // Auto sort is enabled so push picked namespace to the useStatements array.
                 // Later it will be sorted by text length and imported.
                 useStatements.push({
-                    text: `use ${pickedNamespace};\n`,
-                    line: useStatements[useStatements.length - 1].line + 1 // Get the last use statement and add 1 to that
+                    text: `use ${pickedNamespace};`,
+                    line: line
                 });
 
                 resolve(useStatements);
@@ -160,6 +166,14 @@ class Resolver {
             }
         });
         
+        if (config.get('autoSort', true)) {
+            sorted[sorted.length - 1].text += '\n';
+        }
+
+        if (sorted.length === 1) {
+            sorted[sorted.length - 1].text = `\n${sorted[sorted.length - 1].text}`;
+        }
+
         editor.edit(textEdit => {
             for (let i = 0; i < sorted.length; i++) {
                 textEdit.replace(
