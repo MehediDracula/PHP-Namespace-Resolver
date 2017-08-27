@@ -3,10 +3,12 @@ let editor = vscode.window.activeTextEditor;
 let config = vscode.workspace.getConfiguration('namespaceResolver');
 
 class Resolver {
-    sortNamespaces() {
-        this.sortImports(
-            this.getDeclarations()
-        );
+    importNamespace() {
+        this.findFiles()
+            .then(files => this.findNamespaces(files))
+            .then(namespaces => this.pickNamespace(namespaces))
+            .then(pickedNamespace => this.insertNamespace(pickedNamespace))
+            .then(useStatements => this.sortImports(useStatements));
     }
 
     expandNamespace() {
@@ -16,12 +18,10 @@ class Resolver {
             .then(pickedNamespace => this.expandToFqn(pickedNamespace));
     }
 
-    importNamespace() {
-        this.findFiles()
-            .then(files => this.findNamespaces(files))
-            .then(namespaces => this.pickNamespace(namespaces))
-            .then(pickedNamespace => this.insertNamespace(pickedNamespace))
-            .then(useStatements => this.sortImports(useStatements));
+    sortNamespaces() {
+        this.sortImports(
+            this.getDeclarations()
+        );
     }
 
     findFiles() {
@@ -98,18 +98,9 @@ class Resolver {
 
             vscode.window.showQuickPick(namespaces).then(picked => {
                 if (picked !== undefined) {
-                    return resolve(picked);
+                    resolve(picked);
                 }
             });
-        })
-    }
-
-    expandToFqn(pickedNamespace) {
-        editor.edit(textEdit => {
-            textEdit.replace(
-                this.getWordRange(),
-                (config.get('leadingSeparator', true) ? '\\' : '') + pickedNamespace
-            );
         })
     }
 
@@ -153,6 +144,15 @@ class Resolver {
                 resolve(useStatements);
             });
         });
+    }
+
+    expandToFqn(pickedNamespace) {
+        editor.edit(textEdit => {
+            textEdit.replace(
+                this.getWordRange(),
+                (config.get('leadingSeparator', true) ? '\\' : '') + pickedNamespace
+            );
+        })
     }
 
     sortImports(useStatements) {
