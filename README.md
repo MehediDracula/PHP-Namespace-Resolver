@@ -31,15 +31,18 @@ You can override these default keybindings on your `keybindings.json`.
 [
     {
         "command": "namespaceResolver.import",
-        "key": "f1"
+        "key": "f1",
+        "when": "editorTextFocus"
     },
     {
         "command": "namespaceResolver.expand",
-        "key": "f2"
+        "key": "f2",
+        "when": "editorTextFocus"
     },
     {
         "command": "namespaceResolver.sort",
-        "key": "f3"
+        "key": "f3",
+        "when": "editorTextFocus"
     }
 ]
 ```
