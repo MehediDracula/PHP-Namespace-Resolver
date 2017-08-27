@@ -34,13 +34,18 @@ class Resolver {
     findNamespaces(files) {
         return new Promise((resolve, reject) => {
             let resolving = this.resolving();
+
+            if (resolving === null) {
+                return this.showMessage(`$(issue-opened)  No class is selected.`, true);
+            }
+
             let textDocuments = this.getTextDocuments(files, resolving);
 
             Promise.all(textDocuments).then(docs => {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
 
                 if (parsedNamespaces.length === 0) {
-                    return this.showMessage(`$(circle-slash)  Class not found.`, true);
+                    return this.showMessage(`$(circle-slash)  Class ' ${resolving} ' not found.`, true);
                 }
 
                 resolve(parsedNamespaces);
@@ -239,9 +244,13 @@ class Resolver {
     }
 
     resolving() {
-        return editor.document.getText(
-            this.getWordRange()
-        );
+        let wordRange = this.getWordRange();
+        
+        if (wordRange === undefined) {
+            return null;
+        }
+
+        return editor.document.getText(wordRange);
     }
 
     getWordRange() {
