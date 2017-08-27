@@ -2,21 +2,6 @@ let vscode = require('vscode');
 let editor = vscode.window.activeTextEditor;
 let config = vscode.workspace.getConfiguration('namespaceResolver');
 
-function activate(context) {
-    let resolver = new Resolver();
-
-    let sortNamespaces = vscode.commands.registerCommand('namespaceResolver.sort', () => resolver.sortNamespaces());
-    let expandNamespace = vscode.commands.registerCommand('namespaceResolver.expand', () => resolver.expandNamespace());
-    let importNamespace = vscode.commands.registerCommand('namespaceResolver.import', () => resolver.importNamespace());
-
-    context.subscriptions.push(resolver);
-    context.subscriptions.push(sortNamespaces);
-    context.subscriptions.push(expandNamespace);
-    context.subscriptions.push(importNamespace);
-}
-
-exports.activate = activate;
-
 class Resolver {
     sortNamespaces() {
         this.sortImports(
@@ -38,7 +23,7 @@ class Resolver {
             .then(pickedNamespace => this.insertNamespace(pickedNamespace))
             .then(useStatements => this.sortImports(useStatements));
     }
-    
+
     findFiles() {
         let include = '**/*.php';
         let exclude = '**/node_modules/**';
@@ -53,7 +38,7 @@ class Resolver {
 
             Promise.all(textDocuments).then(docs => {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
-                
+
                 if (parsedNamespaces.length === 0) {
                     return this.showMessage(`$(circle-slash)  Class not found.`, true);
                 }
@@ -103,7 +88,7 @@ class Resolver {
         return new Promise((resolve, reject) => {
             if (namespaces.length === 1) {
                 // There is only one namespace found so show return the first namespace.
-                return resolve(namespaces[0]); 
+                return resolve(namespaces[0]);
             }
 
             vscode.window.showQuickPick(namespaces).then(picked => {
@@ -128,7 +113,7 @@ class Resolver {
             editor.edit(textEdit => {
                 let useStatements;
                 let declarationLines;
-                
+
                 try {
                     [useStatements, declarationLines] = this.getDeclarations(pickedNamespace);
                 } catch (error) {
@@ -136,24 +121,24 @@ class Resolver {
                 }
 
                 let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
-                
-                if (! config.get('autoSort', true)) {
+
+                if (!config.get('autoSort', true)) {
                     // Auto sort is disabled so import the picked namespace.
                     textEdit.replace(
                         new vscode.Position((insertLine), 0),
                         `${prepend}use ${pickedNamespace};${append}`
                     );
-                    
+
                     return this.showMessage('$(check)  Namespace imported.');
                 }
-                
+
                 // Auto sort is enabled so push resolved namespace to the useStatements array.
                 // Later it will be sorted by text length and imported.
                 useStatements.push({
                     text: `use ${pickedNamespace};\n`,
-                    line: useStatements[useStatements.length - 1].line + 1  // Get the last use statement and add 1 to that
+                    line: useStatements[useStatements.length - 1].line + 1 // Get the last use statement and add 1 to that
                 });
-                
+
                 resolve(useStatements);
             });
         });
@@ -163,7 +148,7 @@ class Resolver {
         let sorted = useStatements.slice().sort((a, b) => {
             return a.text.length - b.text.length;
         });
-        
+
         editor.edit(textEdit => {
             for (let i = 0; i < sorted.length; i++) {
                 textEdit.replace(
@@ -176,7 +161,7 @@ class Resolver {
         if (config.get('autSort', true)) {
             return this.showMessage('$(check)  Namespace sorted.');
         }
-        
+
         return this.showMessage('$(check)  Namespace imported.');
     }
 
@@ -203,7 +188,10 @@ class Resolver {
             } else if (text.startsWith('namespace ')) {
                 declarationLines.namespace = line + 1;
             } else if (text.startsWith('use ')) {
-                useStatements.push({ text, line });
+                useStatements.push({
+                    text,
+                    line
+                });
                 declarationLines.useStatement = line + 1;
             } else if (text.startsWith('class ')) {
                 declarationLines.class = line + 1;
@@ -225,19 +213,19 @@ class Resolver {
         let insertLine = null;
 
         if (declarationLines.useStatement !== null) {
-            prepend = '';   // There is no use statements so don't prepend new line
+            prepend = ''; // There is no use statements so don't prepend new line
             insertLine = declarationLines.useStatement;
         } else if (declarationLines.namespace !== null) {
             insertLine = declarationLines.namespace;
 
             if ((declarationLines.class - declarationLines.namespace) <= 1) {
-                append = '\n\n';    // There is no line between namespace and class declaration so append 2 new line
+                append = '\n\n'; // There is no line between namespace and class declaration so append 2 new line
             }
         } else {
             insertLine = declarationLines.PHPTag;
-            
+
             if ((declarationLines.class - declarationLines.PHPTag) <= 1) {
-                append = '\n\n';    // There is no line between php tag and class declaration so append 2 new line
+                append = '\n\n'; // There is no line between php tag and class declaration so append 2 new line
             }
         }
 
@@ -272,3 +260,18 @@ class Resolver {
         notifier(message);
     }
 }
+
+function activate(context) {
+    let resolver = new Resolver();
+
+    let importNamespace = vscode.commands.registerCommand('namespaceResolver.import', () => resolver.importNamespace());
+    let expandNamespace = vscode.commands.registerCommand('namespaceResolver.expand', () => resolver.expandNamespace());
+    let sortNamespaces = vscode.commands.registerCommand('namespaceResolver.sort', () => resolver.sortNamespaces());
+
+    context.subscriptions.push(importNamespace);
+    context.subscriptions.push(expandNamespace);
+    context.subscriptions.push(sortNamespaces);
+    context.subscriptions.push(resolver);
+}
+
+exports.activate = activate;
