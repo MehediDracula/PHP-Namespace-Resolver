@@ -8,7 +8,7 @@ class Resolver {
             .then(files => this.findNamespaces(files))
             .then(namespaces => this.pickNamespace(namespaces))
             .then(pickedNamespace => this.insertNamespace(pickedNamespace))
-            .then(useStatements => this.sortImports(useStatements));
+            .then(useStatements => this.sortImports(useStatements, true));
     }
 
     expandNamespace() {
@@ -155,7 +155,7 @@ class Resolver {
         })
     }
 
-    sortImports(useStatements) {
+    sortImports(useStatements, calledFromImportCommand = false) {
         let sorted = useStatements.slice().sort((a, b) => {
             if (config.get('sortAlphabetically', false)) {
                 if (a.text < b.text) return -1;
@@ -166,7 +166,7 @@ class Resolver {
             }
         });
 
-        if (config.get('autoSort', true)) {
+        if (calledFromImportCommand) {
             sorted[sorted.length - 1].text += '\n';
         }
 
