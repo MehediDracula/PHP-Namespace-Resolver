@@ -276,7 +276,7 @@ class Resolver {
     }
 
     showMessage(message, error = false) {
-        if (this.config('messagesOnStatusBar')) {
+        if (this.config('showMessageOnStatusBar')) {
             return vscode.window.setStatusBarMessage(message, 3000);
         }
 
