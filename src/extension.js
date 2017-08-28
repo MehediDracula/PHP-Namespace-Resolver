@@ -191,10 +191,7 @@ class Resolver {
             } else if (text.startsWith('namespace ')) {
                 declarationLines.namespace = line + 1;
             } else if (text.startsWith('use ')) {
-                useStatements.push({
-                    text,
-                    line
-                });
+                useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
             } else if (text.startsWith('class ')) {
                 declarationLines.class = line + 1;
