@@ -9,11 +9,7 @@ class Resolver {
                 try {
                     this.insertNamespace(pickedNamespace);
                 } catch (error) {
-                    if (! error.message) {
-                        return;
-                    }
-
-                    return this.showMessage(error.message);
+                    return this.showMessage(error.message, true);
                 }
 
                 this.showMessage('$(check)  Namespace imported.');
@@ -116,8 +112,7 @@ class Resolver {
         let [useStatements, declarationLines] = this.getDeclarations(pickedNamespace);
 
         if (declarationLines.PHPTag === null) {
-            this.showMessage('$(circle-slash)  Can not import namespace in this file', true);
-            throw new Error();
+            throw new Error('$(circle-slash)  Can not import namespace in this file');
         }
 
         let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
