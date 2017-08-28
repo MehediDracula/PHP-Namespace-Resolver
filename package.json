@@ -13,6 +13,7 @@
         "Other"
     ],
     "activationEvents": [
+        "onLanguage:php",
         "onCommand:namespaceResolver.import",
         "onCommand:namespaceResolver.expand",
         "onCommand:namespaceResolver.sort"
