@@ -1,30 +1,30 @@
 let vscode = require('vscode');
 
 class Resolver {
-    importNamespace() {
+    importClass() {
         this.findFiles()
             .then(files => this.findNamespaces(files))
-            .then(namespaces => this.pickNamespace(namespaces))
-            .then(pickedNamespace => {
+            .then(namespaces => this.pickClass(namespaces))
+            .then(pickedClass => {
                 try {
-                    this.insertNamespace(pickedNamespace);
+                    this.insert(pickedClass);
                 } catch (error) {
                     return this.showMessage(error.message, true);
                 }
 
-                this.showMessage('$(check)  Namespace imported.');
+                this.showMessage('$(check)  Class imported.');
             });
     }
 
-    expandNamespace() {
+    expandClass() {
         this.findFiles()
             .then(files => this.findNamespaces(files))
-            .then(namespaces => this.pickNamespace(namespaces))
-            .then(pickedNamespace => this.expandToFqn(pickedNamespace));
+            .then(namespaces => this.pickClass(namespaces))
+            .then(pickedClass => this.expand(pickedClass));
     }
 
-    sortNamespaces() {
-        this.sortImports();
+    sortImports() {
+        this.sort();
         this.showMessage('$(check)  Namespace sorted.');
     }
 
@@ -54,6 +54,43 @@ class Resolver {
 
                 resolve(parsedNamespaces);
             });
+        });
+    }
+
+    pickClass(namespaces) {
+        return new Promise((resolve, reject) => {
+            if (namespaces.length === 1) {
+                // There is only one namespace found so return with the first namespace.
+                return resolve(namespaces[0]);
+            }
+
+            vscode.window.showQuickPick(namespaces).then(picked => {
+                if (picked !== undefined) {
+                    resolve(picked);
+                }
+            });
+        })
+    }
+
+    insert(pickedClass) {
+        let [useStatements, declarationLines] = this.getDeclarations(pickedClass);
+
+        if (declarationLines.PHPTag === null) {
+            throw new Error('$(circle-slash)  Can not import namespace in this file');
+        }
+
+        let hasConflict = this.hasConflict(useStatements, this.resolving());
+
+        if (! hasConflict) {
+            return this.insertClass(pickedClass, declarationLines);
+        }
+
+        vscode.window.showInputBox({
+            placeHolder: 'Enter an alias'
+        }).then(alias => {
+            if (alias !== undefined && alias !== '') {
+                this.insertClass(pickedClass, declarationLines, alias);
+            }
         });
     }
 
@@ -93,52 +130,16 @@ class Resolver {
         return parsedNamespaces;
     }
 
-    pickNamespace(namespaces) {
-        return new Promise((resolve, reject) => {
-            if (namespaces.length === 1) {
-                // There is only one namespace found so return with the first namespace.
-                return resolve(namespaces[0]);
-            }
-
-            vscode.window.showQuickPick(namespaces).then(picked => {
-                if (picked !== undefined) {
-                    resolve(picked);
-                }
-            });
-        })
-    }
-
-    insertNamespace(pickedNamespace) {
-        let [useStatements, declarationLines] = this.getDeclarations(pickedNamespace);
-
-        if (declarationLines.PHPTag === null) {
-            throw new Error('$(circle-slash)  Can not import namespace in this file');
-        }
-
-        let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
-
-        this.activeEditor().edit(textEdit => {
-            textEdit.replace(
-                new vscode.Position((insertLine), 0),
-                `${prepend}use ${pickedNamespace};${append}`
-            );
-        });
-
-        if (this.config('autoSort')) {
-            this.activeEditor().document.save().then(() => this.sortImports());
-        }
-    }
-
-    expandToFqn(pickedNamespace) {
+    expand(pickedClass) {
         this.activeEditor().edit(textEdit => {
             textEdit.replace(
                 this.getWordRange(),
-                (this.config('leadingSeparator') ? '\\' : '') + pickedNamespace
+                (this.config('leadingSeparator') ? '\\' : '') + pickedClass
             );
         })
     }
 
-    sortImports() {
+    sort() {
         let useStatements = this.getDeclarations();
 
         if (useStatements.length <= 1) {
@@ -165,7 +166,32 @@ class Resolver {
         });
     }
 
-    getDeclarations(pickedNamespace = null) {
+    hasConflict(useStatements, resolving) {
+        for (let i = 0; i < useStatements.length; i++) {
+            if (useStatements[i].text.search(`${resolving};`) !== -1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    insertClass(pickedClass, declarationLines, alias = null) {
+        let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
+
+        this.activeEditor().edit(textEdit => {
+            textEdit.replace(
+                new vscode.Position((insertLine), 0),
+                (`${prepend}use ${pickedClass}`) + (alias !== null ? ` as ${alias}` : '') + (`;${append}`)
+            );
+        });
+
+        if (this.config('autoSort')) {
+            this.activeEditor().document.save().then(() => this.sort());
+        }
+    }
+
+    getDeclarations(pickedClass = null) {
         let useStatements = [];
         let declarationLines = {
             PHPTag: null,
@@ -177,7 +203,7 @@ class Resolver {
         for (let line = 0; line < this.activeEditor().document.lineCount; line++) {
             let text = this.activeEditor().document.lineAt(line).text;
 
-            if (pickedNamespace !== null && text === `use ${pickedNamespace};`) {
+            if (pickedClass !== null && text === `use ${pickedClass};`) {
                 throw new Error('$(issue-opened)  Namespace already imported.');
             }
 
@@ -195,7 +221,7 @@ class Resolver {
             }
         }
 
-        if (pickedNamespace === null) {
+        if (pickedClass === null) {
             return useStatements;
         }
 
@@ -267,9 +293,9 @@ class Resolver {
 function activate(context) {
     let resolver = new Resolver;
 
-    let importNamespace = vscode.commands.registerCommand('namespaceResolver.import', () => resolver.importNamespace());
-    let expandNamespace = vscode.commands.registerCommand('namespaceResolver.expand', () => resolver.expandNamespace());
-    let sortNamespaces = vscode.commands.registerCommand('namespaceResolver.sort', () => resolver.sortNamespaces());
+    let importNamespace = vscode.commands.registerCommand('namespaceResolver.import', () => resolver.importClass());
+    let expandNamespace = vscode.commands.registerCommand('namespaceResolver.expand', () => resolver.expandClass());
+    let sortNamespaces = vscode.commands.registerCommand('namespaceResolver.sort', () => resolver.sortImports());
 
     context.subscriptions.push(importNamespace);
     context.subscriptions.push(expandNamespace);
