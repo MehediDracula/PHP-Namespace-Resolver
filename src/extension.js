@@ -1,14 +1,23 @@
 let vscode = require('vscode');
-let editor = vscode.window.activeTextEditor;
-let config = vscode.workspace.getConfiguration('namespaceResolver');
 
 class Resolver {
     importNamespace() {
         this.findFiles()
             .then(files => this.findNamespaces(files))
             .then(namespaces => this.pickNamespace(namespaces))
-            .then(pickedNamespace => this.insertNamespace(pickedNamespace))
-            .then(useStatements => this.sortImports(useStatements, true));
+            .then(pickedNamespace => {
+                try {
+                    this.insertNamespace(pickedNamespace);
+                } catch (error) {
+                    if (! error.message) {
+                        return;
+                    }
+
+                    return this.showMessage(error.message);
+                }
+
+                this.showMessage('$(check)  Namespace imported.');
+            });
     }
 
     expandNamespace() {
@@ -19,9 +28,8 @@ class Resolver {
     }
 
     sortNamespaces() {
-        this.sortImports(
-            this.getDeclarations()
-        );
+        this.sortImports();
+        this.showMessage('$(check)  Namespace sorted.');
     }
 
     findFiles() {
@@ -43,7 +51,7 @@ class Resolver {
 
             Promise.all(textDocuments).then(docs => {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
-                
+
                 if (parsedNamespaces.length === 0) {
                     return this.showMessage(`$(circle-slash)  Class ' ${resolving} ' not found.`, true);
                 }
@@ -105,59 +113,45 @@ class Resolver {
     }
 
     insertNamespace(pickedNamespace) {
-        return new Promise((resolve, reject) => {
-            editor.edit(textEdit => {
-                let useStatements;
-                let declarationLines;
+        let [useStatements, declarationLines] = this.getDeclarations(pickedNamespace);
 
-                try {
-                    [useStatements, declarationLines] = this.getDeclarations(pickedNamespace);
-                } catch (error) {
-                    return this.showMessage(error.message);
-                }
+        if (declarationLines.PHPTag === null) {
+            this.showMessage('$(circle-slash)  Can not import namespace in this file', true);
+            throw new Error();
+        }
 
-                let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
+        let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
 
-                if (! config.get('autoSort', true)) {
-                    // Auto sort is disabled so import the picked namespace.
-                    textEdit.replace(
-                        new vscode.Position((insertLine), 0),
-                        `${prepend}use ${pickedNamespace};${append}`
-                    );
-
-                    return this.showMessage('$(check)  Namespace imported.');
-                }
-
-                let line = insertLine;
-                
-                if (useStatements.length !== 0) {
-                    line = useStatements[useStatements.length - 1].line + 1;
-                }
-
-                // Auto sort is enabled so push picked namespace to the useStatements array.
-                // Later it will be sorted by text length and imported.
-                useStatements.push({
-                    text: `use ${pickedNamespace};`,
-                    line: line
-                });
-
-                resolve(useStatements);
-            });
+        this.activeEditor().edit(textEdit => {
+            textEdit.replace(
+                new vscode.Position((insertLine), 0),
+                `${prepend}use ${pickedNamespace};${append}`
+            );
         });
+
+        if (this.config().get('autoSort', true)) {
+            this.activeEditor().document.save().then(() => this.sortImports());
+        }
     }
 
     expandToFqn(pickedNamespace) {
-        editor.edit(textEdit => {
+        this.activeEditor().edit(textEdit => {
             textEdit.replace(
                 this.getWordRange(),
-                (config.get('leadingSeparator', true) ? '\\' : '') + pickedNamespace
+                (this.config().get('leadingSeparator', true) ? '\\' : '') + pickedNamespace
             );
         })
     }
 
-    sortImports(useStatements, calledFromImportCommand = false) {
+    sortImports() {
+        let useStatements = this.getDeclarations();
+
+        if (useStatements.length <= 1) {
+            return this.showMessage('$(issue-opened)  Nothing to sort.')
+        }
+
         let sorted = useStatements.slice().sort((a, b) => {
-            if (config.get('sortAlphabetically', false)) {
+            if (this.config().get('sortAlphabetically', false)) {
                 if (a.text < b.text) return -1;
                 if (a.text > b.text) return 1;
                 return 0;
@@ -166,15 +160,7 @@ class Resolver {
             }
         });
 
-        if (calledFromImportCommand) {
-            sorted[sorted.length - 1].text += '\n';
-        }
-
-        if (sorted.length === 1) {
-            sorted[sorted.length - 1].text = `\n${sorted[sorted.length - 1].text}`;
-        }
-
-        editor.edit(textEdit => {
+        this.activeEditor().edit(textEdit => {
             for (let i = 0; i < sorted.length; i++) {
                 textEdit.replace(
                     new vscode.Range(useStatements[i].line, 0, useStatements[i].line, useStatements[i].text.length),
@@ -182,12 +168,6 @@ class Resolver {
                 );
             }
         });
-
-        if (config.get('autSort', true)) {
-            return this.showMessage('$(check)  Namespace imported.');
-        }
-        
-        this.showMessage('$(check)  Namespace sorted.');
     }
 
     getDeclarations(pickedNamespace = null) {
@@ -199,12 +179,11 @@ class Resolver {
             class: null
         };
 
-        for (let line = 0; line < editor.document.lineCount; line++) {
-            let text = editor.document.lineAt(line).text;
+        for (let line = 0; line < this.activeEditor().document.lineCount; line++) {
+            let text = this.activeEditor().document.lineAt(line).text;
 
             if (pickedNamespace !== null && text === `use ${pickedNamespace};`) {
-                // If namespace is already imported no need to get declarations.
-                throw new Error('$(issue-opened)  Namespace is already imported.');
+                throw new Error('$(issue-opened)  Namespace already imported.');
             }
 
             if (text.startsWith('<?php')) {
@@ -234,63 +213,67 @@ class Resolver {
     getInsertLine(declarationLines) {
         let prepend = '\n';
         let append = '\n';
-        let insertLine = null;
+        let insertLine = declarationLines.PHPTag;
 
         if (declarationLines.useStatement !== null) {
-            prepend = ''; // There is no use statements so don't prepend new line
+            prepend = '';
             insertLine = declarationLines.useStatement;
         } else if (declarationLines.namespace !== null) {
             insertLine = declarationLines.namespace;
+        }
 
-            if ((declarationLines.class - declarationLines.namespace) <= 1) {
-                append = '\n\n'; // There is no line between namespace and class declaration so append 2 new line
-            }
-        } else {
-            insertLine = declarationLines.PHPTag;
-
-            if ((declarationLines.class - declarationLines.PHPTag) <= 1) {
-                append = '\n\n'; // There is no line between php tag and class declaration so append 2 new line
-            }
+        if (declarationLines.class !== null &&
+            ((declarationLines.class - declarationLines.useStatement) <= 1 ||
+            (declarationLines.class - declarationLines.namespace) <= 1 ||
+            (declarationLines.class - declarationLines.PHPTag) <= 1)
+        ) {
+            append = '\n\n';
         }
 
         return [prepend, append, insertLine];
     }
 
+    activeEditor() {
+        return vscode.window.activeTextEditor;
+    }
+
+    getWordRange() {
+        return this.activeEditor().document.getWordRangeAtPosition(
+            this.activeEditor().selection.active
+        );
+    }
+
     resolving() {
         let wordRange = this.getWordRange();
-        
+
         if (wordRange === undefined) {
             return null;
         }
 
-        return editor.document.getText(wordRange);
+        return this.activeEditor().document.getText(wordRange);
     }
 
-    getWordRange() {
-        return vscode.workspace.textDocuments[0].getWordRangeAtPosition(
-            editor.selection.active
-        );
+    config() {
+        return vscode.workspace.getConfiguration('namespaceResolver');
     }
 
     showMessage(message, error = false) {
-        if (config.get('messagesOnStatusBar', false)) {
+        if (this.config().get('messagesOnStatusBar', false)) {
             return vscode.window.setStatusBarMessage(message, 3000);
-        } else {
-            message = message.replace(/\$\(.+?\)\s\s/, '');
         }
 
-        let notifier = vscode.window.showInformationMessage;
+        let notify = vscode.window.showInformationMessage;
 
         if (error) {
-            notifier = vscode.window.showErrorMessage;
+            notify = vscode.window.showErrorMessage;
         }
 
-        notifier(message);
+        notify(message.replace(/\$\(.+?\)\s\s/, ''));
     }
 }
 
 function activate(context) {
-    let resolver = new Resolver();
+    let resolver = new Resolver;
 
     let importNamespace = vscode.commands.registerCommand('namespaceResolver.import', () => resolver.importNamespace());
     let expandNamespace = vscode.commands.registerCommand('namespaceResolver.expand', () => resolver.expandNamespace());
