@@ -129,7 +129,7 @@ class Resolver {
             );
         });
 
-        if (this.config().get('autoSort', true)) {
+        if (this.config('autoSort')) {
             this.activeEditor().document.save().then(() => this.sortImports());
         }
     }
@@ -138,7 +138,7 @@ class Resolver {
         this.activeEditor().edit(textEdit => {
             textEdit.replace(
                 this.getWordRange(),
-                (this.config().get('leadingSeparator', true) ? '\\' : '') + pickedNamespace
+                (this.config('leadingSeparator') ? '\\' : '') + pickedNamespace
             );
         })
     }
@@ -151,7 +151,7 @@ class Resolver {
         }
 
         let sorted = useStatements.slice().sort((a, b) => {
-            if (this.config().get('sortAlphabetically', false)) {
+            if (this.config('sortAlphabetically')) {
                 if (a.text < b.text) return -1;
                 if (a.text > b.text) return 1;
                 return 0;
@@ -250,12 +250,12 @@ class Resolver {
         return this.activeEditor().document.getText(wordRange);
     }
 
-    config() {
-        return vscode.workspace.getConfiguration('namespaceResolver');
+    config(key) {
+        return vscode.workspace.getConfiguration('namespaceResolver').get(key);
     }
 
     showMessage(message, error = false) {
-        if (this.config().get('messagesOnStatusBar', false)) {
+        if (this.config('messagesOnStatusBar')) {
             return vscode.window.setStatusBarMessage(message, 3000);
         }
 
