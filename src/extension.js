@@ -64,15 +64,15 @@ class Resolver {
     getTextDocuments(files, resolving) {
         let textDocuments = [];
 
-        files.forEach(file => {
-            let fileName = file.fsPath.replace(/^.*[\\\/]/, '').split('.')[0];
+        for (let i = 0; i < files.length; i++) {
+            let fileName = files[i].fsPath.replace(/^.*[\\\/]/, '').split('.')[0];
 
             if (fileName !== resolving) {
-                return;
+                continue;
             }
 
-            textDocuments.push(vscode.workspace.openTextDocument(file));
-        });
+            textDocuments.push(vscode.workspace.openTextDocument(files[i]));
+        }
 
         return textDocuments;
     }
@@ -80,9 +80,9 @@ class Resolver {
     parseNamespaces(docs, resolving) {
         let parsedNamespaces = [];
 
-        docs.forEach(doc => {
-            for (let line = 0; line < doc.lineCount; line++) {
-                let textLine = doc.lineAt(line).text;
+        for (let i = 0; i < docs.length; i++) {
+            for (let line = 0; line < docs[i].lineCount; line++) {
+                let textLine = docs[i].lineAt(line).text;
 
                 if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
                     let namespace = textLine.split('namespace ')[1].split(';')[0] + '\\' + resolving;
@@ -92,7 +92,7 @@ class Resolver {
                     }
                 }
             }
-        });
+        }
 
         return parsedNamespaces;
     }
