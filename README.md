@@ -31,30 +31,6 @@ Search these commands by the title on command palette.
 ]
 ```
 
-## Keybindings
-
-You can override these default keybindings on your `keybindings.json`.
-
-```json
-[
-    {
-        "command": "namespaceResolver.import",
-        "key": "f1",
-        "when": "editorTextFocus"
-    },
-    {
-        "command": "namespaceResolver.expand",
-        "key": "f2",
-        "when": "editorTextFocus"
-    },
-    {
-        "command": "namespaceResolver.sort",
-        "key": "f3",
-        "when": "editorTextFocus"
-    }
-]
-```
-
 ## Settings
 
 You can override these default settings according to your needs.
@@ -85,6 +61,30 @@ You can override these default settings according to your needs.
         "type": "boolean",
         "default": true,
         "description": "Expand with leading namespace separator."
+    }
+]
+```
+
+## Keybindings
+
+You can override these default keybindings on your `keybindings.json`.
+
+```json
+[
+    {
+        "command": "namespaceResolver.import",
+        "key": "f1",
+        "when": "editorTextFocus"
+    },
+    {
+        "command": "namespaceResolver.expand",
+        "key": "f2",
+        "when": "editorTextFocus"
+    },
+    {
+        "command": "namespaceResolver.sort",
+        "key": "f3",
+        "when": "editorTextFocus"
     }
 ]
 ```
