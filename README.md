@@ -57,6 +57,8 @@ You can override these default keybindings on your `keybindings.json`.
 
 ## Settings
 
+You can override these default settings according to your needs.
+
 ```json
 [
     "namespaceResolver.exclude": {
@@ -83,25 +85,6 @@ You can override these default keybindings on your `keybindings.json`.
         "type": "boolean",
         "default": true,
         "description": "Expand with leading namespace separator."
-    }
-]
-```
-
-## Context Menu
-
-```json
-[
-    {
-        "command": "namespaceResolver.import",
-        "group": "1_modification"
-    },
-    {
-        "command": "namespaceResolver.expand",
-        "group": "1_modification"
-    },
-    {
-        "command": "namespaceResolver.sort",
-        "group": "1_modification"
     }
 ]
 ```
