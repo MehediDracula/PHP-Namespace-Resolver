@@ -2,38 +2,48 @@ let vscode = require('vscode');
 
 class Resolver {
     importClass() {
+        let activeEditor = this.activeEditor();
+
         this.findFiles()
-            .then(files => this.findNamespaces(files))
+            .then(files => this.findNamespaces(activeEditor, files))
             .then(namespaces => this.pickClass(namespaces))
             .then(pickedClass => {
-                let [useStatements, declarationLines] = this.getDeclarations(pickedClass);
+                let useStatements, declarationLines;
+
+                try {
+                    [useStatements, declarationLines] = this.getDeclarations(activeEditor, pickedClass);
+                } catch (error) {
+                    return this.showMessage(error.message, true);
+                }
 
                 if (declarationLines.PHPTag === null) {
                     return this.showMessage('$(circle-slash)  Can not import class in this file', true);
                 }
 
-                if (! this.hasConflict(useStatements, this.resolving())) {
-                    return this.insert(pickedClass, declarationLines);
+                if (! this.hasConflict(useStatements, this.resolving(activeEditor))) {
+                    return this.insert(activeEditor, pickedClass, declarationLines);
                 }
 
                 vscode.window.showInputBox({
                     placeHolder: 'Enter an alias'
                 }).then(alias => {
                     if (alias !== undefined && alias !== '') {
-                        this.insert(pickedClass, declarationLines, alias);
+                        this.insert(activeEditor, pickedClass, declarationLines, alias);
                     }
                 });
             });
     }
 
     expandClass() {
+        let activeEditor = this.activeEditor();
+
         this.findFiles()
-            .then(files => this.findNamespaces(files))
+            .then(files => this.findNamespaces(activeEditor, files))
             .then(namespaces => this.pickClass(namespaces))
             .then(pickedClass => {
-                this.activeEditor().edit(textEdit => {
+                activeEditor.edit(textEdit => {
                     textEdit.replace(
-                        this.getWordRange(),
+                        this.getWordRange(activeEditor),
                         (this.config('leadingSeparator') ? '\\' : '') + pickedClass
                     );
                 })
@@ -41,7 +51,7 @@ class Resolver {
     }
 
     sortImports() {
-        this.sort();
+        this.sort(this.activeEditor());
         this.showMessage('$(check)  Imports sorted.');
     }
 
@@ -49,9 +59,9 @@ class Resolver {
         return vscode.workspace.findFiles('**/*.php', this.config('exclude'));
     }
 
-    findNamespaces(files) {
+    findNamespaces(activeEditor, files) {
         return new Promise((resolve, reject) => {
-            let resolving = this.resolving();
+            let resolving = this.resolving(activeEditor);
 
             if (resolving === null) {
                 return this.showMessage(`$(issue-opened)  No class is selected.`, true);
@@ -86,10 +96,10 @@ class Resolver {
         })
     }
 
-    insert(pickedClass, declarationLines, alias = null) {
+    insert(activeEditor, pickedClass, declarationLines, alias = null) {
         let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
 
-        this.activeEditor().edit(textEdit => {
+        activeEditor.edit(textEdit => {
             textEdit.replace(
                 new vscode.Position((insertLine), 0),
                 (`${prepend}use ${pickedClass}`) + (alias !== null ? ` as ${alias}` : '') + (`;${append}`)
@@ -97,7 +107,7 @@ class Resolver {
         });
 
         if (this.config('autoSort')) {
-            this.activeEditor().document.save().then(() => this.sort());
+            activeEditor.document.save().then(() => this.sort(activeEditor));
         }
 
         this.showMessage('$(check)  Class imported.');
@@ -139,8 +149,8 @@ class Resolver {
         return parsedNamespaces;
     }
 
-    sort() {
-        let useStatements = this.getDeclarations();
+    sort(activeEditor) {
+        let useStatements = this.getDeclarations(activeEditor);
 
         if (useStatements.length <= 1) {
             return this.showMessage('$(issue-opened)  Nothing to sort.')
@@ -156,7 +166,7 @@ class Resolver {
             }
         });
 
-        this.activeEditor().edit(textEdit => {
+        activeEditor.edit(textEdit => {
             for (let i = 0; i < sorted.length; i++) {
                 textEdit.replace(
                     new vscode.Range(useStatements[i].line, 0, useStatements[i].line, useStatements[i].text.length),
@@ -176,7 +186,7 @@ class Resolver {
         return false;
     }
 
-    getDeclarations(pickedClass = null) {
+    getDeclarations(activeEditor, pickedClass = null) {
         let useStatements = [];
         let declarationLines = {
             PHPTag: null,
@@ -185,8 +195,8 @@ class Resolver {
             class: null
         };
 
-        for (let line = 0; line < this.activeEditor().document.lineCount; line++) {
-            let text = this.activeEditor().document.lineAt(line).text;
+        for (let line = 0; line < activeEditor.document.lineCount; line++) {
+            let text = activeEditor.document.lineAt(line).text;
 
             if (pickedClass !== null && text === `use ${pickedClass};`) {
                 throw new Error('$(issue-opened)  Class already imported.');
@@ -240,20 +250,20 @@ class Resolver {
         return vscode.window.activeTextEditor;
     }
 
-    getWordRange() {
-        return this.activeEditor().document.getWordRangeAtPosition(
-            this.activeEditor().selection.active
+    getWordRange(activeEditor) {
+        return activeEditor.document.getWordRangeAtPosition(
+            activeEditor.selection.active
         );
     }
 
-    resolving() {
-        let wordRange = this.getWordRange();
+    resolving(activeEditor) {
+        let wordRange = this.getWordRange(activeEditor);
 
         if (wordRange === undefined) {
             return null;
         }
 
-        return this.activeEditor().document.getText(wordRange);
+        return activeEditor.document.getText(wordRange);
     }
 
     config(key) {
