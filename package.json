@@ -41,6 +41,11 @@
             "type": "object",
             "title": "Resolve PHP Namespace ectension configuration.",
             "properties": {
+                "namespaceResolver.exclude": {
+                    "type": "string",
+                    "default": "**/node_modules/**",
+                    "description": "Exclude glob pattern while finding files."
+                },
                 "namespaceResolver.showMessageOnStatusBar": {
                     "type": "boolean",
                     "default": false,

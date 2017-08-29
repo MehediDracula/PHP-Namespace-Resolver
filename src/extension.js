@@ -46,10 +46,7 @@ class Resolver {
     }
 
     findFiles() {
-        let include = '**/*.php';
-        let exclude = '**/node_modules/**';
-
-        return vscode.workspace.findFiles(include, exclude);
+        return vscode.workspace.findFiles('**/*.php', this.config('exclude'));
     }
 
     findNamespaces(files) {
