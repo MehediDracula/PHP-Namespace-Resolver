@@ -9,7 +9,7 @@ class Resolver {
                 let [useStatements, declarationLines] = this.getDeclarations(pickedClass);
 
                 if (declarationLines.PHPTag === null) {
-                    return this.showMessage('$(circle-slash)  Can not import namespace in this file', true);
+                    return this.showMessage('$(circle-slash)  Can not import class in this file', true);
                 }
 
                 if (! this.hasConflict(useStatements, this.resolving())) {
@@ -42,7 +42,7 @@ class Resolver {
 
     sortImports() {
         this.sort();
-        this.showMessage('$(check)  Namespace sorted.');
+        this.showMessage('$(check)  Imports sorted.');
     }
 
     findFiles() {
@@ -192,7 +192,7 @@ class Resolver {
             let text = this.activeEditor().document.lineAt(line).text;
 
             if (pickedClass !== null && text === `use ${pickedClass};`) {
-                throw new Error('$(issue-opened)  Namespace already imported.');
+                throw new Error('$(issue-opened)  Class already imported.');
             }
 
             if (text.startsWith('<?php')) {
