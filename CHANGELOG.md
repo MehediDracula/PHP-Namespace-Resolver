@@ -4,9 +4,9 @@ All notable changes to the "php-namespace-resolver" extension will be documented
 ## [0.6.0] - 2017-08-29
 ### Added
 - Add configuration to exclude files.
-- If class with the same name is already imported prompt for an alias.
+- If a class with the same name is already imported prompt for an alias.
 
 ### Changed
 - Rename command titles.
 - Rename `messagesOnStatusBar` configuration to `showMessageOnStatusBar`.
-- Show error message instead of info if namespace is already imported.
+- Show error message instead of info if the class is already imported.
