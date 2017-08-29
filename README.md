@@ -17,15 +17,15 @@ Search these commands by the title on command palette.
 ```json
 [
     {
-        "title": "Import Namespace",
+        "title": "Import Class",
         "command": "namespaceResolver.import"
     },
     {
-        "title": "Expand Namespace",
+        "title": "Expand Class",
         "command": "namespaceResolver.expand"
     },
     {
-        "title": "Sort Namespaces",
+        "title": "Sort Imports",
         "command": "namespaceResolver.sort"
     }
 ]
@@ -59,20 +59,25 @@ You can override these default keybindings on your `keybindings.json`.
 
 ```json
 [
-    "namespaceResolver.messagesOnStatusBar": {
+    "namespaceResolver.exclude": {
+        "type": "string",
+        "default": "**/node_modules/**",
+        "description": "Exclude glob pattern while finding files."
+    },
+    "namespaceResolver.showMessageOnStatusBar": {
         "type": "boolean",
         "default": false,
-        "description": "Show messages on status bar."
+        "description": "Show message on status bar instead of notification box."
     },
     "namespaceResolver.autoSort": {
         "type": "boolean",
         "default": true,
-        "description": "Auto sort namespaces after imports."
+        "description": "Auto sort after imports."
     },
     "namespaceResolver.sortAlphabetically": {
         "type": "boolean",
         "default": false,
-        "description": "Sort namespaces in alphabetical order instead of line length."
+        "description": "Sort imports in alphabetical order instead of line length."
     },
     "namespaceResolver.leadingSeparator": {
         "type": "boolean",
