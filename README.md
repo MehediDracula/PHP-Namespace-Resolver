@@ -1,6 +1,6 @@
 # PHP Namespace Resolver
 
-PHP Namespace Resolver can import, expand and sort your namespaces.
+PHP Namespace Resolver can import and expand and your class. You can also sort your imports by line length or in alphabetical order.
 
 # Install
 
