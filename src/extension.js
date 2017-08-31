@@ -3,9 +3,14 @@ let vscode = require('vscode');
 class Resolver {
     importClass() {
         let activeEditor = this.activeEditor();
+        let resolving = this.resolving(activeEditor);
+
+        if (resolving === null) {
+            return this.showMessage(`$(issue-opened)  No class is selected.`, true);
+        }
 
         this.findFiles()
-            .then(files => this.findNamespaces(activeEditor, files))
+            .then(files => this.findNamespaces(activeEditor, resolving, files))
             .then(namespaces => this.pickClass(namespaces))
             .then(pickedClass => {
                 let useStatements, declarationLines;
@@ -16,11 +21,7 @@ class Resolver {
                     return this.showMessage(error.message, true);
                 }
 
-                if (declarationLines.PHPTag === null) {
-                    return this.showMessage('$(circle-slash)  Can not import class in this file', true);
-                }
-
-                if (! this.hasConflict(useStatements, this.resolving(activeEditor))) {
+                if (! this.hasConflict(useStatements, resolving)) {
                     return this.insert(activeEditor, pickedClass, declarationLines);
                 }
 
@@ -36,9 +37,14 @@ class Resolver {
 
     expandClass() {
         let activeEditor = this.activeEditor();
+        let resolving = this.resolving(activeEditor);
+
+        if (resolving === null) {
+            return this.showMessage(`$(issue-opened)  No class is selected.`, true);
+        }
 
         this.findFiles()
-            .then(files => this.findNamespaces(activeEditor, files))
+            .then(files => this.findNamespaces(activeEditor, resolving, files))
             .then(namespaces => this.pickClass(namespaces))
             .then(pickedClass => {
                 activeEditor.edit(textEdit => {
@@ -59,14 +65,8 @@ class Resolver {
         return vscode.workspace.findFiles('**/*.php', this.config('exclude'));
     }
 
-    findNamespaces(activeEditor, files) {
+    findNamespaces(activeEditor, resolving, files) {
         return new Promise((resolve, reject) => {
-            let resolving = this.resolving(activeEditor);
-
-            if (resolving === null) {
-                return this.showMessage(`$(issue-opened)  No class is selected.`, true);
-            }
-
             let textDocuments = this.getTextDocuments(files, resolving);
 
             Promise.all(textDocuments).then(docs => {
@@ -214,6 +214,10 @@ class Resolver {
             } else {
                 continue;
             }
+        }
+
+        if (declarationLines.PHPTag === null) {
+            throw new Error('$(circle-slash)  Can not import class in this file.');
         }
 
         if (pickedClass === null) {
