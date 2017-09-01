@@ -21,6 +21,10 @@
         "expand",
         "sort"
     ],
+    "galleryBanner": {
+        "color": "#282c34",
+        "theme": "dark"
+    },
     "activationEvents": [
         "onLanguage:php",
         "onCommand:namespaceResolver.import",
