@@ -37,14 +37,17 @@
         "menus": {
             "editor/context": [
                 {
+                    "when": "resourceLangId == php",
                     "command": "namespaceResolver.import",
                     "group": "1_modification"
                 },
                 {
+                    "when": "resourceLangId == php",
                     "command": "namespaceResolver.expand",
                     "group": "1_modification"
                 },
                 {
+                    "when": "resourceLangId == php",
                     "command": "namespaceResolver.sort",
                     "group": "1_modification"
                 }
