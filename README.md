@@ -73,17 +73,17 @@ You can override these default keybindings on your `keybindings.json`.
 [
     {
         "command": "namespaceResolver.import",
-        "key": "f1",
+        "key": "ctrl+alt+i",
         "when": "editorTextFocus"
     },
     {
         "command": "namespaceResolver.expand",
-        "key": "f2",
+        "key": "ctrl+alt+e",
         "when": "editorTextFocus"
     },
     {
         "command": "namespaceResolver.sort",
-        "key": "f3",
+        "key": "ctrl+alt+s",
         "when": "editorTextFocus"
     }
 ]
