@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
-## [0.7.0] - 2017-08-29
+## [0.7.0] - 2017-09-01
 ### Changed
 - Change default keybindings.
 
