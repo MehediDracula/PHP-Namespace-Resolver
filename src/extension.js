@@ -178,7 +178,9 @@ class Resolver {
 
     hasConflict(useStatements, resolving) {
         for (let i = 0; i < useStatements.length; i++) {
-            if (useStatements[i].text.search(`${resolving};`) !== -1) {
+            let re = new RegExp(`use\s.+\\${resolving};$`);
+
+            if (useStatements[i].text.search(re) !== -1) {
                 return true;
             }
         }
