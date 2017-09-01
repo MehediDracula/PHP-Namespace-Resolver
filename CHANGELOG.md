@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.7.4] - 2017-09-01
+### Changed
+- Move context menu to a separate group
+
 ## [0.7.3] - 2017-09-01
 ### Changed
 - Activate context menu only on PHP language.
