@@ -12,6 +12,15 @@
     "categories": [
         "Other"
     ],
+    "keywords": [
+        "php",
+        "namespace",
+        "class",
+        "resolver",
+        "import",
+        "expand",
+        "sort"
+    ],
     "activationEvents": [
         "onLanguage:php",
         "onCommand:namespaceResolver.import",
