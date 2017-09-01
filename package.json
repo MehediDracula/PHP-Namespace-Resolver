@@ -39,16 +39,19 @@
                 {
                     "when": "resourceLangId == php",
                     "command": "namespaceResolver.import",
+                    "alt": "namespaceResolver.import",
                     "group": "1_modification"
                 },
                 {
                     "when": "resourceLangId == php",
                     "command": "namespaceResolver.expand",
+                    "alt": "namespaceResolver.expand",
                     "group": "1_modification"
                 },
                 {
                     "when": "resourceLangId == php",
                     "command": "namespaceResolver.sort",
+                    "alt": "namespaceResolver.sort",
                     "group": "1_modification"
                 }
             ]
