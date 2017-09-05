@@ -158,8 +158,8 @@ class Resolver {
 
         let sorted = useStatements.slice().sort((a, b) => {
             if (this.config('sortAlphabetically')) {
-                if (a.text < b.text) return -1;
-                if (a.text > b.text) return 1;
+                if (a.text.toLowerCase() < b.text.toLowerCase()) return -1;
+                if (a.text.toLowerCase() > b.text.toLowerCase()) return 1;
                 return 0;
             } else {
                 return a.text.length - b.text.length;
