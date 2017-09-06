@@ -57,7 +57,12 @@ class Resolver {
     }
 
     sortImports() {
-        this.sort(this.activeEditor());
+        try {
+            this.sort(this.activeEditor());
+        } catch (error) {
+            return this.showMessage(error.message, true);
+        }
+
         this.showMessage('$(check)  Imports sorted.');
     }
 
@@ -107,7 +112,13 @@ class Resolver {
         });
 
         if (this.config('autoSort')) {
-            activeEditor.document.save().then(() => this.sort(activeEditor));
+            activeEditor.document.save().then(() => {
+                try {
+                    this.sort(activeEditor);
+                } catch (error) {
+                    // I don't care. LOL
+                }
+            });
         }
 
         this.showMessage('$(check)  Class imported.');
@@ -153,7 +164,7 @@ class Resolver {
         let useStatements = this.getDeclarations(activeEditor);
 
         if (useStatements.length <= 1) {
-            return this.showMessage('$(issue-opened)  Nothing to sort.', true);
+            throw new Error('$(issue-opened)  Nothing to sort.');
         }
 
         let sorted = useStatements.slice().sort((a, b) => {
