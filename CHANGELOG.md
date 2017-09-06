@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.7.6] - 2017-09-06
+### Changed
+- Make alphabetic sort in case sensitive. [#2](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/2)
+- Show error message instead of information if nothing to sort.
+- Bug fixes.
+
 ## [0.7.4] - 2017-09-01
 ### Changed
 - Move context menu to a separate group
