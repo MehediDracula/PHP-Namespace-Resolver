@@ -153,7 +153,7 @@ class Resolver {
         let useStatements = this.getDeclarations(activeEditor);
 
         if (useStatements.length <= 1) {
-            return this.showMessage('$(issue-opened)  Nothing to sort.')
+            return this.showMessage('$(issue-opened)  Nothing to sort.', true);
         }
 
         let sorted = useStatements.slice().sort((a, b) => {
