@@ -213,6 +213,12 @@ class Resolver {
                 throw new Error('$(issue-opened)  Class already imported.');
             }
 
+            // break if all declarations were found
+            if (declarationLines.PHPTag && declarationLines.namespace &&
+                declarationLines.useStatement && declarationLines.class) {
+                break;
+            }
+
             if (text.startsWith('<?php')) {
                 declarationLines.PHPTag = line + 1;
             } else if (text.startsWith('namespace ') || text.startsWith('<?php namespace')) {
