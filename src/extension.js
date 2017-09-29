@@ -227,7 +227,7 @@ class Resolver {
                 useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
             } else if (text.startsWith('class ')
-                || text.startsWith('interface')
+                || text.startsWith('interface ')
                 || text.startsWith('abstract ')
                 || text.startsWith('trait ')
             ) {
