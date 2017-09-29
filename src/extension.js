@@ -226,7 +226,8 @@ class Resolver {
             } else if (text.startsWith('use ')) {
                 useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
-            } else if (text.startsWith('class ')
+            } else if (text.startsWith('final ')
+                || text.startsWith('class ')
                 || text.startsWith('interface ')
                 || text.startsWith('abstract ')
                 || text.startsWith('trait ')
