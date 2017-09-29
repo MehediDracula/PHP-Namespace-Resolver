@@ -227,10 +227,10 @@ class Resolver {
                 useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
             } else if (text.startsWith('final ')
-                || text.startsWith('class ')
-                || text.startsWith('interface ')
                 || text.startsWith('abstract ')
+                || text.startsWith('class ')
                 || text.startsWith('trait ')
+                || text.startsWith('interface ')
             ) {
                 declarationLines.class = line + 1;
             } else {
