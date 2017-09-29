@@ -215,12 +215,16 @@ class Resolver {
 
             if (text.startsWith('<?php')) {
                 declarationLines.PHPTag = line + 1;
-            } else if (text.startsWith('namespace ')) {
+            } else if (text.startsWith('namespace ') || text.startsWith('<?php namespace')) {
                 declarationLines.namespace = line + 1;
             } else if (text.startsWith('use ')) {
                 useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
-            } else if (text.startsWith('class ')) {
+            } else if (text.startsWith('class ')
+                || text.startsWith('interface')
+                || text.startsWith('abstract ')
+                || text.startsWith('trait ')
+            ) {
                 declarationLines.class = line + 1;
             } else {
                 continue;
