@@ -36,7 +36,7 @@ Search these commands by the title on command palette.
 You can override these default settings according to your needs.
 
 ```json
-[
+{
     "namespaceResolver.exclude": {
         "type": "string",
         "default": "**/node_modules/**",
@@ -62,7 +62,7 @@ You can override these default settings according to your needs.
         "default": true,
         "description": "Expand with leading namespace separator."
     }
-]
+}
 ```
 
 ## Keybindings
