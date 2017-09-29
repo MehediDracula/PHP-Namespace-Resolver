@@ -1,6 +1,14 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.7.7] - 2017-09-30
+### Added
+- Added support for `interface` `abstract` `trait` keywords [#9](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/9)
+- Added support for `final` keyword
+
+### Changed
+- Optimize performance [#10](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/10)
+
 ## [0.7.6] - 2017-09-06
 ### Changed
 - Make alphabetic sort in case sensitive. [#2](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/2)
