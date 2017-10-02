@@ -37,31 +37,11 @@ You can override these default settings according to your needs.
 
 ```json
 {
-    "namespaceResolver.exclude": {
-        "type": "string",
-        "default": "**/node_modules/**",
-        "description": "Exclude glob pattern while finding files."
-    },
-    "namespaceResolver.showMessageOnStatusBar": {
-        "type": "boolean",
-        "default": false,
-        "description": "Show message on status bar instead of notification box."
-    },
-    "namespaceResolver.autoSort": {
-        "type": "boolean",
-        "default": true,
-        "description": "Auto sort after imports."
-    },
-    "namespaceResolver.sortAlphabetically": {
-        "type": "boolean",
-        "default": false,
-        "description": "Sort imports in alphabetical order instead of line length."
-    },
-    "namespaceResolver.leadingSeparator": {
-        "type": "boolean",
-        "default": true,
-        "description": "Expand with leading namespace separator."
-    }
+    "namespaceResolver.exclude": "**/node_modules/**",  // Exclude glob pattern while finding files
+    "namespaceResolver.showMessageOnStatusBar": false,  // Show message on status bar instead of notification box
+    "namespaceResolver.autoSort": true,                 // Auto sort after imports
+    "namespaceResolver.sortAlphabetically": false,      // Sort imports in alphabetical order instead of line length
+    "namespaceResolver.leadingSeparator": true          // Expand class with leading namespace separator
 }
 ```
 
