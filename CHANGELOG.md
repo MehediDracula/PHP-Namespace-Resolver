@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.7.8] - 2017-10-2
+### Changed
+- Show app namespace on top while choosing namespace to import.
+
 ## [0.7.7] - 2017-09-30
 ### Added
 - Added support for `interface` `abstract` `trait` keywords [#9](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/9)
