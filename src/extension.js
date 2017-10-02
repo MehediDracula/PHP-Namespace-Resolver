@@ -93,7 +93,7 @@ class Resolver {
                 return resolve(namespaces[0]);
             }
 
-            vscode.window.showQuickPick(namespaces).then(picked => {
+            vscode.window.showQuickPick(namespaces.reverse()).then(picked => {
                 if (picked !== undefined) {
                     resolve(picked);
                 }
