@@ -56,32 +56,32 @@
         },
         "configuration": {
             "type": "object",
-            "title": "Resolve PHP Namespace ectension configuration.",
+            "title": "PHP Namespace Resolver extension configuration",
             "properties": {
                 "namespaceResolver.exclude": {
                     "type": "string",
                     "default": "**/node_modules/**",
-                    "description": "Exclude glob pattern while finding files."
+                    "description": "Exclude glob pattern while finding files"
                 },
                 "namespaceResolver.showMessageOnStatusBar": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Show message on status bar instead of notification box."
+                    "description": "Show message on status bar instead of notification box"
                 },
                 "namespaceResolver.autoSort": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Auto sort after imports."
+                    "description": "Auto sort after imports"
                 },
                 "namespaceResolver.sortAlphabetically": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Sort imports in alphabetical order instead of line length."
+                    "description": "Sort imports in alphabetical order instead of line length"
                 },
                 "namespaceResolver.leadingSeparator": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Expand with leading namespace separator."
+                    "description": "Expand class with leading namespace separator"
                 }
             }
         },
