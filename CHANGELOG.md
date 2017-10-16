@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.8.0] - 2017-10-16
+### Added
+- Add support for expanding on multiple cursor
+### Changed
+- Check for namespace conflict case insensitively
+
 ## [0.7.9] - 2017-10-2
 ### Changed
 - Clean up settings doc
@@ -13,7 +19,6 @@ All notable changes to the "php-namespace-resolver" extension will be documented
 ### Added
 - Added support for `interface` `abstract` `trait` keywords [#9](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/9)
 - Added support for `final` keyword
-
 ### Changed
 - Optimize performance [#10](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/10)
 
