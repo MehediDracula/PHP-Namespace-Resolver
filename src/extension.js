@@ -189,7 +189,7 @@ class Resolver {
 
     hasConflict(useStatements, resolving) {
         for (let i = 0; i < useStatements.length; i++) {
-            if (useStatements[i].text.split(`\\${resolving};`).length === 2) {
+            if (useStatements[i].text.toLowerCase().split(`\\${resolving.toLowerCase()};`).length === 2) {
                 return true;
             }
         }
