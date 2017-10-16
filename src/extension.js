@@ -48,10 +48,14 @@ class Resolver {
             .then(namespaces => this.pickClass(namespaces))
             .then(pickedClass => {
                 activeEditor.edit(textEdit => {
-                    textEdit.replace(
-                        this.getWordRange(activeEditor),
-                        (this.config('leadingSeparator') ? '\\' : '') + pickedClass
-                    );
+                    let selections = activeEditor.selections;
+
+                    for (let i = 0; i < selections.length; i++) {
+                        textEdit.replace(
+                            activeEditor.document.getWordRangeAtPosition(selections[i].active),
+                            (this.config('leadingSeparator') ? '\\' : '') + pickedClass
+                        );
+                    }
                 });
             });
     }
@@ -276,14 +280,8 @@ class Resolver {
         return vscode.window.activeTextEditor;
     }
 
-    getWordRange(activeEditor) {
-        return activeEditor.document.getWordRangeAtPosition(
-            activeEditor.selection.active
-        );
-    }
-
     resolving(activeEditor) {
-        let wordRange = this.getWordRange(activeEditor);
+        let wordRange = activeEditor.document.getWordRangeAtPosition(activeEditor.selection.active);
 
         if (wordRange === undefined) {
             return null;
