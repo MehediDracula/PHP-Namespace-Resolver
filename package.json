@@ -32,28 +32,6 @@
     "main": "./src/extension",
     "icon": "images/icon.png",
     "contributes": {
-        "menus": {
-            "editor/context": [
-                {
-                    "when": "resourceLangId == php",
-                    "command": "namespaceResolver.import",
-                    "alt": "namespaceResolver.import",
-                    "group": "0_namespace_resolver@1"
-                },
-                {
-                    "when": "resourceLangId == php",
-                    "command": "namespaceResolver.expand",
-                    "alt": "namespaceResolver.expand",
-                    "group": "0_namespace_resolver@2"
-                },
-                {
-                    "when": "resourceLangId == php",
-                    "command": "namespaceResolver.sort",
-                    "alt": "namespaceResolver.sort",
-                    "group": "0_namespace_resolver@3"
-                }
-            ]
-        },
         "configuration": {
             "type": "object",
             "title": "PHP Namespace Resolver extension configuration",
