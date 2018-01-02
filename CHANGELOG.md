@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.9.0] - 2018-01-02
+### Added
+- Add support to find classes without namespaces
+
 ## [0.8.0] - 2017-10-16
 ### Added
 - Add support for expanding on multiple cursor
