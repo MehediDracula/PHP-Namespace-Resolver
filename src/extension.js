@@ -151,12 +151,16 @@ class Resolver {
             for (let line = 0; line < docs[i].lineCount; line++) {
                 let textLine = docs[i].lineAt(line).text;
 
-                if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
-                    let namespace = textLine.split('namespace ')[1].split(';')[0] + '\\' + resolving;
+                let namespace;
 
-                    if (parsedNamespaces.indexOf(namespace) === -1) {
-                        parsedNamespaces.push(namespace);
-                    }
+                if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
+                    namespace = textLine.split('namespace ')[1].split(';')[0] + '\\' + resolving;
+                } else if (textLine.startsWith('class ') || textLine.startsWith('<?php class ')) {
+                    namespace = textLine.match(/class\s(\w+)/)[1];
+                }
+
+                if (namespace !== undefined && parsedNamespaces.indexOf(namespace) === -1) {
+                    parsedNamespaces.push(namespace);
                 }
             }
         }
