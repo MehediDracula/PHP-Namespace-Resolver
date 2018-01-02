@@ -4,6 +4,8 @@ All notable changes to the "php-namespace-resolver" extension will be documented
 ## [0.9.0] - 2018-01-02
 ### Added
 - Add support to find classes without namespaces
+### Removed
+- Remove context menus
 
 ## [0.8.0] - 2017-10-16
 ### Added
