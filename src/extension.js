@@ -26,7 +26,7 @@ class Resolver {
                 }
 
                 this.insertAsAlias(useStatements, activeEditor, pickedClass, declarationLines);
-                });
+            });
     }
 
     expandClass() {
@@ -87,7 +87,7 @@ class Resolver {
     pickClass(namespaces) {
         return new Promise((resolve, reject) => {
             if (namespaces.length === 1) {
-                // only one namespace found so return with the first namespace.
+                // only one namespace found so no need to show picker.
                 return resolve(namespaces[0]);
             }
 
@@ -239,12 +239,7 @@ class Resolver {
             } else if (text.startsWith('use ')) {
                 useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
-            } else if (text.startsWith('final ')
-                || text.startsWith('abstract ')
-                || text.startsWith('class ')
-                || text.startsWith('trait ')
-                || text.startsWith('interface ')
-            ) {
+            } else if (/^(class|trait|interface)\s+\w+/.test(text)) {
                 declarationLines.class = line + 1;
             } else {
                 continue;
@@ -276,8 +271,8 @@ class Resolver {
 
         if (declarationLines.class !== null &&
             ((declarationLines.class - declarationLines.useStatement) <= 1 ||
-                (declarationLines.class - declarationLines.namespace) <= 1 ||
-                (declarationLines.class - declarationLines.PHPTag) <= 1)
+            (declarationLines.class - declarationLines.namespace) <= 1 ||
+            (declarationLines.class - declarationLines.PHPTag) <= 1)
         ) {
             append = '\n\n';
         }
