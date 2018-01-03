@@ -152,10 +152,8 @@ class Resolver {
                 let textLine = docs[i].lineAt(line).text;
 
                 let namespace;
-                let hasNamespace = false;
 
                 if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
-                    hasNamespace = true;
                     namespace = textLine.split('namespace ')[1].split(';')[0] + '\\' + resolving;
                 } else if (textLine.startsWith('class ') || textLine.startsWith('<?php class ')) {
                     namespace = textLine.match(/class\s(\w+)/)[1];
@@ -163,9 +161,6 @@ class Resolver {
 
                 if (namespace !== undefined && parsedNamespaces.indexOf(namespace) === -1) {
                     parsedNamespaces.push(namespace);
-                }
-
-                if (hasNamespace) {
                     break;
                 }
             }
