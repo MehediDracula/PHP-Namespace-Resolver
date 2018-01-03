@@ -243,14 +243,14 @@ class Resolver {
                 break;
             }
 
-            if (text.startsWith('<?php')) {
+            if (text.startsWith('<?php')) {     // find php tag line.
                 declarationLines.PHPTag = line + 1;
-            } else if (/namespace\s+.+?[;\s{]/.test(text)) {
+            } else if (/namespace\s+.+?[;\s{]/.test(text)) {    // find namespace declaration line.
                 declarationLines.namespace = line + 1;
-            } else if (text.startsWith('use ')) {
+            } else if (/use\s.+;/.test(text)) {     // find use statements.
                 useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
-            } else if (/(class|trait|interface)\s+\w+/.test(text)) {
+            } else if (/(class|trait|interface)\s+\w+/.test(text)) {    // find class/trait/interface declaration line.
                 declarationLines.class = line + 1;
             } else {
                 continue;
@@ -258,7 +258,8 @@ class Resolver {
         }
 
         if (declarationLines.PHPTag === null) {
-            throw new Error('$(circle-slash)  Can not import class in this file.');
+            // if php tag not found then import at the top of the file.
+            declarationLines.PHPTag = 0;
         }
 
         if (pickedClass === null) {
@@ -269,7 +270,7 @@ class Resolver {
     }
 
     getInsertLine(declarationLines) {
-        let prepend = '\n';
+        let prepend = declarationLines.PHPTag === 0 ? '' : '\n';
         let append = '\n';
         let insertLine = declarationLines.PHPTag;
 
