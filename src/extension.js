@@ -93,7 +93,7 @@ class Resolver {
     pickClass(namespaces) {
         return new Promise((resolve, reject) => {
             if (namespaces.length === 1) {
-                // There is only one namespace found so return with the first namespace.
+                // there is only one namespace found so no need to show a picker.
                 return resolve(namespaces[0]);
             }
 
@@ -120,7 +120,7 @@ class Resolver {
                 try {
                     this.sort(activeEditor);
                 } catch (error) {
-                    // I don't care. LOL
+                    // i don't care. LOL
                 }
             });
         }
@@ -132,9 +132,10 @@ class Resolver {
         let textDocuments = [];
 
         for (let i = 0; i < files.length; i++) {
-            let fileName = files[i].fsPath.replace(/^.*[\\\/]/, '').split('.')[0];
+            let re = new RegExp(resolving, 'i');
 
-            if (fileName !== resolving) {
+            // if file path contains the resolvng word then it will be parsed.
+            if (! re.test(files[i].fsPath)) {
                 continue;
             }
 
@@ -153,10 +154,24 @@ class Resolver {
 
                 let namespace;
 
-                if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
-                    namespace = textLine.split('namespace ')[1].split(';')[0] + '\\' + resolving;
-                } else if (textLine.startsWith('class ') || textLine.startsWith('<?php class ')) {
-                    namespace = textLine.match(/class\s(\w+)/)[1];
+                // if file has namespace.
+                if (/namespace\s+.+?[;\s{]/.test(textLine)) {
+                    // find class/trait/interface for namespaced file and match with the resolving class/trait/interface.
+                    for (let l = line; l < docs[i].lineCount; l++) {
+                        let matchedToken = docs[i].lineAt(l).text.match(/(class|trait|interface)\s+(\w+)/);
+
+                        if (matchedToken !== null && matchedToken.pop() === resolving) {
+                            namespace = `${textLine.match(/namespace\s+(.+?)[;\s{]/).pop()}\\${resolving}`;
+                            break;
+                        }
+                    }
+                } else {
+                    // file doesn't have any namespace so search for non namespaced class/trait/interface.
+                    let matchedToken = textLine.match(/(class|trait|interface)\s+(\w+)/);
+
+                    if (matchedToken !== null && matchedToken.pop() === resolving) {
+                        namespace = resolving;
+                    }
                 }
 
                 if (namespace !== undefined && parsedNamespaces.indexOf(namespace) === -1) {
@@ -222,7 +237,7 @@ class Resolver {
                 throw new Error('$(issue-opened)  Class already imported.');
             }
 
-            // Break if all declarations were found.
+            // break if all declarations were found.
             if (declarationLines.PHPTag && declarationLines.namespace &&
                 declarationLines.useStatement && declarationLines.class) {
                 break;
@@ -230,17 +245,12 @@ class Resolver {
 
             if (text.startsWith('<?php')) {
                 declarationLines.PHPTag = line + 1;
-            } else if (text.startsWith('namespace ') || text.startsWith('<?php namespace')) {
+            } else if (/namespace\s+.+?[;\s{]/.test(text)) {
                 declarationLines.namespace = line + 1;
             } else if (text.startsWith('use ')) {
                 useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
-            } else if (text.startsWith('final ')
-                || text.startsWith('abstract ')
-                || text.startsWith('class ')
-                || text.startsWith('trait ')
-                || text.startsWith('interface ')
-            ) {
+            } else if (/(class|trait|interface)\s+\w+/.test(text)) {
                 declarationLines.class = line + 1;
             } else {
                 continue;
