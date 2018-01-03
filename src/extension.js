@@ -213,7 +213,7 @@ class Resolver {
     getDeclarations(activeEditor, pickedClass = null) {
         let useStatements = [];
         let declarationLines = {
-            PHPTag: null,
+            PHPTag: 0,
             namespace: null,
             useStatement: null,
             class: null
@@ -251,10 +251,6 @@ class Resolver {
             }
         }
 
-        if (declarationLines.PHPTag === null) {
-            throw new Error('$(circle-slash)  Can not import class in this file.');
-        }
-
         if (pickedClass === null) {
             return useStatements;
         }
@@ -263,9 +259,13 @@ class Resolver {
     }
 
     getInsertLine(declarationLines) {
-        let prepend = '\n';
+        let prepend = declarationLines.PHPTag === 0 ? '' : '\n';
         let append = '\n';
         let insertLine = declarationLines.PHPTag;
+
+        if (prepend === '' && declarationLines.namespace !== null) {
+            prepend = '\n';
+        }
 
         if (declarationLines.useStatement !== null) {
             prepend = '';
