@@ -82,7 +82,7 @@ class Resolver {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
 
                 if (parsedNamespaces.length === 0) {
-                    return this.showMessage(`$(circle-slash)  Class ' ${resolving} ' not found.`, true);
+                    parsedNamespaces.push(resolving);
                 }
 
                 resolve(parsedNamespaces);
@@ -93,7 +93,7 @@ class Resolver {
     pickClass(namespaces) {
         return new Promise((resolve, reject) => {
             if (namespaces.length === 1) {
-                // there is only one namespace found so no need to show a picker.
+                // only one namespace found so return with the first namespace.
                 return resolve(namespaces[0]);
             }
 
@@ -132,10 +132,9 @@ class Resolver {
         let textDocuments = [];
 
         for (let i = 0; i < files.length; i++) {
-            let re = new RegExp(resolving, 'i');
+            let fileName = files[i].fsPath.replace(/^.*[\\\/]/, '').split('.')[0];
 
-            // if file path contains the resolvng word then it will be parsed.
-            if (! re.test(files[i].fsPath)) {
+            if (fileName !== resolving) {
                 continue;
             }
 
@@ -152,31 +151,13 @@ class Resolver {
             for (let line = 0; line < docs[i].lineCount; line++) {
                 let textLine = docs[i].lineAt(line).text;
 
-                let namespace;
+                if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
+                    let namespace = textLine.split('namespace ')[1].split(';')[0] + '\\' + resolving;
 
-                // if file has namespace.
-                if (/namespace\s+.+?[;\s{]/.test(textLine)) {
-                    // find class/trait/interface for namespaced file and match with the resolving class/trait/interface.
-                    for (let l = line; l < docs[i].lineCount; l++) {
-                        let matchedToken = docs[i].lineAt(l).text.match(/(class|trait|interface)\s+(\w+)/);
-
-                        if (matchedToken !== null && matchedToken.pop() === resolving) {
-                            namespace = `${textLine.match(/namespace\s+(.+?)[;\s{]/).pop()}\\${resolving}`;
-                            break;
-                        }
+                    if (parsedNamespaces.indexOf(namespace) === -1) {
+                        parsedNamespaces.push(namespace);
+                        break;
                     }
-                } else {
-                    // file doesn't have any namespace so search for non namespaced class/trait/interface.
-                    let matchedToken = textLine.match(/(class|trait|interface)\s+(\w+)/);
-
-                    if (matchedToken !== null && matchedToken.pop() === resolving) {
-                        namespace = resolving;
-                    }
-                }
-
-                if (namespace !== undefined && parsedNamespaces.indexOf(namespace) === -1) {
-                    parsedNamespaces.push(namespace);
-                    break;
                 }
             }
         }
@@ -243,14 +224,19 @@ class Resolver {
                 break;
             }
 
-            if (text.startsWith('<?php')) {     // find php tag line.
+            if (text.startsWith('<?php')) {
                 declarationLines.PHPTag = line + 1;
-            } else if (/namespace\s+.+?[;\s{]/.test(text)) {    // find namespace declaration line.
+            } else if (text.startsWith('namespace ') || text.startsWith('<?php namespace')) {
                 declarationLines.namespace = line + 1;
-            } else if (/use\s.+;/.test(text)) {     // find use statements.
+            } else if (text.startsWith('use ')) {
                 useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
-            } else if (/(class|trait|interface)\s+\w+/.test(text)) {    // find class/trait/interface declaration line.
+            } else if (text.startsWith('final ')
+                || text.startsWith('abstract ')
+                || text.startsWith('class ')
+                || text.startsWith('trait ')
+                || text.startsWith('interface ')
+            ) {
                 declarationLines.class = line + 1;
             } else {
                 continue;
@@ -258,8 +244,7 @@ class Resolver {
         }
 
         if (declarationLines.PHPTag === null) {
-            // if php tag not found then import at the top of the file.
-            declarationLines.PHPTag = 0;
+            throw new Error('$(circle-slash)  Can not import class in this file.');
         }
 
         if (pickedClass === null) {
@@ -270,7 +255,7 @@ class Resolver {
     }
 
     getInsertLine(declarationLines) {
-        let prepend = declarationLines.PHPTag === 0 ? '' : '\n';
+        let prepend = '\n';
         let append = '\n';
         let insertLine = declarationLines.PHPTag;
 
@@ -283,8 +268,8 @@ class Resolver {
 
         if (declarationLines.class !== null &&
             ((declarationLines.class - declarationLines.useStatement) <= 1 ||
-            (declarationLines.class - declarationLines.namespace) <= 1 ||
-            (declarationLines.class - declarationLines.PHPTag) <= 1)
+                (declarationLines.class - declarationLines.namespace) <= 1 ||
+                (declarationLines.class - declarationLines.PHPTag) <= 1)
         ) {
             append = '\n\n';
         }
