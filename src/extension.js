@@ -25,14 +25,8 @@ class Resolver {
                     return this.insert(activeEditor, pickedClass, declarationLines);
                 }
 
-                vscode.window.showInputBox({
-                    placeHolder: 'Enter an alias'
-                }).then(alias => {
-                    if (alias !== undefined && alias !== '') {
-                        this.insert(activeEditor, pickedClass, declarationLines, alias);
-                    }
+                this.insertAsAlias(useStatements, activeEditor, pickedClass, declarationLines);
                 });
-            });
     }
 
     expandClass() {
@@ -128,6 +122,20 @@ class Resolver {
         this.showMessage('$(check)  Class imported.');
     }
 
+    insertAsAlias(useStatements, activeEditor, pickedClass, declarationLines) {
+        vscode.window.showInputBox({
+            placeHolder: 'Enter an alias'
+        }).then(alias => {
+            if (this.hasConflict(useStatements, alias)) {
+                vscode.window.setStatusBarMessage(`$(issue-opened)  This alias is already in use.`, 3000)
+
+                this.insertAsAlias(useStatements, activeEditor, pickedClass, declarationLines)
+            } else if (alias !== undefined && alias !== '') {
+                this.insert(activeEditor, pickedClass, declarationLines, alias);
+            }
+        });
+    }
+
     getTextDocuments(files, resolving) {
         let textDocuments = [];
 
@@ -194,7 +202,7 @@ class Resolver {
 
     hasConflict(useStatements, resolving) {
         for (let i = 0; i < useStatements.length; i++) {
-            if (useStatements[i].text.toLowerCase().split(`\\${resolving.toLowerCase()};`).length === 2) {
+            if (useStatements[i].text.endsWith(`${resolving};`)) {
                 return true;
             }
         }
