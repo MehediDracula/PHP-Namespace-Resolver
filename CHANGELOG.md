@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.9.3] - 2018-01-03
+### Added
+- Import class at the top of the file if php tag not found
+### Changed
+- Optimize finding class for non namespaced file
+
 ## [0.9.2] - 2018-01-02
 ### Fixed
 - Showing class on picker even if it has a namespace
