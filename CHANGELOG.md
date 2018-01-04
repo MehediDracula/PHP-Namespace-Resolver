@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.9.4] - 2018-01-04
+### Added
+- Add multi cursor support
+- Import class directly if fqcn is selected
+
 ## [0.9.3] - 2018-01-04
 ### Added
 - Check conflict for aliases also
