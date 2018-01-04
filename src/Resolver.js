@@ -183,7 +183,7 @@ module.exports = class Resolver {
     }
 
     sortImports() {
-        let useStatements = this.getDeclarations();
+        let [useStatements,] = this.getDeclarations();
 
         if (useStatements.length <= 1) {
             throw new Error('$(issue-opened)  Nothing to sort.');
@@ -254,10 +254,6 @@ module.exports = class Resolver {
             } else {
                 continue;
             }
-        }
-
-        if (pickedClass === null) {
-            return useStatements;
         }
 
         return [useStatements, declarationLines];
