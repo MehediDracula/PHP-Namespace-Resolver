@@ -5,7 +5,8 @@ module.exports = class Resolver {
         let resolving = this.resolving(selection);
 
         if (resolving === null) {
-            return this.showMessage(`$(issue-opened)  No class is selected.`, true);
+            this.showMessage(`$(issue-opened)  No class is selected.`, true);
+            return;
         }
 
         let files = await this.findFiles();
@@ -18,12 +19,7 @@ module.exports = class Resolver {
     importClass(fqcn, resolving) {
         let useStatements, declarationLines;
 
-        try {
-            [useStatements, declarationLines] = this.getDeclarations(fqcn);
-        } catch (error) {
-            this.showMessage(error.message, true);
-            return;
-        }
+        [useStatements, declarationLines] = this.getDeclarations(fqcn);
 
         if (this.hasConflict(useStatements, resolving)) {
             this.insertAsAlias(fqcn, useStatements, declarationLines);
@@ -65,8 +61,8 @@ module.exports = class Resolver {
         });
     }
 
-    async expandCommand() {
-        let resolving = this.resolving();
+    async expandCommand(selection) {
+        let resolving = this.resolving(selection);
 
         if (resolving === null) {
             this.showMessage(`$(issue-opened)  No class is selected.`, true);
@@ -77,29 +73,20 @@ module.exports = class Resolver {
         let namespaces = await this.findNamespaces(resolving, files);
         let fqcn = await this.pickClass(namespaces);
 
-        this.expandClass(fqcn);
+        this.expandClass(selection, fqcn);
     }
 
-    expandClass(fqcn) {
+    expandClass(selection, fqcn) {
         this.activeEditor().edit(textEdit => {
-            let selections = this.activeEditor().selections;
-
-            for (let i = 0; i < selections.length; i++) {
-                textEdit.replace(
-                    this.activeEditor().document.getWordRangeAtPosition(selections[i].active),
-                    (this.config('leadingSeparator') ? '\\' : '') + fqcn
-                );
-            }
+            textEdit.replace(
+                this.activeEditor().document.getWordRangeAtPosition(selection.active),
+                (this.config('leadingSeparator') ? '\\' : '') + fqcn
+            );
         });
     }
 
     sortCommand() {
-        try {
-            this.sortImports();
-        } catch (error) {
-            this.showMessage(error.message, true);
-            return;
-        }
+        this.sortImports();
 
         this.showMessage('$(check)  Imports sorted.');
     }
@@ -163,10 +150,10 @@ module.exports = class Resolver {
                 let textLine = docs[i].lineAt(line).text;
 
                 if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
-                    let namespace = textLine.split('namespace ')[1].split(';')[0] + '\\' + resolving;
+                    let fqcn = textLine.match(/^namespace\s+(.+)?;/).pop() + resolving;
 
-                    if (parsedNamespaces.indexOf(namespace) === -1) {
-                        parsedNamespaces.push(namespace);
+                    if (parsedNamespaces.indexOf(fqcn) === -1) {
+                        parsedNamespaces.push(fqcn);
                         break;
                     }
                 }
@@ -180,7 +167,8 @@ module.exports = class Resolver {
         let useStatements = this.getDeclarations();
 
         if (useStatements.length <= 1) {
-            throw new Error('$(issue-opened)  Nothing to sort.');
+            this.showMessage('$(issue-opened)  Nothing to sort.', true);
+            return;
         }
 
         let sorted = useStatements.slice().sort((a, b) => {
@@ -226,7 +214,8 @@ module.exports = class Resolver {
             let text = this.activeEditor().document.lineAt(line).text;
 
             if (pickedClass !== null && text === `use ${pickedClass};`) {
-                throw new Error('$(issue-opened)  Class already imported.');
+                this.showMessage('$(issue-opened)  Class already imported.', true);
+                return;
             }
 
             // break if all declarations were found.
@@ -242,7 +231,7 @@ module.exports = class Resolver {
             } else if (text.startsWith('use ')) {
                 useStatements.push({ text, line });
                 declarationLines.useStatement = line + 1;
-            } else if (/^(class|trait|interface)\s+\w+/.test(text)) {
+            } else if (/(class|trait|interface)\s+\w+/.test(text)) {
                 declarationLines.class = line + 1;
             } else {
                 continue;
@@ -303,15 +292,16 @@ module.exports = class Resolver {
 
     showMessage(message, error = false) {
         if (this.config('showMessageOnStatusBar')) {
-            return vscode.window.setStatusBarMessage(message, 3000);
+            vscode.window.setStatusBarMessage(message, 3000);
+            return;
         }
 
-        let notify = vscode.window.showInformationMessage;
+        message = message.replace(/\$\(.+?\)\s\s/, '');
 
         if (error) {
-            notify = vscode.window.showErrorMessage;
+            vscode.window.showErrorMessage(message);
+        } else {
+            vscode.window.showInformationMessage(message);
         }
-
-        notify(message.replace(/\$\(.+?\)\s\s/, ''));
     }
 }

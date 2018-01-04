@@ -2,14 +2,26 @@ const vscode = require('vscode');
 const Resolver = require('./Resolver');
 
 function activate(context) {
-    let resolver = new Resolver();
+    let resolver = new Resolver;
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('namespaceResolver.import', () => resolver.importCommand())
+        vscode.commands.registerCommand('namespaceResolver.import', async () => {
+            let selections = vscode.window.activeTextEditor.selections;
+
+            for (let i = 0; i < selections.length; i++) {
+                await resolver.importCommand(selections[i]);
+            }
+        })
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('namespaceResolver.expand', () => resolver.expandCommand())
+        vscode.commands.registerCommand('namespaceResolver.expand', async () => {
+            let selections = vscode.window.activeTextEditor.selections;
+
+            for (let i = 0; i < selections.length; i++) {
+                await resolver.expandCommand(selections[i]);
+            }
+        })
     );
 
     context.subscriptions.push(
