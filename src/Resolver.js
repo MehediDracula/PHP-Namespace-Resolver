@@ -9,6 +9,13 @@ module.exports = class Resolver {
             return;
         }
 
+        if (/\\/.test(resolving)) {
+            await this.expandClass(selection, resolving.match(/(\w+)/g).pop());
+            await this.activeEditor().document.save();
+            await this.importClass(resolving);
+            return;
+        }
+
         let files = await this.findFiles();
         let namespaces = await this.findNamespaces(resolving, files);
         let fqcn = await this.pickClass(namespaces);
@@ -16,12 +23,17 @@ module.exports = class Resolver {
         this.importClass(fqcn, resolving);
     }
 
-    importClass(fqcn, resolving) {
+    importClass(fqcn) {
         let useStatements, declarationLines;
 
-        [useStatements, declarationLines] = this.getDeclarations(fqcn);
+        try {
+            [useStatements, declarationLines] = this.getDeclarations(fqcn);
+        } catch (error) {
+            this.showMessage(error.message, true);
+            return;
+        }
 
-        if (this.hasConflict(useStatements, resolving)) {
+        if (this.hasConflict(useStatements, fqcn.match(/(\w+)/g).pop())) {
             this.insertAsAlias(fqcn, useStatements, declarationLines);
         } else {
             this.insert(fqcn, declarationLines);
@@ -73,20 +85,25 @@ module.exports = class Resolver {
         let namespaces = await this.findNamespaces(resolving, files);
         let fqcn = await this.pickClass(namespaces);
 
-        this.expandClass(selection, fqcn);
+        this.expandClass(selection, fqcn, true);
     }
 
-    expandClass(selection, fqcn) {
+    expandClass(selection, fqcn, prependBackslash = false) {
         this.activeEditor().edit(textEdit => {
             textEdit.replace(
                 this.activeEditor().document.getWordRangeAtPosition(selection.active),
-                (this.config('leadingSeparator') ? '\\' : '') + fqcn
+                (prependBackslash && this.config('leadingSeparator') ? '\\' : '') + fqcn
             );
         });
     }
 
     sortCommand() {
-        this.sortImports();
+        try {
+            this.sortImports();
+        } catch (error) {
+            this.showMessage(error.message, true);
+            return;
+        }
 
         this.showMessage('$(check)  Imports sorted.');
     }
@@ -101,10 +118,6 @@ module.exports = class Resolver {
 
             Promise.all(textDocuments).then(docs => {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
-
-                if (parsedNamespaces.length === 0) {
-                    parsedNamespaces.push(resolving);
-                }
 
                 resolve(parsedNamespaces);
             });
@@ -150,7 +163,7 @@ module.exports = class Resolver {
                 let textLine = docs[i].lineAt(line).text;
 
                 if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
-                    let fqcn = textLine.match(/^namespace\s+(.+)?;/).pop() + resolving;
+                    let fqcn = `${textLine.match(/^namespace\s+(.+)?;/).pop()}\\${resolving}`;
 
                     if (parsedNamespaces.indexOf(fqcn) === -1) {
                         parsedNamespaces.push(fqcn);
@@ -160,6 +173,10 @@ module.exports = class Resolver {
             }
         }
 
+        if (parsedNamespaces.length === 0) {
+            parsedNamespaces.push(resolving);
+        }
+
         return parsedNamespaces;
     }
 
@@ -167,7 +184,7 @@ module.exports = class Resolver {
         let useStatements = this.getDeclarations();
 
         if (useStatements.length <= 1) {
-            this.showMessage('$(issue-opened)  Nothing to sort.', true);
+            throw new Error('$(issue-opened)  Nothing to sort.');
             return;
         }
 
@@ -214,8 +231,7 @@ module.exports = class Resolver {
             let text = this.activeEditor().document.lineAt(line).text;
 
             if (pickedClass !== null && text === `use ${pickedClass};`) {
-                this.showMessage('$(issue-opened)  Class already imported.', true);
-                return;
+                throw new Error('$(issue-opened)  Class already imported.');
             }
 
             // break if all declarations were found.
