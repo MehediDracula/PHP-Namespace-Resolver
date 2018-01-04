@@ -212,7 +212,7 @@ module.exports = class Resolver {
 
     hasConflict(useStatements, resolving) {
         for (let i = 0; i < useStatements.length; i++) {
-            if (useStatements[i].text.endsWith(`${resolving};`)) {
+            if (useStatements[i].text.match(/(\w+)?;/).pop() === resolving) {
                 return true;
             }
         }
