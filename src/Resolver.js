@@ -1,6 +1,10 @@
 const vscode = require('vscode');
 
 module.exports = class Resolver {
+    constructor() {
+        this.activeEditor = vscode.window.activeTextEditor;;
+    }
+
     async importCommand(selection) {
         let resolving = this.resolving(selection);
 
@@ -12,7 +16,7 @@ module.exports = class Resolver {
         if (/\\/.test(resolving)) {
             this.expandClass(selection, resolving.match(/(\w+)/g).pop());
 
-            await this.activeEditor().document.save();
+            await this.activeEditor.document.save();
 
             this.importClass(resolving);
             return;
@@ -45,7 +49,7 @@ module.exports = class Resolver {
     async insert(pickedClass, declarationLines, alias = null) {
         let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
 
-        this.activeEditor().edit(textEdit => {
+        this.activeEditor.edit(textEdit => {
             textEdit.replace(
                 new vscode.Position((insertLine), 0),
                 (`${prepend}use ${pickedClass}`) + (alias !== null ? ` as ${alias}` : '') + (`;${append}`)
@@ -53,7 +57,7 @@ module.exports = class Resolver {
         });
 
         if (this.config('autoSort')) {
-            await this.activeEditor().document.save();
+            await this.activeEditor.document.save();
 
             this.sortImports();
         }
@@ -91,9 +95,9 @@ module.exports = class Resolver {
     }
 
     expandClass(selection, fqcn, prependBackslash = false) {
-        this.activeEditor().edit(textEdit => {
+        this.activeEditor.edit(textEdit => {
             textEdit.replace(
-                this.activeEditor().document.getWordRangeAtPosition(selection.active),
+                this.activeEditor.document.getWordRangeAtPosition(selection.active),
                 (prependBackslash && this.config('leadingSeparator') ? '\\' : '') + fqcn
             );
         });
@@ -200,7 +204,7 @@ module.exports = class Resolver {
             }
         });
 
-        this.activeEditor().edit(textEdit => {
+        this.activeEditor.edit(textEdit => {
             for (let i = 0; i < sorted.length; i++) {
                 textEdit.replace(
                     new vscode.Range(useStatements[i].line, 0, useStatements[i].line, useStatements[i].text.length),
@@ -229,8 +233,8 @@ module.exports = class Resolver {
             class: null
         };
 
-        for (let line = 0; line < this.activeEditor().document.lineCount; line++) {
-            let text = this.activeEditor().document.lineAt(line).text;
+        for (let line = 0; line < this.activeEditor.document.lineCount; line++) {
+            let text = this.activeEditor.document.lineAt(line).text;
 
             if (pickedClass !== null && text === `use ${pickedClass};`) {
                 throw new Error('$(issue-opened)  Class already imported.');
@@ -286,18 +290,14 @@ module.exports = class Resolver {
         return [prepend, append, insertLine];
     }
 
-    activeEditor() {
-        return vscode.window.activeTextEditor;
-    }
-
     resolving(selection) {
-        let wordRange = this.activeEditor().document.getWordRangeAtPosition(selection.active);
+        let wordRange = this.activeEditor.document.getWordRangeAtPosition(selection.active);
 
         if (wordRange === undefined) {
             return null;
         }
 
-        return this.activeEditor().document.getText(wordRange);
+        return this.activeEditor.document.getText(wordRange);
     }
 
     config(key) {
