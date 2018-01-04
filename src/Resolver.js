@@ -59,18 +59,18 @@ module.exports = class Resolver {
         this.showMessage('$(check)  Class imported.');
     }
 
-    insertAsAlias(fqcn, useStatements, declarationLines) {
-        vscode.window.showInputBox({
+    async insertAsAlias(fqcn, useStatements, declarationLines) {
+        let alias = await vscode.window.showInputBox({
             placeHolder: 'Enter an alias'
-        }).then(alias => {
-            if (this.hasConflict(useStatements, alias)) {
-                vscode.window.setStatusBarMessage(`$(issue-opened)  This alias is already in use.`, 3000)
-
-                this.insertAsAlias(fqcn, useStatements, declarationLines)
-            } else if (alias !== undefined && alias !== '') {
-                this.insert(fqcn, declarationLines, alias);
-            }
         });
+
+        if (this.hasConflict(useStatements, alias)) {
+            vscode.window.setStatusBarMessage(`$(issue-opened)  This alias is already in use.`, 3000)
+
+            this.insertAsAlias(fqcn, useStatements, declarationLines)
+        } else if (alias !== undefined && alias !== '') {
+            this.insert(fqcn, declarationLines, alias);
+        }
     }
 
     async expandCommand(selection) {
