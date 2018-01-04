@@ -10,9 +10,11 @@ module.exports = class Resolver {
         }
 
         if (/\\/.test(resolving)) {
-            await this.expandClass(selection, resolving.match(/(\w+)/g).pop());
+            this.expandClass(selection, resolving.match(/(\w+)/g).pop());
+
             await this.activeEditor().document.save();
-            await this.importClass(resolving);
+
+            this.importClass(resolving);
             return;
         }
 
@@ -20,7 +22,7 @@ module.exports = class Resolver {
         let namespaces = await this.findNamespaces(resolving, files);
         let fqcn = await this.pickClass(namespaces);
 
-        this.importClass(fqcn, resolving);
+        this.importClass(fqcn);
     }
 
     importClass(fqcn) {
