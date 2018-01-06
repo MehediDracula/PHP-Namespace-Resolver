@@ -14,7 +14,7 @@ module.exports = class Resolver {
         }
 
         if (/\\/.test(resolving)) {
-            this.expandClass(selection, resolving.match(/(\w+)/g).pop());
+            this.changeSelectedClass(selection, resolving.match(/(\w+)/g).pop());
 
             await this.activeEditor.document.save();
 
@@ -91,10 +91,10 @@ module.exports = class Resolver {
         let namespaces = await this.findNamespaces(resolving, files);
         let fqcn = await this.pickClass(namespaces);
 
-        this.expandClass(selection, fqcn, true);
+        this.changeSelectedClass(selection, fqcn, true);
     }
 
-    expandClass(selection, fqcn, prependBackslash = false) {
+    changeSelectedClass(selection, fqcn, prependBackslash = false) {
         this.activeEditor.edit(textEdit => {
             textEdit.replace(
                 this.activeEditor.document.getWordRangeAtPosition(selection.active),
