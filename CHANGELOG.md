@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.9.7] - 2018-01-07
+### Added
+- Automatically replace selected class when alias is chosen
+
 ## [0.9.4] - 2018-01-04
 ### Added
 - Bring back context menus
