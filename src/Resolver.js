@@ -2,7 +2,7 @@ const vscode = require('vscode');
 
 module.exports = class Resolver {
     constructor() {
-        this.activeEditor = vscode.window.activeTextEditor;;
+        this.activeEditor = vscode.window.activeTextEditor;
     }
 
     async importCommand(selection) {
@@ -13,23 +13,22 @@ module.exports = class Resolver {
             return;
         }
 
+        let fqcn;
+        let replaceClassAfterImport = false;
+
         if (/\\/.test(resolving)) {
-            this.changeSelectedClass(selection, resolving.match(/(\w+)/g).pop());
-
-            await this.activeEditor.document.save();
-
-            this.importClass(resolving);
-            return;
+            fqcn = resolving;
+            replaceClassAfterImport = true;
+        } else {
+            let files = await this.findFiles();
+            let namespaces = await this.findNamespaces(resolving, files);
+            fqcn = await this.pickClass(namespaces);
         }
 
-        let files = await this.findFiles();
-        let namespaces = await this.findNamespaces(resolving, files);
-        let fqcn = await this.pickClass(namespaces);
-
-        this.importClass(fqcn);
+        this.importClass(selection, fqcn, replaceClassAfterImport);
     }
 
-    importClass(fqcn) {
+    importClass(selection, fqcn, replaceClassAfterImport = false) {
         let useStatements, declarationLines;
 
         try {
@@ -39,20 +38,24 @@ module.exports = class Resolver {
             return;
         }
 
-        if (this.hasConflict(useStatements, fqcn.match(/(\w+)/g).pop())) {
-            this.insertAsAlias(fqcn, useStatements, declarationLines);
+        let classBaseName = fqcn.match(/(\w+)/g).pop();
+
+        if (this.hasConflict(useStatements, classBaseName)) {
+            this.insertAsAlias(selection, fqcn, useStatements, declarationLines);
+        } else if (replaceClassAfterImport) {
+            this.importAndReplaceSelectedClass(selection, classBaseName, fqcn, declarationLines);
         } else {
             this.insert(fqcn, declarationLines);
         }
     }
 
-    async insert(pickedClass, declarationLines, alias = null) {
+    async insert(fqcn, declarationLines, alias = null) {
         let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
 
         this.activeEditor.edit(textEdit => {
             textEdit.replace(
                 new vscode.Position((insertLine), 0),
-                (`${prepend}use ${pickedClass}`) + (alias !== null ? ` as ${alias}` : '') + (`;${append}`)
+                (`${prepend}use ${fqcn}`) + (alias !== null ? ` as ${alias}` : '') + (`;${append}`)
             );
         });
 
@@ -65,7 +68,7 @@ module.exports = class Resolver {
         this.showMessage('$(check)  Class imported.');
     }
 
-    async insertAsAlias(fqcn, useStatements, declarationLines) {
+    async insertAsAlias(selection, fqcn, useStatements, declarationLines) {
         let alias = await vscode.window.showInputBox({
             placeHolder: 'Enter an alias'
         });
@@ -73,10 +76,18 @@ module.exports = class Resolver {
         if (this.hasConflict(useStatements, alias)) {
             vscode.window.setStatusBarMessage(`$(issue-opened)  This alias is already in use.`, 3000)
 
-            this.insertAsAlias(fqcn, useStatements, declarationLines)
+            this.insertAsAlias(selection, fqcn, useStatements, declarationLines)
         } else if (alias !== undefined && alias !== '') {
-            this.insert(fqcn, declarationLines, alias);
+            this.importAndReplaceSelectedClass(selection, alias, fqcn, declarationLines, alias);
         }
+    }
+
+    async importAndReplaceSelectedClass(selection, replacingClassName, fqcn, declarationLines, alias = null) {
+        this.changeSelectedClass(selection, replacingClassName, false);
+
+        await this.activeEditor.document.save();
+
+        this.insert(fqcn, declarationLines, alias);
     }
 
     async expandCommand(selection) {
