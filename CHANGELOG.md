@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.9.8] - 2018-01-09
+### Added
+- Fix: extension not working on other tab
+
 ## [0.9.7] - 2018-01-07
 ### Added
 - Automatically replace selected class when alias is chosen
