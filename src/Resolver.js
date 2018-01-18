@@ -176,7 +176,7 @@ module.exports = class Resolver {
                 let textLine = docs[i].lineAt(line).text;
 
                 if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
-                    let fqcn = `${textLine.match(/^namespace\s+(.+)?;/).pop()}\\${resolving}`;
+                    let fqcn = `${textLine.match(/^(namespace|(<\?php namespace))\s+(.+)?;/).pop()}\\${resolving}`;
 
                     if (parsedNamespaces.indexOf(fqcn) === -1) {
                         parsedNamespaces.push(fqcn);
