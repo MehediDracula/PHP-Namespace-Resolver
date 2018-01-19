@@ -1,9 +1,13 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [0.9.9] - 2018-01-19
+### Fix
+- Extension is not working when namespace is in the first line alongside the php tag [#18](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/19)
+
 ## [0.9.8] - 2018-01-09
-### Added
-- Fix: extension not working on other tab
+### Fix
+- Extension isnot working on other tab
 
 ## [0.9.7] - 2018-01-07
 ### Added
