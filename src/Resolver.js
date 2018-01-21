@@ -16,7 +16,7 @@ module.exports = class Resolver {
             fqcn = resolving;
             replaceClassAfterImport = true;
         } else {
-            let files = await this.findFiles();
+            let files = await this.findFiles(resolving);
             let namespaces = await this.findNamespaces(resolving, files);
             fqcn = await this.pickClass(namespaces);
         }
@@ -121,8 +121,8 @@ module.exports = class Resolver {
         this.showMessage('$(check)  Imports sorted.');
     }
 
-    findFiles() {
-        return vscode.workspace.findFiles('**/*.php', this.config('exclude'));
+    findFiles(resolving) {
+        return vscode.workspace.findFiles(`**/${resolving}.php`, this.config('exclude'));
     }
 
     findNamespaces(resolving, files) {
