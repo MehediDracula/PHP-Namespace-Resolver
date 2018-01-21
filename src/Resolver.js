@@ -139,7 +139,10 @@ module.exports = class Resolver {
 
     pickClass(namespaces) {
         return new Promise((resolve, reject) => {
-            if (namespaces.length === 1) {
+            if (namespaces.length == 0) {
+                this.showMessage(`Class does not exists.`, true);
+                return resolve();
+            } else if (namespaces.length === 1) {
                 // only one namespace found so no need to show picker.
                 return resolve(namespaces[0]);
             }
@@ -186,7 +189,7 @@ module.exports = class Resolver {
             }
         }
 
-        if (parsedNamespaces.length === 0) {
+        if (parsedNamespaces.length === 0 && docs.length > 0) {
             parsedNamespaces.push(resolving);
         }
 
