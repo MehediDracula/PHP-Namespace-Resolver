@@ -2,10 +2,6 @@
 
 PHP Namespace Resolver can import and expand and your class. You can also sort your imports by line length or in alphabetical order.
 
-# Install
-
-Press <kbd>ctrl+p</kbd> in VS Code, then type `ext install php-namespace-resolver`
-
 ## Demo
 
 ![](https://i.imgur.com/upEGtPa.gif)
