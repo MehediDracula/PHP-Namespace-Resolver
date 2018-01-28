@@ -95,7 +95,7 @@ module.exports = class Resolver {
             return;
         }
 
-        let files = await this.findFiles();
+        let files = await this.findFiles(resolving);
         let namespaces = await this.findNamespaces(resolving, files);
         let fqcn = await this.pickClass(namespaces);
 
@@ -205,6 +205,7 @@ module.exports = class Resolver {
             parsedNamespaces.push(resolving);
         }
 
+        console.log(parsedNamespaces);
         return parsedNamespaces;
     }
 
