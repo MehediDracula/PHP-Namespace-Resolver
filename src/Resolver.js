@@ -179,7 +179,8 @@ module.exports = class Resolver {
                 let textLine = docs[i].lineAt(line).text;
 
                 if (textLine.startsWith('namespace ') || textLine.startsWith('<?php namespace ')) {
-                    let fqcn = `${textLine.match(/^(namespace|(<\?php namespace))\s+(.+)?;/).pop()}\\${resolving}`;
+                    let namespace = textLine.match(/^(namespace|(<\?php namespace))\s+(.+)?;/).pop();
+                    let fqcn = `${namespace}\\${resolving}`;
 
                     if (parsedNamespaces.indexOf(fqcn) === -1) {
                         parsedNamespaces.push(fqcn);
@@ -189,6 +190,14 @@ module.exports = class Resolver {
             }
         }
 
+        // If selected text is a built-in php class add that at the beginning.
+        if (classes.indexOf(resolving) !== -1) {
+            parsedNamespaces.unshift(resolving);
+        }
+
+        // If namespace couldn't parsed but there is a file with the same
+        // name of selected text then assuming it's a global class and
+        // add that in the parsedNamespaces array as a global class.
         if (parsedNamespaces.length === 0 && docs.length > 0) {
             parsedNamespaces.push(resolving);
         }
