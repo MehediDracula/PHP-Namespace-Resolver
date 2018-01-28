@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.0.1] - 2018-01-28
+### Fix
+- Expand command is not working
+
 ## [1.0.0] - 2018-01-28
 ### Added
 - Add built-in php class
