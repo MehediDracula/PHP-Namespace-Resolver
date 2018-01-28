@@ -1,4 +1,5 @@
 const vscode = require('vscode');
+const classes = require('./classes');
 
 module.exports = class Resolver {
     async importCommand(selection) {
@@ -132,6 +133,11 @@ module.exports = class Resolver {
             Promise.all(textDocuments).then(docs => {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
 
+                if (parsedNamespaces.length === 0) {
+                    this.showMessage(`$(circle-slash)  Class does not exists.`, true);
+                    return;
+                }
+
                 resolve(parsedNamespaces);
             });
         });
@@ -139,11 +145,8 @@ module.exports = class Resolver {
 
     pickClass(namespaces) {
         return new Promise((resolve, reject) => {
-            if (namespaces.length == 0) {
-                this.showMessage(`Class does not exists.`, true);
-                return resolve();
-            } else if (namespaces.length === 1) {
-                // only one namespace found so no need to show picker.
+            if (namespaces.length === 1) {
+                // Only one namespace found so no need to show picker.
                 return resolve(namespaces[0]);
             }
 
@@ -317,7 +320,7 @@ module.exports = class Resolver {
         let wordRange = this.activeEditor().document.getWordRangeAtPosition(selection.active);
 
         if (wordRange === undefined) {
-            return null;
+            return;
         }
 
         return this.activeEditor().document.getText(wordRange);
