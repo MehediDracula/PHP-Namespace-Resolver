@@ -1,9 +1,15 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.0.0] - 2018-01-28
+### Added
+- Add built-in php class
+### Changed
+- Do not import classes that does not exists [#20](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/20)
+
 ## [0.9.9] - 2018-01-19
 ### Fix
-- Extension is not working when namespace is in the first line alongside the php tag [#18](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/19)
+- Extension is not working when namespace is in the first line alongside the php tag [#19](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/19)
 
 ## [0.9.8] - 2018-01-09
 ### Fix
@@ -15,7 +21,7 @@ All notable changes to the "php-namespace-resolver" extension will be documented
 
 ## [0.9.4] - 2018-01-04
 ### Added
-- Bring back context menus
+- Bring back the context menus
 
 ## [0.9.4] - 2018-01-04
 ### Added
