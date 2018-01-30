@@ -14,7 +14,7 @@ PHP Namespace Resolver can import and expand and your class. You can also sort y
 
 Search these commands by the title on command palette.
 
-```json
+```javascript
 [
     {
         "title": "Import Class",
@@ -35,7 +35,7 @@ Search these commands by the title on command palette.
 
 You can override these default settings according to your needs.
 
-```json
+```javascript
 {
     "namespaceResolver.exclude": "**/node_modules/**",  // Exclude glob pattern while finding files
     "namespaceResolver.showMessageOnStatusBar": false,  // Show message on status bar instead of notification box
@@ -49,7 +49,7 @@ You can override these default settings according to your needs.
 
 You can override these default keybindings on your `keybindings.json`.
 
-```json
+```javascript
 [
     {
         "command": "namespaceResolver.import",
@@ -71,7 +71,6 @@ You can override these default keybindings on your `keybindings.json`.
 
 ## Author
 
-- [Mehedi Hassan](https://www.facebook.com/MehediDracula)
 - [@MehediDracula](https://twitter.com/MehediDracula)
 
 ## License
