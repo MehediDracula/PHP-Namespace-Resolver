@@ -226,7 +226,6 @@ module.exports = class Resolver {
         if (parsedNamespaces.length === 0 && docs.length > 0) {
             parsedNamespaces.push(resolving);
         }
-
       
         return parsedNamespaces;
     }
@@ -272,8 +271,6 @@ module.exports = class Resolver {
 
         return false;
     }
-
-
 
     getDeclarations(pickedClass = null) {
         let useStatements = [];
