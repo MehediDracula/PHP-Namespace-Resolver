@@ -82,7 +82,6 @@ module.exports = class Resolver {
     }
 
     async replaceUseStatement(fqcn, useStatements) {
-      
         let useStatement = useStatements.find(use => {
             let className = use.text.match(/(\w+)?;/).pop();
             return fqcn.endsWith(className); 
