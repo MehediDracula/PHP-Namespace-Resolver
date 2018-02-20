@@ -67,7 +67,7 @@ module.exports = class Resolver {
 
     async insertAsAlias(selection, fqcn, useStatements, declarationLines) {
         let alias = await vscode.window.showInputBox({
-            placeHolder: 'Enter an alias'
+            placeHolder: 'Enter an alias or leave it empty to replace'
         });
 
         if (this.hasConflict(useStatements, alias)) {
@@ -76,7 +76,29 @@ module.exports = class Resolver {
             this.insertAsAlias(selection, fqcn, useStatements, declarationLines)
         } else if (alias !== undefined && alias !== '') {
             this.importAndReplaceSelectedClass(selection, alias, fqcn, declarationLines, alias);
+        } else if (alias === '') {
+            this.replaceUseStatement(fqcn, useStatements);
         }
+    }
+
+    async replaceUseStatement(fqcn, useStatements) {
+        let useStatement = useStatements.find(use => {
+            let className = use.text.match(/(\w+)?;/).pop();
+            return fqcn.endsWith(className); 
+        });
+
+        this.activeEditor().edit(textEdit => {
+            textEdit.replace(
+                new vscode.Range(useStatement.line, 0, useStatement.line, useStatement.text.length),
+                `use ${fqcn}` + `;`
+            );
+        });
+
+        await this.activeEditor().document.save();
+
+        if (this.config('autoSort')) {
+            this.sortImports();
+        } 
     }
 
     async importAndReplaceSelectedClass(selection, replacingClassName, fqcn, declarationLines, alias = null) {
@@ -204,8 +226,7 @@ module.exports = class Resolver {
         if (parsedNamespaces.length === 0 && docs.length > 0) {
             parsedNamespaces.push(resolving);
         }
-
-        console.log(parsedNamespaces);
+      
         return parsedNamespaces;
     }
 
