@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.0.2] - 2018-02-20
+### Added
+- Allow replacing use statement [#24](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/24)
+
 ## [1.0.1] - 2018-01-28
 ### Fix
 - Expand command is not working
