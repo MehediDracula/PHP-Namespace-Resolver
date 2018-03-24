@@ -244,6 +244,10 @@ module.exports = class Resolver {
                 if (a.text.toLowerCase() > b.text.toLowerCase()) return 1;
                 return 0;
             } else {
+                if (a.text.length == b.text.length) {
+                    if (a.text.toLowerCase() < b.text.toLowerCase()) return -1;
+                    if (a.text.toLowerCase() > b.text.toLowerCase()) return 1;
+                }
                 return a.text.length - b.text.length;
             }
         });
