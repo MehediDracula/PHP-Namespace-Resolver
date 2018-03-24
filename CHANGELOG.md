@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.0.3] - 2018-03-24
+### Fixed
+- Add alphabetical fallback when imports are the same length [#25](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/25)
+
 ## [1.0.2] - 2018-02-20
 ### Added
 - Allow replacing use statement [#24](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/24)
