@@ -4,7 +4,7 @@
 )](https://marketplace.visualstudio.com/items?itemName=MehediDracula.php-namespace-resolver) [![Installs](https://vsmarketplacebadge.apphb.com/installs-short/MehediDracula.php-namespace-resolver.svg
 )](https://marketplace.visualstudio.com/items?itemName=MehediDracula.php-namespace-resolver) [![Rating](https://vsmarketplacebadge.apphb.com/rating-short/MehediDracula.php-namespace-resolver.svg)](https://marketplace.visualstudio.com/items?itemName=MehediDracula.php-namespace-resolver#review-details)
 
-PHP Namespace Resolver can import and expand and your class. You can also sort your imports by line length or in alphabetical order.
+PHP Namespace Resolver can import and expand your class. You can also sort your imported classes by line length or in alphabetical order.
 
 ## Demo
 
