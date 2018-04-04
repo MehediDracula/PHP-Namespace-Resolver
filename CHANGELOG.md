@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.0.5] - 2018-03-24
+### Changed
+- Don't move cursor after expanding class
+- Don't wait before autosorting and replacing selected class
+
 ## [1.0.3] - 2018-03-24
 ### Fixed
 - Add alphabetical fallback when imports are the same length [#25](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/25)
