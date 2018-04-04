@@ -49,7 +49,7 @@ module.exports = class Resolver {
     async insert(fqcn, declarationLines, alias = null) {
         let [prepend, append, insertLine] = this.getInsertLine(declarationLines);
 
-        this.activeEditor().edit(textEdit => {
+        await this.activeEditor().edit(textEdit => {
             textEdit.replace(
                 new vscode.Position((insertLine), 0),
                 (`${prepend}use ${fqcn}`) + (alias !== null ? ` as ${alias}` : '') + (`;${append}`)
@@ -57,8 +57,6 @@ module.exports = class Resolver {
         });
 
         if (this.config('autoSort')) {
-            await this.activeEditor().document.save();
-
             this.sortImports();
         }
 
@@ -84,27 +82,24 @@ module.exports = class Resolver {
     async replaceUseStatement(fqcn, useStatements) {
         let useStatement = useStatements.find(use => {
             let className = use.text.match(/(\w+)?;/).pop();
-            return fqcn.endsWith(className); 
+
+            return fqcn.endsWith(className);
         });
 
-        this.activeEditor().edit(textEdit => {
+        await this.activeEditor().edit(textEdit => {
             textEdit.replace(
                 new vscode.Range(useStatement.line, 0, useStatement.line, useStatement.text.length),
                 `use ${fqcn}` + `;`
             );
         });
 
-        await this.activeEditor().document.save();
-
         if (this.config('autoSort')) {
             this.sortImports();
-        } 
+        }
     }
 
     async importAndReplaceSelectedClass(selection, replacingClassName, fqcn, declarationLines, alias = null) {
-        this.changeSelectedClass(selection, replacingClassName, false);
-
-        await this.activeEditor().document.save();
+        await this.changeSelectedClass(selection, replacingClassName, false);
 
         this.insert(fqcn, declarationLines, alias);
     }
@@ -230,7 +225,7 @@ module.exports = class Resolver {
         if (parsedNamespaces.length === 0 && docs.length > 0) {
             parsedNamespaces.push(resolving);
         }
-      
+
         return parsedNamespaces;
     }
 
