@@ -124,13 +124,17 @@ module.exports = class Resolver {
         this.changeSelectedClass(selection, fqcn, true);
     }
 
-    changeSelectedClass(selection, fqcn, prependBackslash = false) {
-        this.activeEditor().edit(textEdit => {
+    async changeSelectedClass(selection, fqcn, prependBackslash = false) {
+        await this.activeEditor().edit(textEdit => {
             textEdit.replace(
                 this.activeEditor().document.getWordRangeAtPosition(selection.active),
                 (prependBackslash && this.config('leadingSeparator') ? '\\' : '') + fqcn
             );
         });
+
+        let newPosition = new vscode.Position(selection.active.line, selection.active.character);
+
+        this.activeEditor().selection = new vscode.Selection(newPosition, newPosition);
     }
 
     sortCommand() {
