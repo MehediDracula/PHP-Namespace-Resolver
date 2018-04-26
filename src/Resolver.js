@@ -5,7 +5,7 @@ module.exports = class Resolver {
     async importCommand(selection) {
         let resolving = this.resolving(selection);
 
-        if (resolving === null) {
+        if (resolving === undefined) {
             this.showMessage(`$(issue-opened)  No class is selected.`, true);
             return;
         }
@@ -19,6 +19,7 @@ module.exports = class Resolver {
         } else {
             let files = await this.findFiles(resolving);
             let namespaces = await this.findNamespaces(resolving, files);
+
             fqcn = await this.pickClass(namespaces);
         }
 
