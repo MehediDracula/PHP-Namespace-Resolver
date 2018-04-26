@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.0.6] - 2018-04-26
+### Fixed
+- Escaping from alias import box not working
+- No class is selected warning is not showing
+
 ## [1.0.5] - 2018-03-24
 ### Changed
 - Don't move cursor after expanding class
