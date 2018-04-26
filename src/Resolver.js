@@ -69,11 +69,15 @@ module.exports = class Resolver {
             placeHolder: 'Enter an alias or leave it empty to replace'
         });
 
+        if (alias === undefined) {
+            return;
+        }
+
         if (this.hasConflict(useStatements, alias)) {
             vscode.window.setStatusBarMessage(`$(issue-opened)  This alias is already in use.`, 3000)
 
             this.insertAsAlias(selection, fqcn, useStatements, declarationLines)
-        } else if (alias !== undefined && alias !== '') {
+        } else if (alias !== '') {
             this.importAndReplaceSelectedClass(selection, alias, fqcn, declarationLines, alias);
         } else if (alias === '') {
             this.replaceUseStatement(fqcn, useStatements);
@@ -90,7 +94,7 @@ module.exports = class Resolver {
         await this.activeEditor().edit(textEdit => {
             textEdit.replace(
                 new vscode.Range(useStatement.line, 0, useStatement.line, useStatement.text.length),
-                `use ${fqcn}` + `;`
+                `use ${fqcn};`
             );
         });
 
