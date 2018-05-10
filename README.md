@@ -40,6 +40,7 @@ You can override these default settings according to your needs.
     "namespaceResolver.exclude": "**/node_modules/**",  // Exclude glob pattern while finding files
     "namespaceResolver.showMessageOnStatusBar": false,  // Show message on status bar instead of notification box
     "namespaceResolver.autoSort": true,                 // Auto sort after imports
+    "namespaceResolver.sortOnSave": true,               // Auto sort when a file is saved
     "namespaceResolver.sortAlphabetically": false,      // Sort imports in alphabetical order instead of line length
     "namespaceResolver.leadingSeparator": true          // Expand class with leading namespace separator
 }

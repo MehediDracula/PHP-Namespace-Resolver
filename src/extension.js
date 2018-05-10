@@ -28,6 +28,15 @@ function activate(context) {
         vscode.commands.registerCommand('namespaceResolver.sort', () => resolver.sortCommand())
     );
 
+    context.subscriptions.push(vscode.workspace.onWillSaveTextDocument((event) => {
+        if (
+            event.document.languageId === 'php' &&
+            vscode.workspace.getConfiguration('namespaceResolver').get('sortOnSave')
+        ) {
+            resolver.sortCommand();
+        }
+    }));
+
     context.subscriptions.push(resolver);
 }
 

@@ -73,6 +73,11 @@
                     "default": true,
                     "description": "Auto sort after imports"
                 },
+                "namespaceResolver.sortOnSave": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Auto sort when a file is saved"
+                },
                 "namespaceResolver.sortAlphabetically": {
                     "type": "boolean",
                     "default": false,
