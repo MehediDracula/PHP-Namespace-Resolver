@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.0.7] - 2018-05-10
+### Added
+- New config for auto sorting when a file is saved
+
 ## [1.0.6] - 2018-04-26
 ### Fixed
 - Escaping from alias import box not working
