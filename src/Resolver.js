@@ -241,8 +241,8 @@ module.exports = class Resolver {
         if (useStatements.length <= 1) {
             throw new Error('$(issue-opened)  Nothing to sort.');
             return;
-        }       
-        
+        }
+
         let sortFunction = (a, b) => {
             if (this.config('sortAlphabetically')) {
                 if (a.text.toLowerCase() < b.text.toLowerCase()) return -1;
