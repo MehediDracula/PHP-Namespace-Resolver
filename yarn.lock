@@ -1024,6 +1024,10 @@ multipipe@^0.1.2:
   dependencies:
     duplexer2 "0.0.2"
 
+node-natural-sort@^0.8.6:
+  version "0.8.6"
+  resolved "https://registry.yarnpkg.com/node-natural-sort/-/node-natural-sort-0.8.6.tgz#01dc6badc4743b16033408f0d8589ab2e6c094cf"
+
 node.extend@~1.1.2:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/node.extend/-/node.extend-1.1.6.tgz#a7b882c82d6c93a4863a5504bd5de8ec86258b96"

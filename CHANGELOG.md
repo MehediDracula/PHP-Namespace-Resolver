@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.0.9] - 2018-05-21
+### Added
+- Add natural sorting option [#29](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/29)
+
 ## [1.0.7] - 2018-05-10
 ### Added
 - New config for auto sorting when a file is saved
