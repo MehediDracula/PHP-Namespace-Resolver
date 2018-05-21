@@ -83,6 +83,11 @@
                     "default": false,
                     "description": "Sort imports in alphabetical order instead of line length"
                 },
+                "namespaceResolver.sortNatural": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Sort imports using a 'natural order' algorithm"
+                },
                 "namespaceResolver.leadingSeparator": {
                     "type": "boolean",
                     "default": true,
@@ -134,5 +139,8 @@
     },
     "devDependencies": {
         "vscode": "^1.0.0"
+    },
+    "dependencies": {
+        "node-natural-sort": "^0.8.6"
     }
 }

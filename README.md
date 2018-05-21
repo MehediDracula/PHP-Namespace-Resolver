@@ -42,6 +42,7 @@ You can override these default settings according to your needs.
     "namespaceResolver.autoSort": true,                 // Auto sort after imports
     "namespaceResolver.sortOnSave": false,              // Auto sort when a file is saved
     "namespaceResolver.sortAlphabetically": false,      // Sort imports in alphabetical order instead of line length
+    "namespaceResolver.sortNatural": false,             // Sort imports using a 'natural order' algorithm
     "namespaceResolver.leadingSeparator": true          // Expand class with leading namespace separator
 }
 ```

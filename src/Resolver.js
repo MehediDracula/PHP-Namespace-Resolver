@@ -1,5 +1,6 @@
 const vscode = require('vscode');
 const classes = require('./classes');
+const naturalSort = require('node-natural-sort');
 
 module.exports = class Resolver {
     async importCommand(selection) {
@@ -242,7 +243,7 @@ module.exports = class Resolver {
             return;
         }
 
-        let sorted = useStatements.slice().sort((a, b) => {
+        let sortFunction = (a, b) => {
             if (this.config('sortAlphabetically')) {
                 if (a.text.toLowerCase() < b.text.toLowerCase()) return -1;
                 if (a.text.toLowerCase() > b.text.toLowerCase()) return 1;
@@ -254,7 +255,19 @@ module.exports = class Resolver {
                 }
                 return a.text.length - b.text.length;
             }
-        });
+        }
+
+        if (this.config('sortNatural')) {
+            let natsort = naturalSort({
+                caseSensitive: true,
+                order: this.config('sortAlphabetically') ? 'ASC' : 'DESC'
+            });
+            sortFunction = (a, b) => {
+                return natsort(a.text, b.text);
+            };
+        }
+
+        let sorted = useStatements.slice().sort(sortFunction);
 
         this.activeEditor().edit(textEdit => {
             for (let i = 0; i < sorted.length; i++) {
