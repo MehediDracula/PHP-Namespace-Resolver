@@ -1,5 +1,5 @@
-const vscode = require('vscode');
-const Resolver = require('./Resolver');
+let vscode = require('vscode');
+let Resolver = require('./Resolver');
 
 function activate(context) {
     let resolver = new Resolver;

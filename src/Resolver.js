@@ -1,8 +1,8 @@
-const vscode = require('vscode');
-const classes = require('./classes');
-const naturalSort = require('node-natural-sort');
+let vscode = require('vscode');
+let builtInClasses = require('./classes');
+let naturalSort = require('node-natural-sort');
 
-module.exports = class Resolver {
+class Resolver {
     async importCommand(selection) {
         let resolving = this.resolving(selection);
 
@@ -62,7 +62,7 @@ module.exports = class Resolver {
             this.sortImports();
         }
 
-        this.showMessage('$(check)  Class imported.');
+        this.showMessage('$(check)  The class is imported.');
     }
 
     async insertAsAlias(selection, fqcn, useStatements, declarationLines) {
@@ -146,7 +146,7 @@ module.exports = class Resolver {
             return;
         }
 
-        this.showMessage('$(check)  Imports sorted.');
+        this.showMessage('$(check)  Imports are sorted.');
     }
 
     findFiles(resolving) {
@@ -161,7 +161,7 @@ module.exports = class Resolver {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
 
                 if (parsedNamespaces.length === 0) {
-                    this.showMessage(`$(circle-slash)  Class does not exists.`, true);
+                    this.showMessage(`$(circle-slash)  The class is not found.`, true);
                     return;
                 }
 
@@ -221,11 +221,11 @@ module.exports = class Resolver {
         }
 
         // If selected text is a built-in php class add that at the beginning.
-        if (classes.indexOf(resolving) !== -1) {
+        if (builtInClasses.indexOf(resolving) !== -1) {
             parsedNamespaces.unshift(resolving);
         }
 
-        // If namespace couldn't parsed but there is a file with the same
+        // If namespace can't be parsed but there is a file with the same
         // name of selected text then assuming it's a global class and
         // add that in the parsedNamespaces array as a global class.
         if (parsedNamespaces.length === 0 && docs.length > 0) {
@@ -306,7 +306,7 @@ module.exports = class Resolver {
             let text = this.activeEditor().document.lineAt(line).text;
 
             if (pickedClass !== null && text === `use ${pickedClass};`) {
-                throw new Error('$(issue-opened)  Class already imported.');
+                throw new Error('$(issue-opened)  The class is already imported.');
             }
 
             // break if all declarations were found.
@@ -388,3 +388,5 @@ module.exports = class Resolver {
         }
     }
 }
+
+module.exports = Resolver;
