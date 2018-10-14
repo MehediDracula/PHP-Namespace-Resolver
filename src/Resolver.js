@@ -7,8 +7,7 @@ class Resolver {
         let resolving = this.resolving(selection);
 
         if (resolving === undefined) {
-            this.showMessage(`$(issue-opened)  No class is selected.`, true);
-            return;
+            return this.showErrorMessage(`$(issue-opened)  No class is selected.`);
         }
 
         let fqcn;
@@ -102,8 +101,7 @@ class Resolver {
         try {
             [useStatements, declarationLines] = this.getDeclarations(fqcn);
         } catch (error) {
-            this.showMessage(error.message, true);
-            return;
+            return this.showErrorMessage(error.message);
         }
 
         let classBaseName = fqcn.match(/(\w+)/g).pop();
@@ -144,7 +142,7 @@ class Resolver {
         }
 
         if (this.hasConflict(useStatements, alias)) {
-            vscode.window.setStatusBarMessage(`$(issue-opened)  This alias is already in use.`, 3000)
+            this.showErrorMessage(`$(issue-opened)  This alias is already in use.`);
 
             this.insertAsAlias(selection, fqcn, useStatements, declarationLines)
         } else if (alias !== '') {
@@ -183,8 +181,7 @@ class Resolver {
         let resolving = this.resolving(selection);
 
         if (resolving === null) {
-            this.showMessage(`$(issue-opened)  No class is selected.`, true);
-            return;
+            return this.showErrorMessage(`$(issue-opened)  No class is selected.`);
         }
 
         let files = await this.findFiles(resolving);
@@ -211,8 +208,7 @@ class Resolver {
         try {
             this.sortImports();
         } catch (error) {
-            this.showMessage(error.message, true);
-            return;
+            return this.showErrorMessage(error.message);
         }
 
         this.showMessage('$(check)  Imports are sorted.');
@@ -230,8 +226,7 @@ class Resolver {
                 let parsedNamespaces = this.parseNamespaces(docs, resolving);
 
                 if (parsedNamespaces.length === 0) {
-                    this.showMessage(`$(circle-slash)  The class is not found.`, true);
-                    return;
+                    return this.showErrorMessage(`$(circle-slash)  The class is not found.`);
                 }
 
                 resolve(parsedNamespaces);
@@ -281,7 +276,7 @@ class Resolver {
                     let namespace = textLine.match(/^(namespace|(<\?php namespace))\s+(.+)?;/).pop();
                     let fqcn = `${namespace}\\${resolving}`;
 
-                    if (parsedNamespaces.indexOf(fqcn) === -1) {
+                    if (! parsedNamespaces.includes(fqcn)) {
                         parsedNamespaces.push(fqcn);
                         break;
                     }
@@ -290,7 +285,7 @@ class Resolver {
         }
 
         // If selected text is a built-in php class add that at the beginning.
-        if (builtInClasses.indexOf(resolving) !== -1) {
+        if (builtInClasses.includes(resolving)) {
             parsedNamespaces.unshift(resolving);
         }
 
@@ -309,7 +304,6 @@ class Resolver {
 
         if (useStatements.length <= 1) {
             throw new Error('$(issue-opened)  Nothing to sort.');
-            return;
         }
 
         let sortFunction = (a, b) => {
@@ -322,6 +316,7 @@ class Resolver {
                     if (a.text.toLowerCase() < b.text.toLowerCase()) return -1;
                     if (a.text.toLowerCase() > b.text.toLowerCase()) return 1;
                 }
+
                 return a.text.length - b.text.length;
             }
         }
@@ -331,6 +326,7 @@ class Resolver {
                 caseSensitive: true,
                 order: this.config('sortAlphabetically') ? 'ASC' : 'DESC'
             });
+
             sortFunction = (a, b) => {
                 return natsort(a.text, b.text);
             };
@@ -393,8 +389,6 @@ class Resolver {
                 declarationLines.useStatement = line + 1;
             } else if (/(class|trait|interface)\s+\w+/.test(text)) {
                 declarationLines.class = line + 1;
-            } else {
-                continue;
             }
         }
 
@@ -448,8 +442,7 @@ class Resolver {
 
     showMessage(message, error = false) {
         if (this.config('showMessageOnStatusBar')) {
-            vscode.window.setStatusBarMessage(message, 3000);
-            return;
+            return vscode.window.setStatusBarMessage(message, 3000);
         }
 
         message = message.replace(/\$\(.+?\)\s\s/, '');
@@ -459,6 +452,10 @@ class Resolver {
         } else {
             vscode.window.showInformationMessage(message);
         }
+    }
+
+    showErrorMessage(message) {
+        this.showMessage(message, true);
     }
 }
 
