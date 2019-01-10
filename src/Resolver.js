@@ -27,6 +27,38 @@ class Resolver {
         this.importClass(selection, fqcn, replaceClassAfterImport);
     }
 
+    async importAll() {
+        let phpClasses = [];
+        for (let line = 0; line < this.activeEditor().document.lineCount; line++) {
+            let text = this.activeEditor().document.lineAt(line).text;
+            let matches = [];
+            // get those what starts with extends keyword
+            matches = text.match(/extends\s([\S]*)/);   // class Foo extends Bar
+            if (matches && matches[1]) {
+                phpClasses.push(matches[1]);
+                continue;
+            }
+            // get from function parameter declarations
+            matches = text.match(/function [\S]+\((.*)\)/); // public function wizard(Wov $wov, Ahh $ahh)
+            if (matches && matches[1]) {
+                matches = matches[1].split(', ');
+                for (let s of matches) {
+                    let phpClassName = s.substr(0, s.indexOf(' '));
+                    if (phpClassName && /[A-Z]/.test(phpClassName[0])) {    //starts with capital letter
+                        phpClasses.push(phpClassName);
+                    }
+                }
+                continue;
+            }
+
+        }
+        phpClasses = phpClasses.filter((v, i, a) => a.indexOf(v) === i);    // get unique class names only
+
+        for (let phpClass of phpClasses) {
+            this.importCommand(phpClass);
+        }
+    }
+
     importClass(selection, fqcn, replaceClassAfterImport = false) {
         let useStatements, declarationLines;
 
@@ -360,6 +392,10 @@ class Resolver {
     }
 
     resolving(selection) {
+        if ((typeof selection) == 'string') {
+            return selection;
+        }
+
         let wordRange = this.activeEditor().document.getWordRangeAtPosition(selection.active);
 
         if (wordRange === undefined) {
