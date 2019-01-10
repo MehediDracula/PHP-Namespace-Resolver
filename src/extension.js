@@ -15,12 +15,6 @@ function activate(context) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('namespaceResolver.importall', async () => {
-            await resolver.importAll();
-        })
-    );
-
-    context.subscriptions.push(
         vscode.commands.registerCommand('namespaceResolver.expand', async () => {
             let selections = vscode.window.activeTextEditor.selections;
 
