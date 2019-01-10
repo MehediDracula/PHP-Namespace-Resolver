@@ -27,6 +27,8 @@ class Resolver {
         this.importClass(selection, fqcn, replaceClassAfterImport);
     }
 
+    async importAll() {
+    }
     importClass(selection, fqcn, replaceClassAfterImport = false) {
         let useStatements, declarationLines;
 

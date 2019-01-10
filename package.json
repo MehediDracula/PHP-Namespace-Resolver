@@ -27,7 +27,8 @@
         "onLanguage:php",
         "onCommand:namespaceResolver.import",
         "onCommand:namespaceResolver.expand",
-        "onCommand:namespaceResolver.sort"
+        "onCommand:namespaceResolver.sort",
+        "onCommand:namespaceResolver.importall"
     ],
     "main": "./src/extension",
     "icon": "images/icon.png",
@@ -51,6 +52,12 @@
                     "command": "namespaceResolver.sort",
                     "alt": "namespaceResolver.sort",
                     "group": "0_namespace_resolver@3"
+                },
+                {
+                    "when": "resourceLangId == php",
+                    "command": "namespaceResolver.importall",
+                    "alt": "namespaceResolver.importall",
+                    "group": "0_namespace_resolver@4"
                 }
             ]
         },
@@ -107,6 +114,10 @@
             {
                 "title": "Sort Imports",
                 "command": "namespaceResolver.sort"
+            },
+            {
+                "title": "Import All Classes",
+                "command": "namespaceResolver.importall"
             }
         ],
         "keybindings": [
@@ -123,6 +134,11 @@
             {
                 "command": "namespaceResolver.sort",
                 "key": "ctrl+alt+s",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "namespaceResolver.importall",
+                "key": "ctrl+alt+a",
                 "when": "editorTextFocus"
             }
         ]
