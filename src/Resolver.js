@@ -97,9 +97,46 @@ class Resolver {
     }
 
     async highlightNotImported() {
-        // collect classes
-        // collect use statements
+        const text = this.activeEditor().document.getText();
+        const phpClasses = this.getPhpClasses(text);
+        const importedPhpClasses = this.getImportedPhpClasses(text);
+        // get phpClasses not present in importedPhpClasses
+        let notImported = phpClasses.filter(function (phpClass) {
+            return !importedPhpClasses.includes(phpClass);
+        });
         // higlight diff
+        let matches = [];
+        let ranges = [];
+        for (let i = 0; i < notImported.length; i++) {
+            let regex = new RegExp(notImported[i], 'g');
+            while (matches = regex.exec(text)) {
+                let startPos = this.activeEditor().document.positionAt(matches.index);
+                let endPos = this.activeEditor().document.positionAt(matches.index + matches[0].length);
+                ranges.push(new vscode.Range(startPos, endPos));
+            }
+        }
+
+        const decorationType = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(255,0,0, 0.5)',
+            light: {
+                borderColor: 'darkblue'
+            },
+            dark: {
+                borderColor: 'lightblue'
+            }
+        });
+        this.activeEditor().setDecorations(decorationType, ranges);
+    }
+
+    getImportedPhpClasses(text) {
+        let regex = /use (.*);/gm;
+        let matches = [];
+        let importedPhpClasses = [];
+        while (matches = regex.exec(text)) {
+            let className = matches[1].split('\\').pop();
+            importedPhpClasses.push(className);
+        }
+        return importedPhpClasses;
     }
 
     importClass(selection, fqcn, replaceClassAfterImport = false) {
