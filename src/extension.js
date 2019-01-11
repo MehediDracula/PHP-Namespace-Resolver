@@ -32,6 +32,10 @@ function activate(context) {
         vscode.commands.registerCommand('namespaceResolver.importall', () => resolver.importAll())
     );
 
+    context.subscriptions.push(
+        vscode.commands.registerCommand('namespaceResolver.highlightnotimported', () => resolver.highlightNotImported())
+    );
+
     context.subscriptions.push(vscode.workspace.onWillSaveTextDocument((event) => {
         if (
             event.document.languageId === 'php' &&

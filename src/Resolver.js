@@ -94,6 +94,12 @@ class Resolver {
         return phpClasses;
     }
 
+    async highlightNotImported() {
+        // collect classes
+        // collect use statements
+        // higlight diff
+    }
+
     importClass(selection, fqcn, replaceClassAfterImport = false) {
         let useStatements, declarationLines;
 
