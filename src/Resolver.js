@@ -33,7 +33,6 @@ class Resolver {
         let regex = /.*/;
 
         let phpClasses = this.getPhpClasses(text);
-        phpClasses = phpClasses.filter((v, i, a) => a.indexOf(v) === i);    // get unique class names only
 
         for (let phpClass of phpClasses) {
             await this.importCommand(phpClass);
@@ -45,6 +44,9 @@ class Resolver {
         phpClasses = phpClasses.concat(this.getFromFunctionParameters(text));
         phpClasses = phpClasses.concat(this.getInitializedWithNew(text));
         phpClasses = phpClasses.concat(this.getFromStaticCalls(text));
+
+        // get unique class names only
+        phpClasses = phpClasses.filter((v, i, a) => a.indexOf(v) === i);
         return phpClasses;
     }
 
