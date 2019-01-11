@@ -29,9 +29,12 @@ class Resolver {
     async importAll() {
         let text = this.activeEditor().document.getText();
         let phpClasses = this.getPhpClasses(text);
+        let useStatements = this.getUseStatementsArray();
 
         for (let phpClass of phpClasses) {
-            await this.importCommand(phpClass);
+            if (! useStatements.includes(phpClass)) {
+                await this.importCommand(phpClass);
+            }
         }
     }
 
@@ -364,6 +367,24 @@ class Resolver {
         }
 
         return false;
+    }
+
+    getUseStatementsArray() {
+        let useStatements = [];
+
+        for (let line = 0; line < this.activeEditor().document.lineCount; line++) {
+            let text = this.activeEditor().document.lineAt(line).text;
+
+            if (text.startsWith('use ')) {
+                useStatements.push(
+                    text.match(/(\w+?);/)[1]
+                );
+            } else if (/(class|trait|interface)\s+\w+/.test(text)) {
+                break;
+            }
+        }
+
+        return useStatements;
     }
 
     getDeclarations(pickedClass = null) {
