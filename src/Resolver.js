@@ -41,14 +41,14 @@ class Resolver {
     }
 
     getPhpClasses(text) {
-        let phpClasses = this.getExtendedClasses(text);
+        let phpClasses = this.getExtended(text);
         phpClasses = phpClasses.concat(this.getFromFunctionParameters(text));
         phpClasses = phpClasses.concat(this.getInitializedWithNew(text));
         phpClasses = phpClasses.concat(this.getFromStaticCalls(text));
         return phpClasses;
     }
 
-    getExtendedClasses(text) {
+    getExtended(text) {
         let regex = /extends ([A-Z][A-Za-z0-9\-\_]*)/gm;
         let matches = [];
         let phpClasses = [];
