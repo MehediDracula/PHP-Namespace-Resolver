@@ -29,46 +29,69 @@ class Resolver {
 
     async importAll() {
         const text = this.activeEditor().document.getText();
-        let phpClasses = [];
         let matches = [];
         let regex = /.*/;
 
-        // get classes used via the "extends" keyword
-        regex = /extends ([A-Z][A-Za-z0-9\-\_]*)/gm;
-        while (matches = regex.exec(text)) {
-            phpClasses.push(matches[1]);
-        }
-
-        // get classes from function parameter declarations
-        regex = /function [\S]+\((.*)\)/gm;
-        while (matches = regex.exec(text)) {
-            let parameters = matches[1].split(', ');
-            for (let s of parameters) {
-                let phpClassName = s.substr(0, s.indexOf(' '));
-                if (phpClassName && /[A-Z]/.test(phpClassName[0])) {    //starts with capital letter
-                    phpClasses.push(phpClassName);
-                }
-            }
-        }
-
-        // get classes initialized with "new" keyword
-        regex = /new ([A-Z][A-Za-z0-9\-\_]*)/gm;
-        while (matches = regex.exec(text)) {
-            phpClasses.push(matches[1]);
-        }
-
-        // get classes from static calls
-        regex = /([A-Z][A-Za-z0-9\-\_]*)::/gm;
-        while (matches = regex.exec(text)) {
-            phpClasses.push(matches[1]);
-        }
-
+        let phpClasses = this.getPhpClasses(text);
         phpClasses = phpClasses.filter((v, i, a) => a.indexOf(v) === i);    // get unique class names only
-        console.log(phpClasses);
 
         for (let phpClass of phpClasses) {
             await this.importCommand(phpClass);
         }
+    }
+
+    getPhpClasses(text) {
+        let phpClasses = this.getExtendedClasses(text);
+        phpClasses = phpClasses.concat(this.getFromFunctionParameters(text));
+        phpClasses = phpClasses.concat(this.getInitializedWithNew(text));
+        phpClasses = phpClasses.concat(this.getFromStaticCalls(text));
+        return phpClasses;
+    }
+
+    getExtendedClasses(text) {
+        let regex = /extends ([A-Z][A-Za-z0-9\-\_]*)/gm;
+        let matches = [];
+        let phpClasses = [];
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
+        return phpClasses;
+    }
+
+    getFromFunctionParameters(text) {
+        let regex = /function [\S]+\((.*)\)/gm;
+        let matches = [];
+        let phpClasses = [];
+        while (matches = regex.exec(text)) {
+            let parameters = matches[1].split(', ');
+            for (let s of parameters) {
+                let phpClassName = s.substr(0, s.indexOf(' '));
+                if (phpClassName && /[A-Z]/.test(phpClassName[0])) { //starts with capital letter
+                    phpClasses.push(phpClassName);
+                }
+            }
+        }
+        return phpClasses;
+    }
+
+    getInitializedWithNew(text) {
+        let regex = /new ([A-Z][A-Za-z0-9\-\_]*)/gm;
+        let matches = [];
+        let phpClasses = [];
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
+        return phpClasses;
+    }
+
+    getFromStaticCalls(text) {
+        let regex = /([A-Z][A-Za-z0-9\-\_]*)::/gm;
+        let matches = [];
+        let phpClasses = [];
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
+        return phpClasses;
     }
 
     importClass(selection, fqcn, replaceClassAfterImport = false) {
