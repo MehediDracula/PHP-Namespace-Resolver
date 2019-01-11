@@ -27,6 +27,75 @@ class Resolver {
         this.importClass(selection, fqcn, replaceClassAfterImport);
     }
 
+    async importAll() {
+        const text = this.activeEditor().document.getText();
+        let matches = [];
+        let regex = /.*/;
+
+        let phpClasses = this.getPhpClasses(text);
+
+        for (let phpClass of phpClasses) {
+            await this.importCommand(phpClass);
+        }
+    }
+
+    getPhpClasses(text) {
+        let phpClasses = this.getExtended(text);
+        phpClasses = phpClasses.concat(this.getFromFunctionParameters(text));
+        phpClasses = phpClasses.concat(this.getInitializedWithNew(text));
+        phpClasses = phpClasses.concat(this.getFromStaticCalls(text));
+
+        // get unique class names only
+        phpClasses = phpClasses.filter((v, i, a) => a.indexOf(v) === i);
+        return phpClasses;
+    }
+
+    getExtended(text) {
+        let regex = /extends ([A-Z][A-Za-z0-9\-\_]*)/gm;
+        let matches = [];
+        let phpClasses = [];
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
+        return phpClasses;
+    }
+
+    getFromFunctionParameters(text) {
+        let regex = /function [\S]+\((.*)\)/gm;
+        let matches = [];
+        let phpClasses = [];
+        while (matches = regex.exec(text)) {
+            let parameters = matches[1].split(', ');
+            for (let s of parameters) {
+                let phpClassName = s.substr(0, s.indexOf(' '));
+                if (phpClassName && /[A-Z]/.test(phpClassName[0])) { //starts with capital letter
+                    phpClasses.push(phpClassName);
+                }
+            }
+        }
+        return phpClasses;
+    }
+
+    getInitializedWithNew(text) {
+        let regex = /new ([A-Z][A-Za-z0-9\-\_]*)/gm;
+        let matches = [];
+        let phpClasses = [];
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
+        return phpClasses;
+    }
+
+    getFromStaticCalls(text) {
+        let regex = /([A-Z][A-Za-z0-9\-\_]*)::/gm;
+        let matches = [];
+        let phpClasses = [];
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
+        return phpClasses;
+    }
+
     importClass(selection, fqcn, replaceClassAfterImport = false) {
         let useStatements, declarationLines;
 
@@ -360,6 +429,10 @@ class Resolver {
     }
 
     resolving(selection) {
+        if ((typeof selection) == 'string') {
+            return selection;
+        }
+
         let wordRange = this.activeEditor().document.getWordRangeAtPosition(selection.active);
 
         if (wordRange === undefined) {
