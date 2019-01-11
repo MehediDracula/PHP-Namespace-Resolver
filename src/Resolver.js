@@ -55,7 +55,7 @@ class Resolver {
         phpClasses = phpClasses.filter((v, i, a) => a.indexOf(v) === i);    // get unique class names only
 
         for (let phpClass of phpClasses) {
-            this.importCommand(phpClass);
+            await this.importCommand(phpClass);
         }
     }
 
