@@ -28,28 +28,29 @@ class Resolver {
     }
 
     async importAll() {
+        const text = this.activeEditor().document.getText();
         let phpClasses = [];
-        for (let line = 0; line < this.activeEditor().document.lineCount; line++) {
-            let text = this.activeEditor().document.lineAt(line).text;
-            let matches = [];
-            // get those what starts with extends keyword
-            matches = text.match(/extends\s([\S]*)/);   // class Foo extends Bar
-            if (matches && matches[1]) {
-                phpClasses.push(matches[1]);
-                continue;
-            }
-            // get from function parameter declarations
-            matches = text.match(/function [\S]+\((.*)\)/); // public function wizard(Wov $wov, Ahh $ahh)
-            if (matches && matches[1]) {
-                matches = matches[1].split(', ');
-                for (let s of matches) {
-                    let phpClassName = s.substr(0, s.indexOf(' '));
-                    if (phpClassName && /[A-Z]/.test(phpClassName[0])) {    //starts with capital letter
-                        phpClasses.push(phpClassName);
-                    }
+        let matches = [];
+        let regex = /.*/;
+
+        // get classes used via the "extends" keyword
+        regex = /extends ([A-Z][A-Za-z0-9\-\_]*)/gm;
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
+
+        // get classes from function parameter declarations
+        regex = /function [\S]+\((.*)\)/gm;
+        while (matches = regex.exec(text)) {
+            let parameters = matches[1].split(', ');
+            for (let s of parameters) {
+                let phpClassName = s.substr(0, s.indexOf(' '));
+                if (phpClassName && /[A-Z]/.test(phpClassName[0])) {    //starts with capital letter
+                    phpClasses.push(phpClassName);
                 }
-                continue;
             }
+        }
+
         // get classes initialized with "new" keyword
         regex = /new ([A-Z][A-Za-z0-9\-\_]*)/gm;
         while (matches = regex.exec(text)) {
@@ -61,7 +62,9 @@ class Resolver {
         while (matches = regex.exec(text)) {
             phpClasses.push(matches[1]);
         }
+
         phpClasses = phpClasses.filter((v, i, a) => a.indexOf(v) === i);    // get unique class names only
+        console.log(phpClasses);
 
         for (let phpClass of phpClasses) {
             await this.importCommand(phpClass);
