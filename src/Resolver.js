@@ -50,6 +50,11 @@ class Resolver {
                 }
                 continue;
             }
+        // get classes initialized with "new" keyword
+        regex = /new ([A-Z][A-Za-z0-9\-\_]*)/gm;
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
 
         }
         phpClasses = phpClasses.filter((v, i, a) => a.indexOf(v) === i);    // get unique class names only
