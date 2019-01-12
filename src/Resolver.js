@@ -117,7 +117,7 @@ class Resolver {
         }
 
         const decorationType = vscode.window.createTextEditorDecorationType({
-            backgroundColor: 'rgba(255,0,0, 0.5)',
+            backgroundColor: 'rgba(255,155,0, 0.5)',
             light: {
                 borderColor: 'darkblue'
             },
