@@ -26,6 +26,7 @@
     "activationEvents": [
         "onLanguage:php",
         "onCommand:namespaceResolver.import",
+        "onCommand:namespaceResolver.importAll",
         "onCommand:namespaceResolver.expand",
         "onCommand:namespaceResolver.sort"
     ],
@@ -42,20 +43,20 @@
                 },
                 {
                     "when": "resourceLangId == php",
+                    "command": "namespaceResolver.importAll",
+                    "alt": "namespaceResolver.importAll",
+                    "group": "0_namespace_resolver@2"
+                },
+                {
+                    "when": "resourceLangId == php",
                     "command": "namespaceResolver.expand",
                     "alt": "namespaceResolver.expand",
-                    "group": "0_namespace_resolver@2"
+                    "group": "0_namespace_resolver@3"
                 },
                 {
                     "when": "resourceLangId == php",
                     "command": "namespaceResolver.sort",
                     "alt": "namespaceResolver.sort",
-                    "group": "0_namespace_resolver@3"
-                },
-                {
-                    "when": "resourceLangId == php",
-                    "command": "namespaceResolver.importall",
-                    "alt": "namespaceResolver.importall",
                     "group": "0_namespace_resolver@4"
                 }
             ]
@@ -107,22 +108,27 @@
                 "command": "namespaceResolver.import"
             },
             {
+                "title": "Import All Classes",
+                "command": "namespaceResolver.importAll"
+            },
+            {
                 "title": "Expand Class",
                 "command": "namespaceResolver.expand"
             },
             {
                 "title": "Sort Imports",
                 "command": "namespaceResolver.sort"
-            },
-            {
-                "title": "Import All Classes",
-                "command": "namespaceResolver.importall"
             }
         ],
         "keybindings": [
             {
                 "command": "namespaceResolver.import",
                 "key": "ctrl+alt+i",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "namespaceResolver.importAll",
+                "key": "ctrl+alt+a",
                 "when": "editorTextFocus"
             },
             {
@@ -133,11 +139,6 @@
             {
                 "command": "namespaceResolver.sort",
                 "key": "ctrl+alt+s",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "namespaceResolver.importall",
-                "key": "ctrl+alt+a",
                 "when": "editorTextFocus"
             }
         ]
