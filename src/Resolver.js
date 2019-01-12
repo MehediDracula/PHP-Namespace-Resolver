@@ -122,11 +122,8 @@ class Resolver {
                 }
             }
         }
-                let endPos = this.activeEditor().document.positionAt(matches.index + matches[0].length);
-                ranges.push(new vscode.Range(startPos, endPos));
-            }
-        }
 
+        // TODO have these in settings
         const decorationType = vscode.window.createTextEditorDecorationType({
             backgroundColor: 'rgba(255,155,0, 0.5)',
             light: {
