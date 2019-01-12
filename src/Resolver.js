@@ -111,6 +111,17 @@ class Resolver {
             let regex = new RegExp(notImported[i], 'g');
             while (matches = regex.exec(text)) {
                 let startPos = this.activeEditor().document.positionAt(matches.index);
+                // as js does not support regex lookbehinds we get results
+                // where the object name is in the middle of a string
+                // we should drop those
+                let textLine = this.activeEditor().document.lineAt(startPos);
+                let charBeforeMatch = textLine.text.charAt(textLine.text.indexOf(notImported[i]) - 1);
+                if (!/\w/.test(charBeforeMatch)) {
+                    let endPos = this.activeEditor().document.positionAt(matches.index + matches[0].length);
+                    ranges.push(new vscode.Range(startPos, endPos));
+                }
+            }
+        }
                 let endPos = this.activeEditor().document.positionAt(matches.index + matches[0].length);
                 ranges.push(new vscode.Range(startPos, endPos));
             }
