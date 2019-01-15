@@ -2,7 +2,7 @@
     "name": "php-namespace-resolver",
     "displayName": "PHP Namespace Resolver",
     "description": "Import and expand php namespaces",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "publisher": "MehediDracula",
     "author": "Mehedi Hassan <MehediDracula@gmail.com>",
     "license": "SEE LICENSE IN LICENSE",
@@ -26,6 +26,7 @@
     "activationEvents": [
         "onLanguage:php",
         "onCommand:namespaceResolver.import",
+        "onCommand:namespaceResolver.importAll",
         "onCommand:namespaceResolver.expand",
         "onCommand:namespaceResolver.sort"
     ],
@@ -42,9 +43,15 @@
                 },
                 {
                     "when": "resourceLangId == php",
+                    "command": "namespaceResolver.importAll",
+                    "alt": "namespaceResolver.importAll",
+                    "group": "0_namespace_resolver@2"
+                },
+                {
+                    "when": "resourceLangId == php",
                     "command": "namespaceResolver.expand",
                     "alt": "namespaceResolver.expand",
-                    "group": "0_namespace_resolver@2"
+                    "group": "0_namespace_resolver@3"
                 },
                 {
                     "when": "resourceLangId == php",
@@ -113,6 +120,10 @@
                 "command": "namespaceResolver.import"
             },
             {
+                "title": "Import All Classes",
+                "command": "namespaceResolver.importAll"
+            },
+            {
                 "title": "Expand Class",
                 "command": "namespaceResolver.expand"
             },
@@ -133,6 +144,11 @@
             {
                 "command": "namespaceResolver.import",
                 "key": "ctrl+alt+i",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "namespaceResolver.importAll",
+                "key": "ctrl+alt+a",
                 "when": "editorTextFocus"
             },
             {

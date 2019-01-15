@@ -21,6 +21,10 @@ Search these commands by the title on command palette.
         "command": "namespaceResolver.import"
     },
     {
+        "title": "Import All Classes",
+        "command": "namespaceResolver.importAll"
+    },
+    {
         "title": "Expand Class",
         "command": "namespaceResolver.expand"
     },
@@ -56,6 +60,11 @@ You can override these default keybindings on your `keybindings.json`.
     {
         "command": "namespaceResolver.import",
         "key": "ctrl+alt+i",
+        "when": "editorTextFocus"
+    },
+    {
+        "command": "namespaceResolver.importAll",
+        "key": "ctrl+alt+a",
         "when": "editorTextFocus"
     },
     {

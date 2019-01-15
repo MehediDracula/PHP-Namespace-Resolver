@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.1.1] - 2019-01-11
+### Added
+- Add a new `Import All Classes` command [#36](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/36)
+
 ## [1.1.0] - 2018-06-24
 ### Changed
 - Adjust words
