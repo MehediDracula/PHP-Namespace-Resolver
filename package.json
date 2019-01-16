@@ -57,12 +57,12 @@
                     "when": "resourceLangId == php",
                     "command": "namespaceResolver.sort",
                     "alt": "namespaceResolver.sort",
-                    "group": "0_namespace_resolver@3"
+                    "group": "0_namespace_resolver@4"
                 },
                 {
                     "when": "resourceLangId == php",
-                    "command": "namespaceResolver.highlightnotimported",
-                    "alt": "namespaceResolver.highlightnotimported",
+                    "command": "namespaceResolver.highlightNotImported",
+                    "alt": "namespaceResolver.highlightNotImported",
                     "group": "0_namespace_resolver@5"
                 }
             ]
@@ -127,7 +127,7 @@
             },
             {
                 "title": "Highlight Not Imported Classes",
-                "command": "namespaceResolver.highlightnotimported"
+                "command": "namespaceResolver.highlightNotImported"
             }
         ],
         "keybindings": [
@@ -152,7 +152,7 @@
                 "when": "editorTextFocus"
             },
             {
-                "command": "namespaceResolver.highlightnotimported",
+                "command": "namespaceResolver.highlightNotImported",
                 "key": "ctrl+alt+n",
                 "when": "editorTextFocus"
             }
