@@ -115,7 +115,7 @@ class Resolver {
                 // we should drop those
                 let textLine = this.activeEditor().document.lineAt(startPos);
                 let charBeforeMatch = textLine.text.charAt(textLine.text.indexOf(notImported[i]) - 1);
-                if (!/\w/.test(charBeforeMatch)) {
+                if (!/\w/.test(charBeforeMatch) && textLine.text.search(/namespace/) == -1) {
                     let endPos = this.activeEditor().document.positionAt(matches.index + matches[0].length);
                     decorationOptions.push({ range: new vscode.Range(startPos, endPos), hoverMessage: 'Class not imported. '});
                 }
