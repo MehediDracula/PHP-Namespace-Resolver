@@ -33,7 +33,7 @@ function activate(context) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('namespaceResolver.highlightnotimported', () => resolver.highlightNotImported())
+        vscode.commands.registerCommand('namespaceResolver.highlightNotImported', () => resolver.highlightNotImported())
     );
 
     context.subscriptions.push(vscode.workspace.onWillSaveTextDocument((event) => {
