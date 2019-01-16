@@ -105,7 +105,7 @@ class Resolver {
         });
         // higlight diff
         let matches = [];
-        let ranges = [];
+        let decorationOptions = [];
         for (let i = 0; i < notImported.length; i++) {
             let regex = new RegExp(notImported[i], 'g');
             while (matches = regex.exec(text)) {
@@ -117,7 +117,7 @@ class Resolver {
                 let charBeforeMatch = textLine.text.charAt(textLine.text.indexOf(notImported[i]) - 1);
                 if (!/\w/.test(charBeforeMatch)) {
                     let endPos = this.activeEditor().document.positionAt(matches.index + matches[0].length);
-                    ranges.push(new vscode.Range(startPos, endPos));
+                    decorationOptions.push({ range: new vscode.Range(startPos, endPos), hoverMessage: 'Class not imported. '});
                 }
             }
         }
@@ -132,7 +132,7 @@ class Resolver {
                 borderColor: 'lightblue'
             }
         });
-        this.activeEditor().setDecorations(decorationType, ranges);
+        this.activeEditor().setDecorations(decorationType, decorationOptions);
     }
 
     getImportedPhpClasses(text) {
