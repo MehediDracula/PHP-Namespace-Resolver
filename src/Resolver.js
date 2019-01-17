@@ -138,6 +138,45 @@ class Resolver {
         this.activeEditor().setDecorations(decorationType, decorationOptions);
     }
 
+    async highlightNotUsed() {
+        const text = this.activeEditor().document.getText();
+        const phpClasses = this.getPhpClasses(text);
+        const importedPhpClasses = this.getImportedPhpClasses(text);
+        // get phpClasses not present in importedPhpClasses
+        let notUsed = importedPhpClasses.filter(function (phpClass) {
+            return !phpClasses.includes(phpClass);
+        });
+        // higlight diff
+        let matches = [];
+        let decorationOptions = [];
+        for (let i = 0; i < notUsed.length; i++) {
+            let regex = new RegExp(notUsed[i], 'g');
+            while (matches = regex.exec(text)) {
+                let startPos = this.activeEditor().document.positionAt(matches.index);
+                let textLine = this.activeEditor().document.lineAt(startPos);
+                if (textLine.text.search(/use/) != -1) {
+                    let endPos = this.activeEditor().document.positionAt(matches.index + matches[0].length);
+                    decorationOptions.push({
+                        range: new vscode.Range(startPos, endPos),
+                        hoverMessage: 'Class not used. '
+                    });
+                }
+            }
+        }
+
+        // TODO have these in settings
+        const decorationType = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(255,55,55, 0.5)',
+            light: {
+                borderColor: 'darkblue'
+            },
+            dark: {
+                borderColor: 'lightblue'
+            }
+        });
+        this.activeEditor().setDecorations(decorationType, decorationOptions);
+    }
+
     getImportedPhpClasses(text) {
         let regex = /use (.*);/gm;
         let matches = [];
