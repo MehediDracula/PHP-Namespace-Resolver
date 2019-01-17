@@ -28,7 +28,9 @@
         "onCommand:namespaceResolver.import",
         "onCommand:namespaceResolver.importAll",
         "onCommand:namespaceResolver.expand",
-        "onCommand:namespaceResolver.sort"
+        "onCommand:namespaceResolver.sort",
+        "onCommand:namespaceResolver.highlightNotImported",
+        "onCommand:namespaceResolver.highlightNotUsed"
     ],
     "main": "./src/extension",
     "icon": "images/icon.png",
