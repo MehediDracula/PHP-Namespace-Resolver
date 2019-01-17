@@ -27,37 +27,35 @@ class Resolver {
     }
 
     async importAll() {
-        let text = this.activeEditor().document.getText();
+        const text = this.activeEditor().document.getText();
+        let matches = [];
+        let regex = /.*/;
+
         let phpClasses = this.getPhpClasses(text);
-        let useStatements = this.getUseStatementsArray();
 
         for (let phpClass of phpClasses) {
-            if (! useStatements.includes(phpClass)) {
-                await this.importCommand(phpClass);
-            }
+            await this.importCommand(phpClass);
         }
     }
 
     getPhpClasses(text) {
         let phpClasses = this.getExtended(text);
-
         phpClasses = phpClasses.concat(this.getFromFunctionParameters(text));
         phpClasses = phpClasses.concat(this.getInitializedWithNew(text));
         phpClasses = phpClasses.concat(this.getFromStaticCalls(text));
 
         // get unique class names only
-        return phpClasses.filter((v, i, a) => a.indexOf(v) === i);
+        phpClasses = phpClasses.filter((v, i, a) => a.indexOf(v) === i);
+        return phpClasses;
     }
 
     getExtended(text) {
         let regex = /extends ([A-Z][A-Za-z0-9\-\_]*)/gm;
         let matches = [];
         let phpClasses = [];
-
         while (matches = regex.exec(text)) {
             phpClasses.push(matches[1]);
         }
-
         return phpClasses;
     }
 
@@ -65,20 +63,15 @@ class Resolver {
         let regex = /function [\S]+\((.*)\)/gm;
         let matches = [];
         let phpClasses = [];
-
         while (matches = regex.exec(text)) {
             let parameters = matches[1].split(', ');
-
             for (let s of parameters) {
                 let phpClassName = s.substr(0, s.indexOf(' '));
-
-                // starts with capital letter
-                if (phpClassName && /[A-Z]/.test(phpClassName[0])) {
+                if (phpClassName && /[A-Z]/.test(phpClassName[0])) { //starts with capital letter
                     phpClasses.push(phpClassName);
                 }
             }
         }
-
         return phpClasses;
     }
 
@@ -86,11 +79,9 @@ class Resolver {
         let regex = /new ([A-Z][A-Za-z0-9\-\_]*)/gm;
         let matches = [];
         let phpClasses = [];
-
         while (matches = regex.exec(text)) {
             phpClasses.push(matches[1]);
         }
-
         return phpClasses;
     }
 
@@ -98,12 +89,64 @@ class Resolver {
         let regex = /([A-Z][A-Za-z0-9\-\_]*)::/gm;
         let matches = [];
         let phpClasses = [];
-
         while (matches = regex.exec(text)) {
             phpClasses.push(matches[1]);
         }
-
         return phpClasses;
+    }
+
+    async highlightNotImported() {
+        const text = this.activeEditor().document.getText();
+        const phpClasses = this.getPhpClasses(text);
+        const importedPhpClasses = this.getImportedPhpClasses(text);
+        // get phpClasses not present in importedPhpClasses
+        let notImported = phpClasses.filter(function (phpClass) {
+            return !importedPhpClasses.includes(phpClass);
+        });
+        // higlight diff
+        let matches = [];
+        let decorationOptions = [];
+        for (let i = 0; i < notImported.length; i++) {
+            let regex = new RegExp(notImported[i], 'g');
+            while (matches = regex.exec(text)) {
+                let startPos = this.activeEditor().document.positionAt(matches.index);
+                // as js does not support regex lookbehinds we get results
+                // where the object name is in the middle of a string
+                // we should drop those
+                let textLine = this.activeEditor().document.lineAt(startPos);
+                let charBeforeMatch = textLine.text.charAt(startPos.character - 1);
+                if (!/\w/.test(charBeforeMatch) && textLine.text.search(/namespace/) == -1) {
+                    let endPos = this.activeEditor().document.positionAt(matches.index + matches[0].length);
+                    decorationOptions.push({
+                        range: new vscode.Range(startPos, endPos),
+                        hoverMessage: 'Class not imported. '
+                    });
+                }
+            }
+        }
+
+        // TODO have these in settings
+        const decorationType = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(255,155,0, 0.5)',
+            light: {
+                borderColor: 'darkblue'
+            },
+            dark: {
+                borderColor: 'lightblue'
+            }
+        });
+        this.activeEditor().setDecorations(decorationType, decorationOptions);
+    }
+
+    getImportedPhpClasses(text) {
+        let regex = /use (.*);/gm;
+        let matches = [];
+        let importedPhpClasses = [];
+        while (matches = regex.exec(text)) {
+            let className = matches[1].split('\\').pop();
+            importedPhpClasses.push(className);
+        }
+        return importedPhpClasses;
     }
 
     importClass(selection, fqcn, replaceClassAfterImport = false) {

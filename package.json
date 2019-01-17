@@ -58,6 +58,12 @@
                     "command": "namespaceResolver.sort",
                     "alt": "namespaceResolver.sort",
                     "group": "0_namespace_resolver@4"
+                },
+                {
+                    "when": "resourceLangId == php",
+                    "command": "namespaceResolver.highlightNotImported",
+                    "alt": "namespaceResolver.highlightNotImported",
+                    "group": "0_namespace_resolver@5"
                 }
             ]
         },
@@ -118,6 +124,10 @@
             {
                 "title": "Sort Imports",
                 "command": "namespaceResolver.sort"
+            },
+            {
+                "title": "Highlight Not Imported Classes",
+                "command": "namespaceResolver.highlightNotImported"
             }
         ],
         "keybindings": [
@@ -139,6 +149,11 @@
             {
                 "command": "namespaceResolver.sort",
                 "key": "ctrl+alt+s",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "namespaceResolver.highlightNotImported",
+                "key": "ctrl+alt+n",
                 "when": "editorTextFocus"
             }
         ]
