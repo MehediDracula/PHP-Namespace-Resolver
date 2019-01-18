@@ -31,6 +31,14 @@ Search these commands by the title on command palette.
     {
         "title": "Sort Imports",
         "command": "namespaceResolver.sort"
+    },
+    {
+        "title": "Highlight Not Imported Classes",
+        "command": "namespaceResolver.highlightNotImported"
+    },
+    {
+        "title": "Highlight Not Used Classes",
+        "command": "namespaceResolver.highlightNotUsed"
     }
 ]
 ```
@@ -75,6 +83,16 @@ You can override these default keybindings on your `keybindings.json`.
     {
         "command": "namespaceResolver.sort",
         "key": "ctrl+alt+s",
+        "when": "editorTextFocus"
+    },
+    {
+        "command": "namespaceResolver.highlightNotImported",
+        "key": "ctrl+alt+n",
+        "when": "editorTextFocus"
+    },
+    {
+        "command": "namespaceResolver.highlightNotUsed",
+        "key": "ctrl+alt+u",
         "when": "editorTextFocus"
     }
 ]
