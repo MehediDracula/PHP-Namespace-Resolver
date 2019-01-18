@@ -596,6 +596,20 @@ class Resolver {
     showErrorMessage(message) {
         this.showMessage(message, true);
     }
+
+    async generateNamespace() {
+        let namespace = this.activeEditor().document.fileName.split('/src/');
+        namespace = namespace[1].substring(0, namespace[1].lastIndexOf('/'));
+        namespace = namespace.replace('\/', '\\');
+        if (namespace.substring(0, 4) != 'App\\') {
+            namespace = 'App\\' + namespace;
+        }
+        namespace = 'namespace ' + namespace + ';' + "\n"
+
+        this.activeEditor().edit(textEdit => {
+            textEdit.insert(new vscode.Position(1, 0), namespace);
+        });
+    }
 }
 
 module.exports = Resolver;

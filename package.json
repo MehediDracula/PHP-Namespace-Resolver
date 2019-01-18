@@ -30,7 +30,8 @@
         "onCommand:namespaceResolver.expand",
         "onCommand:namespaceResolver.sort",
         "onCommand:namespaceResolver.highlightNotImported",
-        "onCommand:namespaceResolver.highlightNotUsed"
+        "onCommand:namespaceResolver.highlightNotUsed",
+        "onCommand:namespaceResolver.generateNamespace"
     ],
     "main": "./src/extension",
     "icon": "images/icon.png",
@@ -72,6 +73,12 @@
                     "command": "namespaceResolver.highlightNotUsed",
                     "alt": "namespaceResolver.highlightNotUsed",
                     "group": "0_namespace_resolver@6"
+                },
+                {
+                    "when": "resourceLangId == php",
+                    "command": "namespaceResolver.generateNamespace",
+                    "alt": "namespaceResolver.generateNamespace",
+                    "group": "0_namespace_resolver@7"
                 }
             ]
         },
@@ -140,6 +147,10 @@
             {
                 "title": "Highlight Not Used Classes",
                 "command": "namespaceResolver.highlightNotUsed"
+            },
+            {
+                "title": "Generate namespace for this file",
+                "command": "namespaceResolver.generateNamespace"
             }
         ],
         "keybindings": [
@@ -171,6 +182,11 @@
             {
                 "command": "namespaceResolver.highlightNotUsed",
                 "key": "ctrl+alt+u",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "namespaceResolver.generateNamespace",
+                "key": "ctrl+alt+g",
                 "when": "editorTextFocus"
             }
         ]
