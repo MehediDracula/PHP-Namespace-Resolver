@@ -598,17 +598,31 @@ class Resolver {
     }
 
     async generateNamespace() {
-        let namespace = this.activeEditor().document.fileName.split('/src/');
-        namespace = namespace[1].substring(0, namespace[1].lastIndexOf('/'));
-        namespace = namespace.replace('\/', '\\');
-        if (namespace.substring(0, 4) != 'App\\') {
-            namespace = 'App\\' + namespace;
-        }
-        namespace = 'namespace ' + namespace + ';' + "\n"
+        let currentFile = this.activeEditor().document.fileName;
+        let currentPath = currentFile.substr(0, currentFile.lastIndexOf('/'));
+        let composerFile = await vscode.workspace.findFiles('composer.json');
+        composerFile = composerFile.pop().path;
 
-        this.activeEditor().edit(textEdit => {
-            textEdit.insert(new vscode.Position(1, 0), namespace);
+        vscode.workspace.openTextDocument(composerFile).then((document) => {
+            let composerJson = JSON.parse(document.getText());
+            let psr4 = composerJson.autoload['psr-4'];
+            let namespaceBase = Object.keys(psr4)[0];
+            let baseDir = psr4[namespaceBase];
+
+            let namespace = currentPath.split(baseDir);
+            namespace = namespace[1];
+            namespace = namespace.replace(/\//g, '\\');
+            namespace = namespaceBase.replace(/\\/, '') + namespace;
+            namespace = 'namespace ' + namespace + ';' + "\n"
+
+            this.activeEditor().edit(textEdit => {
+                textEdit.insert(new vscode.Position(1, 0), namespace);
+            });
         });
+    }
+
+    traversePath(path) {
+
     }
 }
 
