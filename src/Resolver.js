@@ -617,11 +617,17 @@ class Resolver {
 
             let namespaceBase = Object.keys(psr4)[0];
             let baseDir = psr4[namespaceBase];
+            namespaceBase = namespaceBase.replace(/\\/, '');
 
             let namespace = currentPath.split(baseDir);
-            namespace = namespace[1];
-            namespace = namespace.replace(/\//g, '\\');
-            namespace = namespaceBase.replace(/\\/, '') + namespace;
+            if (namespace[1]) {
+                namespace = namespace[1]
+                namespace = namespace.replace(/\//g, '\\');
+                namespace = namespace.replace(/^\\/, '');
+                namespace = namespaceBase + '\\' + namespace;
+            } else {
+                namespace = namespaceBase;
+            }
             namespace = 'namespace ' + namespace + ';' + "\n"
 
             this.activeEditor().edit(textEdit => {
