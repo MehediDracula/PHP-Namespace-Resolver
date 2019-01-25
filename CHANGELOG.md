@@ -1,7 +1,11 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
-## [1.1.1] - 2019-01-18
+## [1.1.3] - 2019-01-25
+### Added
+- Add a new `Generate namespace for this file` command [#42](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/42)
+
+## [1.1.2] - 2019-01-18
 ### Added
 - Add a new `Highlight Not Imported Classes` command [#38](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/38)
 - Add a new `Highlight Not Used Classes` command [#39](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/39)

@@ -39,6 +39,10 @@ Search these commands by the title on command palette.
     {
         "title": "Highlight Not Used Classes",
         "command": "namespaceResolver.highlightNotUsed"
+    },
+    {
+        "title": "Generate namespace for this file",
+        "command": "namespaceResolver.generateNamespace"
     }
 ]
 ```
@@ -93,6 +97,11 @@ You can override these default keybindings on your `keybindings.json`.
     {
         "command": "namespaceResolver.highlightNotUsed",
         "key": "ctrl+alt+u",
+        "when": "editorTextFocus"
+    },
+    {
+        "command": "namespaceResolver.generateNamespace",
+        "key": "ctrl+alt+g",
         "when": "editorTextFocus"
     }
 ]
