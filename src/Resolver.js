@@ -596,6 +596,45 @@ class Resolver {
     showErrorMessage(message) {
         this.showMessage(message, true);
     }
+
+    async generateNamespace() {
+        let currentFile = this.activeEditor().document.fileName;
+        let currentPath = currentFile.substr(0, currentFile.lastIndexOf('/'));
+        let composerFile = await vscode.workspace.findFiles('composer.json');
+
+        if (!composerFile.length) {
+            return this.showErrorMessage('No composer.json file found, automatic namespace generation failed');
+        }
+
+        composerFile = composerFile.pop().path;
+
+        vscode.workspace.openTextDocument(composerFile).then((document) => {
+            let composerJson = JSON.parse(document.getText());
+            let psr4 = composerJson.autoload['psr-4'];
+            if (psr4 === undefined) {
+                return this.showErrorMessage('No psr-4 key in composer.json autoload object, automatic namespace generation failed');
+            }
+
+            let namespaceBase = Object.keys(psr4)[0];
+            let baseDir = psr4[namespaceBase];
+            namespaceBase = namespaceBase.replace(/\\/, '');
+
+            let namespace = currentPath.split(baseDir);
+            if (namespace[1]) {
+                namespace = namespace[1]
+                namespace = namespace.replace(/\//g, '\\');
+                namespace = namespace.replace(/^\\/, '');
+                namespace = namespaceBase + '\\' + namespace;
+            } else {
+                namespace = namespaceBase;
+            }
+            namespace = 'namespace ' + namespace + ';' + "\n"
+
+            this.activeEditor().edit(textEdit => {
+                textEdit.insert(new vscode.Position(1, 0), namespace);
+            });
+        });
+    }
 }
 
 module.exports = Resolver;

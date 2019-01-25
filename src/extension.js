@@ -40,6 +40,10 @@ function activate(context) {
         vscode.commands.registerCommand('namespaceResolver.highlightNotUsed', () => resolver.highlightNotUsed())
     );
 
+    context.subscriptions.push(
+        vscode.commands.registerCommand('namespaceResolver.generateNamespace', () => resolver.generateNamespace())
+    );
+
     context.subscriptions.push(vscode.workspace.onWillSaveTextDocument((event) => {
         if (
             event.document.languageId === 'php' &&
