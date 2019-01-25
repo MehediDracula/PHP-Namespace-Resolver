@@ -120,6 +120,16 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Expand class with leading namespace separator"
+                },
+                "namespaceResolver.highlightOnSave": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Auto highlight not imported and not used when a file is saved"
+                },
+                "namespaceResolver.highlightOnOpen": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Auto highlight not imported and not used when a file is opened"
                 }
             }
         },

@@ -51,6 +51,24 @@ function activate(context) {
         ) {
             resolver.sortCommand();
         }
+
+        if (
+            event.document.languageId === 'php' &&
+            vscode.workspace.getConfiguration('namespaceResolver').get('highlightOnSave')
+        ) {
+            resolver.highlightNotImported();
+            resolver.highlightNotUsed();
+        }
+    }));
+
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((event) => {
+        if (
+            event.document.languageId === 'php' &&
+            vscode.workspace.getConfiguration('namespaceResolver').get('highlightOnOpen')
+        ) {
+            resolver.highlightNotImported();
+            resolver.highlightNotUsed();
+        }
     }));
 
     context.subscriptions.push(resolver);
