@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.1.4] - 2019-01-29
+### Added
+- Auto highlight settings added [#43](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/43)
+
 ## [1.1.3] - 2019-01-25
 ### Added
 - Add a new `Generate namespace for this file` command [#42](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/42)
