@@ -598,7 +598,7 @@ class Resolver {
     }
 
     async generateNamespace() {
-        let currentFile = this.activeEditor().document.fileName;
+        let currentFile = this.activeEditor().document.uri.path;
         let currentPath = currentFile.substr(0, currentFile.lastIndexOf('/'));
         let composerFile = await vscode.workspace.findFiles('composer.json');
 
