@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.1.5] - 2019-01-29
+### Fixed
+- Trail only the latest double backslash in namespaceBase [#48](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#48)
+- Support windows path [#47](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#47)
+
 ## [1.1.4] - 2019-01-29
 ### Added
 - Auto highlight settings added [#43](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/43)
