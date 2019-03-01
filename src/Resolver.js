@@ -619,7 +619,7 @@ class Resolver {
             let namespaceBase = Object.keys(psr4)[0];
             let baseDir = psr4[namespaceBase];
 
-            namespaceBase = namespaceBase.replace(/\\/, '');
+            namespaceBase = namespaceBase.replace(/\\$/, '');
 
             let namespace = currentPath.split(baseDir);
 
