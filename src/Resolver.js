@@ -292,6 +292,19 @@ class Resolver {
         }
     }
 
+    async replaceNamespaceStatement(namespace, line) {
+        let realLine = line - 1;
+        let text = this.activeEditor().document.lineAt(realLine).text;
+        let newNs = text.replace(/namespace (.+)/, namespace);
+
+        await this.activeEditor().edit(textEdit => {
+            textEdit.replace(
+                new vscode.Range(realLine, 0, realLine, text.length),
+                newNs.trim()
+            );
+        });
+    }
+
     async importAndReplaceSelectedClass(selection, replacingClassName, fqcn, declarationLines, alias = null) {
         await this.changeSelectedClass(selection, replacingClassName, false);
 
@@ -634,9 +647,21 @@ class Resolver {
 
             namespace = 'namespace ' + namespace + ';' + "\n"
 
-            this.activeEditor().edit(textEdit => {
-                textEdit.insert(new vscode.Position(1, 0), namespace);
-            });
+            let declarationLines;
+
+            try {
+                [, declarationLines] = this.getDeclarations();
+            } catch (error) {
+                return this.showErrorMessage(error.message);
+            }
+
+            if (declarationLines.namespace !== null) {
+                this.replaceNamespaceStatement(namespace, declarationLines.namespace);
+            } else {
+                this.activeEditor().edit(textEdit => {
+                    textEdit.insert(new vscode.Position(1, 0), namespace);
+                });
+            }
         });
     }
 }
