@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.1.6] - 2019-03-13
+### Changed
+- Replace namespace if already present in file while generating namespace [#50](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#50)
+
 ## [1.1.5] - 2019-01-29
 ### Fixed
 - Trail only the latest double backslash in namespaceBase [#48](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#48)
