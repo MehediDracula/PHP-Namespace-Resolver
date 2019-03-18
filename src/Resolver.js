@@ -623,13 +623,20 @@ class Resolver {
 
         vscode.workspace.openTextDocument(composerFile).then((document) => {
             let composerJson = JSON.parse(document.getText());
-            let psr4 = composerJson.autoload['psr-4'];
-
+            let psr4 = (composerJson.autoload || {})['psr-4'];
             if (psr4 === undefined) {
                 return this.showErrorMessage('No psr-4 key in composer.json autoload object, automatic namespace generation failed');
             }
 
-            let namespaceBase = Object.keys(psr4)[0];
+            let devPsr4 = (composerJson['autoload-dev'] || {})['psr-4'];
+            if (devPsr4 !== undefined) {
+                psr4 = {...psr4, ...devPsr4};
+            }
+
+            let namespaceBase = Object.keys(psr4).filter(function (namespaceBase) {
+                return currentPath.split(psr4[namespaceBase])[1];
+            }).concat(Object.keys(psr4))[0];
+
             let baseDir = psr4[namespaceBase];
 
             namespaceBase = namespaceBase.replace(/\\$/, '');
