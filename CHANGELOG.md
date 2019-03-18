@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.1.7] - 2019-03-18
+### Added
+- Support multiple autoload paths for namespace generation [#54](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#54)
+
 ## [1.1.6] - 2019-03-13
 ### Changed
 - Replace namespace if already present in file while generating namespace [#50](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#50)

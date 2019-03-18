@@ -2,7 +2,7 @@
     "name": "php-namespace-resolver",
     "displayName": "PHP Namespace Resolver",
     "description": "Import and expand php namespaces",
-    "version": "1.1.6",
+    "version": "1.1.7",
     "publisher": "MehediDracula",
     "author": "Mehedi Hassan <MehediDracula@gmail.com>",
     "license": "SEE LICENSE IN LICENSE",
