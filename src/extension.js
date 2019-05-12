@@ -46,6 +46,7 @@ function activate(context) {
 
     context.subscriptions.push(vscode.workspace.onWillSaveTextDocument((event) => {
         if (
+            event &&
             event.document.languageId === 'php' &&
             vscode.workspace.getConfiguration('namespaceResolver').get('sortOnSave')
         ) {
@@ -53,6 +54,7 @@ function activate(context) {
         }
 
         if (
+            event &&
             event.document.languageId === 'php' &&
             vscode.workspace.getConfiguration('namespaceResolver').get('highlightOnSave')
         ) {
@@ -63,6 +65,7 @@ function activate(context) {
 
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((event) => {
         if (
+            event &&
             event.document.languageId === 'php' &&
             vscode.workspace.getConfiguration('namespaceResolver').get('highlightOnOpen')
         ) {
