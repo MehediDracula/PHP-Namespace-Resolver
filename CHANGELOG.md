@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [1.1.8] - 2019-05-13
+### Fixed
+- Cannot read property 'document' of undefined [#61](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#61)
+
 ## [1.1.7] - 2019-03-18
 ### Added
 - Support multiple autoload paths for namespace generation [#54](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#54)
