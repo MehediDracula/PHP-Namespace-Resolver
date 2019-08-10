@@ -7,7 +7,7 @@
     "author": "Mehedi Hassan <MehediDracula@gmail.com>",
     "license": "SEE LICENSE IN LICENSE",
     "engines": {
-        "vscode": "^1.15.0"
+        "vscode": "^1.34.0"
     },
     "categories": [
         "Other"
@@ -33,7 +33,7 @@
         "onCommand:namespaceResolver.highlightNotUsed",
         "onCommand:namespaceResolver.generateNamespace"
     ],
-    "main": "./src/extension",
+    "main": "./out/extension.js",
     "icon": "images/icon.png",
     "contributes": {
         "menus": {
@@ -208,13 +208,13 @@
     "bugs": {
         "url": "https://github.com/MehediDracula/PHP-Namespace-Resolver/issues"
     },
-    "scripts": {
-        "postinstall": "node ./node_modules/vscode/bin/install"
-    },
     "devDependencies": {
-        "vscode": "^1.0.0"
+        "@types/node": "^8.10.25",
+        "@types/vscode": "^1.34.0",
+        "typescript": "^3.5.1"
     },
     "dependencies": {
-        "node-natural-sort": "^0.8.6"
+        "node-natural-sort": "^0.8.6",
+        "php-parser": "^3.0.0-prerelease.8"
     }
 }
