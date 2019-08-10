@@ -1,5 +1,3 @@
-/* let vscode = require('vscode');
-let Resolver = require('./Resolver'); */
 import * as vscode from 'vscode';
 import { Resolver } from './Resolver';
 export function activate(context: { subscriptions: any }) {

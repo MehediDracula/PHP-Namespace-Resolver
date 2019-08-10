@@ -47,7 +47,6 @@ export class Parser {
     }
 
     private getExtendedClasses(parsedCode: any): ClassInfo[] {
-
         const classBody = this.getClass(parsedCode);
         if (!classBody) {
             return [];

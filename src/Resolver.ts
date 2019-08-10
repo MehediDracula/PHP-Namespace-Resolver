@@ -6,7 +6,6 @@ import builtInClasses from './classes';
 import { naturalSort } from 'node-natural-sort';
 import { window, workspace, TextEditor, Range, Position, Selection, TextEditorDecorationType } from 'vscode';
 
-
 export class Resolver {
     private decorationTypeForNotImported: TextEditorDecorationType;
     private decorationTypeForNotUsed: TextEditorDecorationType;
