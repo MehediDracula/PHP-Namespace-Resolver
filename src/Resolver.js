@@ -611,9 +611,17 @@ class Resolver {
     }
 
     async generateNamespace() {
-        let currentFile = this.activeEditor().document.uri.path;
+        let currentUri = this.activeEditor().document.uri;
+        let currentFile = currentUri.path;
         let currentPath = currentFile.substr(0, currentFile.lastIndexOf('/'));
         let composerFile = await vscode.workspace.findFiles('composer.json');
+        let projectFolder = await vscode.workspace.getWorkspaceFolder(currentUri);
+
+        if (projectFolder === undefined) {
+            return this.showErrorMessage('No project folder found, automatic namespace generation failed');
+        }
+
+        let projectPath = projectFolder.uri.path;
 
         if (! composerFile.length) {
             return this.showErrorMessage('No composer.json file found, automatic namespace generation failed');
@@ -635,15 +643,17 @@ class Resolver {
                 psr4 = {...psr4, ...devPsr4};
             }
 
+            let currentRelativePath = currentPath.split(projectPath)[1];
+
             let namespaceBase = Object.keys(psr4).filter(function (namespaceBase) {
-                return currentPath.split(psr4[namespaceBase])[1];
+                return currentRelativePath.split(psr4[namespaceBase])[1];
             }).concat(Object.keys(psr4))[0];
 
             let baseDir = psr4[namespaceBase];
 
             namespaceBase = namespaceBase.replace(/\\$/, '');
 
-            let namespace = currentPath.split(baseDir);
+            let namespace = currentRelativePath.split(baseDir);
 
             if (namespace[1]) {
                 namespace = namespace[1]
