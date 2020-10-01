@@ -3,6 +3,8 @@ let builtInClasses = require('./classes');
 let naturalSort = require('node-natural-sort');
 
 class Resolver {
+    regexWordWithNamespace = new RegExp(/[a-zA-Z0-9\\]+/);
+
     async importCommand(selection) {
         let resolving = this.resolving(selection);
 
@@ -14,7 +16,7 @@ class Resolver {
         let replaceClassAfterImport = false;
 
         if (/\\/.test(resolving)) {
-            fqcn = resolving;
+            fqcn = resolving.replace(/^\\?/, '');
             replaceClassAfterImport = true;
         } else {
             let files = await this.findFiles(resolving);
@@ -328,7 +330,7 @@ class Resolver {
     async changeSelectedClass(selection, fqcn, prependBackslash = false) {
         await this.activeEditor().edit(textEdit => {
             textEdit.replace(
-                this.activeEditor().document.getWordRangeAtPosition(selection.active),
+                this.activeEditor().document.getWordRangeAtPosition(selection.active, this.regexWordWithNamespace),
                 (prependBackslash && this.config('leadingSeparator') ? '\\' : '') + fqcn
             );
         });
@@ -579,7 +581,7 @@ class Resolver {
             return selection;
         }
 
-        let wordRange = this.activeEditor().document.getWordRangeAtPosition(selection.active);
+        let wordRange = this.activeEditor().document.getWordRangeAtPosition(selection.active, this.regexWordWithNamespace);
 
         if (wordRange === undefined) {
             return;
