@@ -613,7 +613,7 @@ class Resolver {
     async generateNamespace() {
         let currentFile = this.activeEditor().document.uri.path;
         let currentPath = currentFile.substr(0, currentFile.lastIndexOf('/'));
-        let composerFile = await vscode.workspace.findFiles('composer.json');
+        let composerFile = await vscode.workspace.findFiles('**/composer.json');
 
         if (! composerFile.length) {
             return this.showErrorMessage('No composer.json file found, automatic namespace generation failed');
@@ -668,7 +668,7 @@ class Resolver {
                 this.replaceNamespaceStatement(namespace, declarationLines.namespace);
             } else {
                 this.activeEditor().edit(textEdit => {
-                    textEdit.insert(new vscode.Position(1, 0), namespace);
+                    textEdit.insert(new vscode.Position(3, 0), namespace) + textEdit.insert(new vscode.Position(4, 0), '');
                 });
             }
         });
