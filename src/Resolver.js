@@ -611,9 +611,26 @@ class Resolver {
     }
 
     async generateNamespace() {
-        let currentFile = this.activeEditor().document.uri.path;
+        let currentUri = this.activeEditor().document.uri;
+        let currentFile = currentUri.path;
         let currentPath = currentFile.substr(0, currentFile.lastIndexOf('/'));
-        let composerFile = await vscode.workspace.findFiles('composer.json');
+        
+        let workspaceFolder = vscode.workspace.getWorkspaceFolder(currentUri);
+
+        if(workspaceFolder === undefined) {
+            return this.showErrorMessage('No folder openned in workspace, cannot find composer.json');
+        }
+
+        //try to retrieve composer file by searching recursively into parent folders of the current file
+        
+        let composerFile;
+        let composerPath = currentFile;
+
+        do {
+            composerPath = composerPath.substr(0, composerPath.lastIndexOf('/'));
+            composerFile = await vscode.workspace.findFiles(new vscode.RelativePattern(composerPath, 'composer.json'));    
+        } while (!composerFile.length && composerPath !== workspaceFolder.uri.path)
+
 
         if (! composerFile.length) {
             return this.showErrorMessage('No composer.json file found, automatic namespace generation failed');
@@ -634,21 +651,28 @@ class Resolver {
             if (devPsr4 !== undefined) {
                 psr4 = {...psr4, ...devPsr4};
             }
+            
+            let currentRelativePath = currentPath.split(composerPath)[1];
+
+            //this is a way to always match with psr-4 entries
+            if(!currentRelativePath.endsWith('/')) {
+                currentRelativePath += '/';
+            }
 
             let namespaceBase = Object.keys(psr4).filter(function (namespaceBase) {
-                return currentPath.split(psr4[namespaceBase])[1];
-            }).concat(Object.keys(psr4))[0];
+                return currentRelativePath.lastIndexOf(psr4[namespaceBase]) !== -1;
+            })[0];
 
             let baseDir = psr4[namespaceBase];
 
             namespaceBase = namespaceBase.replace(/\\$/, '');
 
-            let namespace = currentPath.split(baseDir);
+            let namespace = currentPath.substring(currentPath.lastIndexOf(baseDir)+baseDir.length);
 
-            if (namespace[1]) {
-                namespace = namespace[1]
+            if (namespace !== "") {
                 namespace = namespace.replace(/\//g, '\\');
                 namespace = namespace.replace(/^\\/, '');
+                namespace = namespace.replace(/\\$/, '');
                 namespace = namespaceBase + '\\' + namespace;
             } else {
                 namespace = namespaceBase;
