@@ -59,6 +59,7 @@ You can override these default settings according to your needs.
     "namespaceResolver.sortOnSave": false,              // Auto sort when a file is saved
     "namespaceResolver.sortAlphabetically": false,      // Sort imports in alphabetical order instead of line length
     "namespaceResolver.sortNatural": false,             // Sort imports using a 'natural order' algorithm
+    "namespaceResolver.sortBlockWise": false,           // Sort imports in individual blocks separated by blank lines
     "namespaceResolver.leadingSeparator": true,         // Expand class with leading namespace separator
     "namespaceResolver.highlightOnSave": false,         // Auto highlight not imported and not used when a file is saved
     "namespaceResolver.highlightOnOpen": false          // Auto highlight not imported and not used when a file is opened
