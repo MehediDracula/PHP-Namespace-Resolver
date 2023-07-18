@@ -448,13 +448,7 @@ class Resolver {
         return parsedNamespaces;
     }
 
-    sortImports() {
-        let [useStatements,] = this.getDeclarations();
-
-        if (useStatements.length <= 1) {
-            throw new Error('$(issue-opened)  Nothing to sort.');
-        }
-
+    getSortFunction() {
         let sortFunction = (a, b) => {
             if (this.config('sortAlphabetically')) {
                 if (a.text.toLowerCase() < b.text.toLowerCase()) return -1;
@@ -481,7 +475,21 @@ class Resolver {
             };
         }
 
-        let sorted = useStatements.slice().sort(sortFunction);
+        return sortFunction;
+    }
+
+    sortImports() {
+        const sortFunction = this.getSortFunction();
+
+        const [useStatements, sorted] = (() => {
+            if (this.config('sortBlockWise')) {
+                const useStatements = this.getUseStatementsArray(true);
+                return [useStatements.flat(), useStatements.map(block => block.slice().sort(sortFunction)).flat()];
+            }
+
+            const useStatements = this.getDeclarations();
+            return [useStatements, useStatements.slice().sort(sortFunction)];
+        })();
 
         this.activeEditor().edit(textEdit => {
             for (let i = 0; i < sorted.length; i++) {
@@ -507,20 +515,27 @@ class Resolver {
         return false;
     }
 
-    getUseStatementsArray() {
-        let useStatements = [];
+    getUseStatementsArray(blocked = false) {
+        const useStatements = [];
+        const matchRegex = new RegExp(/^(use\s[\w\\]+;)/, 'g');
 
         for (let line = 0; line < this.activeEditor().document.lineCount; line++) {
-            let text = this.activeEditor().document.lineAt(line).text;
+            const text = this.activeEditor().document.lineAt(line).text;
+            const matchRes = text.match(matchRegex);
 
-            if (text.startsWith('use ')) {
-                useStatements.push(
-                    text.match(/(\w+?);/)[1]
-                );
+            if (matchRes != null) {
+                const prevLine = this.activeEditor().document.lineAt(Math.max(0, line - 1)).text;
+                if (prevLine === '' || !prevLine.match(matchRegex) || useStatements.length === 0)
+                    useStatements.push([{ text: matchRes[0], line }]);
+                else
+                    useStatements[useStatements.length - 1].push({ text: matchRes[0], line });
             } else if (/(class|trait|interface)\s+\w+/.test(text)) {
                 break;
             }
         }
+
+        if (!blocked)
+            return useStatements.flat();
 
         return useStatements;
     }

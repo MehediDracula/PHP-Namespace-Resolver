@@ -116,6 +116,11 @@
                     "default": false,
                     "description": "Sort imports using a 'natural order' algorithm"
                 },
+                "namespaceResolver.sortBlockWise": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Sort imports in individual blocks separated by blank lines"
+                },
                 "namespaceResolver.leadingSeparator": {
                     "type": "boolean",
                     "default": true,
