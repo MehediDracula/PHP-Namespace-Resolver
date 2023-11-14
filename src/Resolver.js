@@ -693,7 +693,7 @@ class Resolver {
                 namespace = namespaceBase;
             }
 
-            namespace = 'namespace ' + namespace + ';' + "\n"
+            namespace = "\nnamespace " + namespace + ";\n";
 
             let declarationLines;
 
