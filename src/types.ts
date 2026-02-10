@@ -70,16 +70,11 @@ export type SortMode = 'length' | 'alphabetical' | 'natural';
 /** Extension configuration with typed keys */
 export interface ExtensionConfig {
     exclude: string;
-    showMessageOnStatusBar: boolean;
     autoSort: boolean;
     sortOnSave: boolean;
     sortAlphabetically: boolean;
     sortNatural: boolean;
     leadingSeparator: boolean;
-    highlightOnSave: boolean;
-    highlightOnOpen: boolean;
-    highlightNotImportedColor: string;
-    highlightNotUsedColor: string;
     removeOnSave: boolean;
     autoImportOnSave: boolean;
 }

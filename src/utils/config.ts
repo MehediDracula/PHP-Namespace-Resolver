@@ -23,16 +23,11 @@ export function getSortMode(): SortMode {
 function getDefault<K extends keyof ExtensionConfig>(key: K): ExtensionConfig[K] {
     const defaults: ExtensionConfig = {
         exclude: '**/node_modules/**',
-        showMessageOnStatusBar: false,
         autoSort: true,
         sortOnSave: false,
         sortAlphabetically: false,
         sortNatural: false,
         leadingSeparator: true,
-        highlightOnSave: false,
-        highlightOnOpen: false,
-        highlightNotImportedColor: 'rgba(255, 155, 0, 0.5)',
-        highlightNotUsedColor: 'rgba(255, 55, 55, 0.5)',
         removeOnSave: false,
         autoImportOnSave: false,
     };

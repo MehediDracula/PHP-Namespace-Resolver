@@ -14,12 +14,10 @@ import { ImportCommand } from './features/ImportCommand';
 import { ExpandCommand } from './features/ExpandCommand';
 import { SortCommand } from './features/SortCommand';
 import { GenerateNamespaceCommand } from './features/GenerateNamespaceCommand';
-import { HighlightManager } from './features/HighlightManager';
+
 import { RemoveUnusedCommand } from './features/RemoveUnusedCommand';
 import { DiagnosticManager } from './features/DiagnosticManager';
 import { PhpCodeActionProvider } from './features/CodeActionProvider';
-
-// Utils
 import { getConfig } from './utils/config';
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -37,7 +35,6 @@ export function activate(context: vscode.ExtensionContext): void {
     const expandCommand = new ExpandCommand(resolver, importManager);
     const sortCommand = new SortCommand(sortManager);
     const generateNsCommand = new GenerateNamespaceCommand(generator);
-    const highlightManager = new HighlightManager(detector, parser);
     const removeUnusedCommand = new RemoveUnusedCommand(detector, parser);
     const diagnosticManager = new DiagnosticManager(detector, parser);
 
@@ -70,16 +67,6 @@ export function activate(context: vscode.ExtensionContext): void {
             sortCommand.execute();
         }),
 
-        vscode.commands.registerCommand('namespaceResolver.highlightNotImported', () => {
-            const editor = vscode.window.activeTextEditor;
-            if (editor) { highlightManager.highlightNotImported(editor); }
-        }),
-
-        vscode.commands.registerCommand('namespaceResolver.highlightNotUsed', () => {
-            const editor = vscode.window.activeTextEditor;
-            if (editor) { highlightManager.highlightNotUsed(editor); }
-        }),
-
         vscode.commands.registerCommand('namespaceResolver.generateNamespace', () => {
             return generateNsCommand.execute();
         }),
@@ -90,7 +77,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
         vscode.commands.registerCommand('namespaceResolver.rebuildIndex', async () => {
             await cache.rebuild();
-            vscode.window.showInformationMessage('PHP Namespace Resolver: Index rebuilt.');
+            vscode.window.setStatusBarMessage('PHP Namespace Resolver: Index rebuilt.', 3000);
         }),
     );
 
@@ -120,25 +107,13 @@ export function activate(context: vscode.ExtensionContext): void {
             if (getConfig('sortOnSave')) {
                 sortCommand.execute();
             }
-
-            if (getConfig('highlightOnSave')) {
-                highlightManager.highlightNotImported(editor);
-                highlightManager.highlightNotUsed(editor);
-            }
         })
     );
 
-    // On editor change
+    // On editor change — update diagnostics
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(editor => {
             if (!editor || editor.document.languageId !== 'php') { return; }
-
-            if (getConfig('highlightOnOpen')) {
-                highlightManager.highlightNotImported(editor);
-                highlightManager.highlightNotUsed(editor);
-            }
-
-            // Update diagnostics for the newly active document
             diagnosticManager.update(editor.document);
         })
     );
@@ -159,7 +134,7 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     // --- Register disposables ---
-    context.subscriptions.push(cache, highlightManager, diagnosticManager);
+    context.subscriptions.push(cache, diagnosticManager);
 
     // --- Initial diagnostics for already open editors ---
     if (vscode.window.activeTextEditor?.document.languageId === 'php') {
