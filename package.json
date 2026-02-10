@@ -1,15 +1,18 @@
 {
     "name": "php-namespace-resolver",
     "displayName": "PHP Namespace Resolver",
-    "description": "Import and expand php namespaces",
-    "version": "1.1.9",
+    "description": "Import, expand, and manage PHP namespaces with PHP 8+ support",
+    "version": "2.0.0",
     "publisher": "MehediDracula",
     "author": "Mehedi Hasan <mehedi5531@gmail.com>",
     "license": "SEE LICENSE IN LICENSE",
     "engines": {
-        "vscode": "^1.68.0"
+        "vscode": "^1.75.0"
     },
     "categories": [
+        "Programming Languages",
+        "Formatters",
+        "Linters",
         "Other"
     ],
     "keywords": [
@@ -17,74 +20,75 @@
         "namespace",
         "class",
         "import",
-        "expand"
+        "expand",
+        "autoload",
+        "psr-4",
+        "php8"
     ],
     "galleryBanner": {
         "color": "#282c34",
         "theme": "dark"
     },
     "activationEvents": [
-        "onLanguage:php",
-        "onCommand:namespaceResolver.import",
-        "onCommand:namespaceResolver.importAll",
-        "onCommand:namespaceResolver.expand",
-        "onCommand:namespaceResolver.sort",
-        "onCommand:namespaceResolver.highlightNotImported",
-        "onCommand:namespaceResolver.highlightNotUsed",
-        "onCommand:namespaceResolver.generateNamespace"
+        "onLanguage:php"
     ],
-    "main": "./src/extension",
+    "main": "./out/extension.js",
     "icon": "images/icon.png",
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTests.js"
+    },
     "contributes": {
         "menus": {
             "editor/context": [
                 {
                     "when": "resourceLangId == php",
                     "command": "namespaceResolver.import",
-                    "alt": "namespaceResolver.import",
                     "group": "0_namespace_resolver@1"
                 },
                 {
                     "when": "resourceLangId == php",
                     "command": "namespaceResolver.importAll",
-                    "alt": "namespaceResolver.importAll",
                     "group": "0_namespace_resolver@2"
                 },
                 {
                     "when": "resourceLangId == php",
                     "command": "namespaceResolver.expand",
-                    "alt": "namespaceResolver.expand",
                     "group": "0_namespace_resolver@3"
                 },
                 {
                     "when": "resourceLangId == php",
                     "command": "namespaceResolver.sort",
-                    "alt": "namespaceResolver.sort",
                     "group": "0_namespace_resolver@4"
                 },
                 {
                     "when": "resourceLangId == php",
-                    "command": "namespaceResolver.highlightNotImported",
-                    "alt": "namespaceResolver.highlightNotImported",
+                    "command": "namespaceResolver.removeUnused",
                     "group": "0_namespace_resolver@5"
                 },
                 {
                     "when": "resourceLangId == php",
-                    "command": "namespaceResolver.highlightNotUsed",
-                    "alt": "namespaceResolver.highlightNotUsed",
+                    "command": "namespaceResolver.highlightNotImported",
                     "group": "0_namespace_resolver@6"
                 },
                 {
                     "when": "resourceLangId == php",
-                    "command": "namespaceResolver.generateNamespace",
-                    "alt": "namespaceResolver.generateNamespace",
+                    "command": "namespaceResolver.highlightNotUsed",
                     "group": "0_namespace_resolver@7"
+                },
+                {
+                    "when": "resourceLangId == php",
+                    "command": "namespaceResolver.generateNamespace",
+                    "group": "0_namespace_resolver@8"
                 }
             ]
         },
         "configuration": {
             "type": "object",
-            "title": "PHP Namespace Resolver extension configuration",
+            "title": "PHP Namespace Resolver",
             "properties": {
                 "namespaceResolver.exclude": {
                     "type": "string",
@@ -94,73 +98,110 @@
                 "namespaceResolver.showMessageOnStatusBar": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Show message on status bar instead of notification box"
+                    "description": "Show messages on the status bar instead of notification popups"
                 },
                 "namespaceResolver.autoSort": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Auto sort after imports"
+                    "description": "Automatically sort imports after adding a new one"
                 },
                 "namespaceResolver.sortOnSave": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Auto sort when a file is saved"
+                    "description": "Automatically sort imports when a file is saved"
                 },
                 "namespaceResolver.sortAlphabetically": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Sort imports in alphabetical order instead of line length"
+                    "description": "Sort imports alphabetically instead of by line length"
                 },
                 "namespaceResolver.sortNatural": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Sort imports using a 'natural order' algorithm"
+                    "description": "Sort imports using a natural order algorithm"
                 },
                 "namespaceResolver.leadingSeparator": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Expand class with leading namespace separator"
+                    "description": "Prepend a leading backslash when expanding class names"
                 },
                 "namespaceResolver.highlightOnSave": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Auto highlight not imported and not used when a file is saved"
+                    "description": "Highlight not-imported and not-used classes when a file is saved"
                 },
                 "namespaceResolver.highlightOnOpen": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Auto highlight not imported and not used when a file is opened"
+                    "description": "Highlight not-imported and not-used classes when a file is opened"
+                },
+                "namespaceResolver.highlightNotImportedColor": {
+                    "type": "string",
+                    "default": "rgba(255, 155, 0, 0.5)",
+                    "description": "Background color for highlighting classes that are not imported"
+                },
+                "namespaceResolver.highlightNotUsedColor": {
+                    "type": "string",
+                    "default": "rgba(255, 55, 55, 0.5)",
+                    "description": "Background color for highlighting imported classes that are not used"
+                },
+                "namespaceResolver.removeOnSave": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically remove unused imports when a file is saved"
+                },
+                "namespaceResolver.autoImportOnSave": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically import all detected classes when a file is saved"
                 }
             }
         },
         "commands": [
             {
                 "title": "Import Class",
-                "command": "namespaceResolver.import"
+                "command": "namespaceResolver.import",
+                "category": "PHP Namespace Resolver"
             },
             {
                 "title": "Import All Classes",
-                "command": "namespaceResolver.importAll"
+                "command": "namespaceResolver.importAll",
+                "category": "PHP Namespace Resolver"
             },
             {
                 "title": "Expand Class",
-                "command": "namespaceResolver.expand"
+                "command": "namespaceResolver.expand",
+                "category": "PHP Namespace Resolver"
             },
             {
                 "title": "Sort Imports",
-                "command": "namespaceResolver.sort"
+                "command": "namespaceResolver.sort",
+                "category": "PHP Namespace Resolver"
             },
             {
                 "title": "Highlight Not Imported Classes",
-                "command": "namespaceResolver.highlightNotImported"
+                "command": "namespaceResolver.highlightNotImported",
+                "category": "PHP Namespace Resolver"
             },
             {
                 "title": "Highlight Not Used Classes",
-                "command": "namespaceResolver.highlightNotUsed"
+                "command": "namespaceResolver.highlightNotUsed",
+                "category": "PHP Namespace Resolver"
             },
             {
-                "title": "Generate namespace for this file",
-                "command": "namespaceResolver.generateNamespace"
+                "title": "Generate Namespace",
+                "command": "namespaceResolver.generateNamespace",
+                "category": "PHP Namespace Resolver"
+            },
+            {
+                "title": "Remove Unused Imports",
+                "command": "namespaceResolver.removeUnused",
+                "category": "PHP Namespace Resolver"
+            },
+            {
+                "title": "Rebuild Namespace Index",
+                "command": "namespaceResolver.rebuildIndex",
+                "category": "PHP Namespace Resolver"
             }
         ],
         "keybindings": [
@@ -198,6 +239,11 @@
                 "command": "namespaceResolver.generateNamespace",
                 "key": "ctrl+alt+g",
                 "when": "editorTextFocus"
+            },
+            {
+                "command": "namespaceResolver.removeUnused",
+                "key": "ctrl+alt+r",
+                "when": "editorTextFocus"
             }
         ]
     },
@@ -208,11 +254,12 @@
     "bugs": {
         "url": "https://github.com/MehediDracula/PHP-Namespace-Resolver/issues"
     },
-    "dependencies": {
-        "node-natural-sort": "^0.8.6"
-    },
     "devDependencies": {
-        "@types/vscode": "^1.68.0",
-        "@types/node": "16.x"
+        "@types/vscode": "^1.75.0",
+        "@types/node": "18.x",
+        "@types/mocha": "^10.0.0",
+        "@vscode/test-electron": "^2.3.0",
+        "mocha": "^10.2.0",
+        "typescript": "^5.3.0"
     }
 }
