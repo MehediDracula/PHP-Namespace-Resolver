@@ -1,0 +1,270 @@
+/**
+ * Built-in PHP classes, interfaces, and enums that don't need namespace imports.
+ * Expanded to include PHP 8.0, 8.1, 8.2, and 8.3 additions.
+ */
+export const builtInClasses: ReadonlySet<string> = new Set([
+    // Core
+    'stdClass',
+    'Exception',
+    'ErrorException',
+    'Error',
+    'ParseError',
+    'TypeError',
+    'ArgumentCountError',
+    'ArithmeticError',
+    'DivisionByZeroError',
+    'Closure',
+    'Generator',
+    'ClosedGeneratorException',
+    'WeakReference',
+    'WeakMap',
+    'Fiber',
+    'FiberError',
+    'UnhandledMatchError',
+    'ValueError',
+
+    // Date/Time
+    'DateTime',
+    'DateTimeImmutable',
+    'DateTimeZone',
+    'DateInterval',
+    'DatePeriod',
+    'DateError',
+    'DateException',
+    'DateInvalidOperationException',
+    'DateInvalidTimeZoneException',
+    'DateMalformedIntervalStringException',
+    'DateMalformedPeriodStringException',
+    'DateMalformedStringException',
+    'DateObjectError',
+    'DateRangeError',
+
+    // LibXML
+    'LibXMLError',
+
+    // Reflection
+    'ReflectionException',
+    'Reflection',
+    'ReflectionFunctionAbstract',
+    'ReflectionFunction',
+    'ReflectionGenerator',
+    'ReflectionParameter',
+    'ReflectionType',
+    'ReflectionNamedType',
+    'ReflectionUnionType',
+    'ReflectionIntersectionType',
+    'ReflectionMethod',
+    'ReflectionClass',
+    'ReflectionObject',
+    'ReflectionProperty',
+    'ReflectionClassConstant',
+    'ReflectionExtension',
+    'ReflectionZendExtension',
+    'ReflectionAttribute',
+    'ReflectionEnum',
+    'ReflectionEnumUnitCase',
+    'ReflectionEnumBackedCase',
+    'ReflectionFiber',
+
+    // SPL Exceptions
+    'LogicException',
+    'BadFunctionCallException',
+    'BadMethodCallException',
+    'DomainException',
+    'InvalidArgumentException',
+    'LengthException',
+    'OutOfRangeException',
+    'RuntimeException',
+    'OutOfBoundsException',
+    'OverflowException',
+    'RangeException',
+    'UnderflowException',
+    'UnexpectedValueException',
+
+    // SPL Iterators
+    'RecursiveIteratorIterator',
+    'IteratorIterator',
+    'FilterIterator',
+    'RecursiveFilterIterator',
+    'CallbackFilterIterator',
+    'RecursiveCallbackFilterIterator',
+    'ParentIterator',
+    'LimitIterator',
+    'CachingIterator',
+    'RecursiveCachingIterator',
+    'NoRewindIterator',
+    'AppendIterator',
+    'InfiniteIterator',
+    'RegexIterator',
+    'RecursiveRegexIterator',
+    'EmptyIterator',
+    'RecursiveTreeIterator',
+
+    // SPL Data Structures
+    'ArrayObject',
+    'ArrayIterator',
+    'RecursiveArrayIterator',
+    'SplFileInfo',
+    'DirectoryIterator',
+    'FilesystemIterator',
+    'RecursiveDirectoryIterator',
+    'GlobIterator',
+    'SplFileObject',
+    'SplTempFileObject',
+    'SplDoublyLinkedList',
+    'SplQueue',
+    'SplStack',
+    'SplHeap',
+    'SplMinHeap',
+    'SplMaxHeap',
+    'SplPriorityQueue',
+    'SplFixedArray',
+    'SplObjectStorage',
+    'MultipleIterator',
+
+    // Session
+    'SessionHandler',
+
+    // Internal
+    '__PHP_Incomplete_Class',
+    'php_user_filter',
+    'Directory',
+    'AssertionError',
+
+    // PDO
+    'PDOException',
+    'PDO',
+    'PDOStatement',
+    'PDORow',
+
+    // cURL
+    'CURLFile',
+    'CURLStringFile',
+
+    // DOM
+    'DOMException',
+    'DOMStringList',
+    'DOMNameList',
+    'DOMImplementationList',
+    'DOMImplementationSource',
+    'DOMImplementation',
+    'DOMNode',
+    'DOMNameSpaceNode',
+    'DOMDocumentFragment',
+    'DOMDocument',
+    'DOMNodeList',
+    'DOMNamedNodeMap',
+    'DOMCharacterData',
+    'DOMAttr',
+    'DOMElement',
+    'DOMText',
+    'DOMComment',
+    'DOMTypeinfo',
+    'DOMUserDataHandler',
+    'DOMDomError',
+    'DOMErrorHandler',
+    'DOMLocator',
+    'DOMConfiguration',
+    'DOMCdataSection',
+    'DOMDocumentType',
+    'DOMNotation',
+    'DOMEntity',
+    'DOMEntityReference',
+    'DOMProcessingInstruction',
+    'DOMStringExtend',
+    'DOMXPath',
+
+    // Fileinfo
+    'finfo',
+
+    // Intl
+    'Collator',
+    'NumberFormatter',
+    'Normalizer',
+    'Locale',
+    'MessageFormatter',
+    'IntlDateFormatter',
+    'ResourceBundle',
+    'Transliterator',
+    'IntlTimeZone',
+    'IntlCalendar',
+    'IntlGregorianCalendar',
+    'Spoofchecker',
+    'IntlException',
+    'IntlIterator',
+    'IntlBreakIterator',
+    'IntlRuleBasedBreakIterator',
+    'IntlCodePointBreakIterator',
+    'IntlPartsIterator',
+    'UConverter',
+    'IntlChar',
+
+    // MySQLi
+    'mysqli_sql_exception',
+    'mysqli_driver',
+    'mysqli',
+    'mysqli_warning',
+    'mysqli_result',
+    'mysqli_stmt',
+
+    // Phar
+    'PharException',
+    'Phar',
+    'PharData',
+    'PharFileInfo',
+
+    // SimpleXML
+    'SimpleXMLElement',
+    'SimpleXMLIterator',
+
+    // SQLite3
+    'SQLite3',
+    'SQLite3Stmt',
+    'SQLite3Result',
+
+    // XML
+    'XMLReader',
+    'XMLWriter',
+    'XSLTProcessor',
+
+    // Zip
+    'ZipArchive',
+
+    // PHP 8.0+ Attributes
+    'Attribute',
+    'ReturnTypeWillChange',
+    'AllowDynamicProperties',
+    'SensitiveParameter',
+    'Override',
+
+    // PHP 8.1+ Enums
+    'BackedEnum',
+    'UnitEnum',
+
+    // Random (PHP 8.2+)
+    'Random\\Engine',
+    'Random\\Randomizer',
+
+    // Interfaces
+    'Traversable',
+    'IteratorAggregate',
+    'Iterator',
+    'ArrayAccess',
+    'Serializable',
+    'Throwable',
+    'DateTimeInterface',
+    'Reflector',
+    'RecursiveIterator',
+    'OuterIterator',
+    'Countable',
+    'SeekableIterator',
+    'SplObserver',
+    'SplSubject',
+    'SessionHandlerInterface',
+    'SessionIdInterface',
+    'SessionUpdateTimestampHandlerInterface',
+    'JsonSerializable',
+    'Stringable',
+    'UnitEnum',
+    'BackedEnum',
+]);

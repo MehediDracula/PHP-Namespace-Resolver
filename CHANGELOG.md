@@ -1,6 +1,29 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [2.0.0] - 2026-02-12
+### Added
+- Rewrite extension in TypeScript with modular architecture
+- Real-time diagnostics for not-imported and unused classes (warnings and hints)
+- Quick Fix code actions: import class, expand to FQCN, and remove unused imports
+- `Remove Unused Imports` command (`phpNamespaceResolver.removeUnused`)
+- `Rebuild Index` command (`phpNamespaceResolver.rebuildIndex`)
+- `removeOnSave` setting to auto-remove unused imports on save
+- `declare(strict_types=1)` support in insert position calculation and namespace generation
+- PHP 8+ support: enums, named arguments, union/intersection types, match expressions, `readonly` classes, attributes, first-class callables, fibers, and `never`/`null`/`true`/`false` types
+- Comprehensive test suite: unit tests and VS Code integration tests
+
+### Changed
+- Rename all command/config prefixes from `namespaceResolver` to `phpNamespaceResolver`
+- Replace `sortAlphabetically` and `sortNatural` boolean settings with a single `sortMode` enum (`"length"` | `"alphabetical"` | `"natural"`)
+- Status bar messages replace the old highlight decorations for all notifications
+- Require VS Code `^1.75.0` (previously `^1.68.0`)
+
+### Removed
+- `Highlight Not Imported Classes` command (replaced by real-time diagnostics)
+- `Highlight Not Used Classes` command (replaced by real-time diagnostics)
+- `highlightOnOpen`, `highlightOnSave`, and highlight-related settings
+
 ## [1.1.8] - 2019-05-13
 ### Fixed
 - Cannot read property 'document' of undefined [#61](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#61)
