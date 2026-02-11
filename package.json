@@ -39,7 +39,9 @@
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTests.js"
+        "test": "node ./out/test/runTests.js",
+        "test:unit": "npx mocha out/test/*.test.js",
+        "test:integration": "node ./out/test/runTests.js"
     },
     "contributes": {
         "menus": {
