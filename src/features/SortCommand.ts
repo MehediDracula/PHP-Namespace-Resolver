@@ -1,6 +1,6 @@
+import * as vscode from 'vscode';
 import { SortManager } from '../core/SortManager';
 import { requireActiveEditor } from '../utils/editor';
-import { showMessage, showError } from '../utils/messages';
 
 /**
  * Handles the Sort Imports command.
@@ -12,9 +12,9 @@ export class SortCommand {
         try {
             const editor = requireActiveEditor();
             this.sortManager.sort(editor);
-            showMessage('$(check)  Imports are sorted.');
+            vscode.window.setStatusBarMessage('$(check)  Imports are sorted.', 3000);
         } catch (error: any) {
-            showError(error.message);
+            vscode.window.setStatusBarMessage(error.message, 3000);
         }
     }
 }

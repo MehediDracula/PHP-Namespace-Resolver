@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { ComposerAutoload, PsrMapping } from '../types';
 import { DeclarationParser } from './DeclarationParser';
-import { showError } from '../utils/messages';
 
 /**
  * Generates PHP namespace declarations based on composer.json PSR-4 and PSR-0 autoload mappings.
@@ -23,13 +22,13 @@ export class NamespaceGenerator {
 
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(currentUri);
         if (!workspaceFolder) {
-            return showError('No folder opened in workspace, cannot find composer.json');
+            return void vscode.window.setStatusBarMessage('No folder opened in workspace, cannot find composer.json', 3000);
         }
 
         // Search for composer.json recursively up from the current file
         const composerFile = await this.findComposerJson(normalizedCurrentFile, workspaceFolder);
         if (!composerFile) {
-            return showError('No composer.json file found, automatic namespace generation failed');
+            return void vscode.window.setStatusBarMessage('No composer.json file found, automatic namespace generation failed', 3000);
         }
 
         const composerDoc = await vscode.workspace.openTextDocument(composerFile);
@@ -37,7 +36,7 @@ export class NamespaceGenerator {
         const autoload = this.parseAutoload(composerJson);
 
         if (autoload.psr4.length === 0 && autoload.psr0.length === 0) {
-            return showError('No psr-4 or psr-0 key in composer.json autoload, automatic namespace generation failed');
+            return void vscode.window.setStatusBarMessage('No psr-4 or psr-0 key in composer.json autoload, automatic namespace generation failed', 3000);
         }
 
         const composerDir = composerFile.fsPath.replace(/\\/g, '/').replace(/\/composer\.json$/, '');
@@ -45,7 +44,7 @@ export class NamespaceGenerator {
 
         const namespace = this.resolveNamespace(relativePath, autoload);
         if (!namespace) {
-            return showError('Could not resolve namespace from composer.json autoload configuration');
+            return void vscode.window.setStatusBarMessage('Could not resolve namespace from composer.json autoload configuration', 3000);
         }
 
         const namespaceStatement = `namespace ${namespace};\n`;
@@ -54,7 +53,7 @@ export class NamespaceGenerator {
         try {
             ({ declarationLines } = this.parser.parse(editor.document));
         } catch (error: any) {
-            return showError(error.message);
+            return void vscode.window.setStatusBarMessage(error.message, 3000);
         }
 
         if (declarationLines.namespace !== null) {

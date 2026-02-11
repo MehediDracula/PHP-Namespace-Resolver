@@ -4,7 +4,6 @@ import { DeclarationParser } from '../core/DeclarationParser';
 import { NamespaceResolver } from '../core/NamespaceResolver';
 import { ImportManager } from '../core/ImportManager';
 import { requireActiveEditor, resolveClassName } from '../utils/editor';
-import { showError } from '../utils/messages';
 
 /**
  * Handles the Import Class and Import All Classes commands.
@@ -25,7 +24,8 @@ export class ImportCommand {
         const resolving = resolveClassName(editor, selection);
 
         if (!resolving) {
-            return showError('No class is selected.');
+            vscode.window.setStatusBarMessage('No class is selected.', 3000);
+            return;
         }
 
         let fqcn: string | undefined;
@@ -39,7 +39,8 @@ export class ImportCommand {
             const namespaces = await this.resolver.resolve(resolving);
 
             if (namespaces.length === 0) {
-                return showError('The class is not found.');
+                vscode.window.setStatusBarMessage('The class is not found.', 3000);
+                return;
             }
 
             fqcn = await this.resolver.pickNamespace(namespaces);

@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { UseStatement, DeclarationLines, InsertPosition } from '../types';
 import { DeclarationParser } from './DeclarationParser';
 import { getConfig } from '../utils/config';
-import { showMessage, showError } from '../utils/messages';
 
 /**
  * Manages the insertion, replacement, and conflict resolution of PHP use statements.
@@ -28,7 +27,7 @@ export class ImportManager {
         try {
             result = this.parser.parse(editor.document, fqcn);
         } catch (error: any) {
-            showError(error.message);
+            vscode.window.setStatusBarMessage(error.message, 3000);
             return;
         }
 
@@ -65,7 +64,7 @@ export class ImportManager {
             this.sortCallback(editor);
         }
 
-        showMessage('$(check)  The class is imported.');
+        vscode.window.setStatusBarMessage('$(check)  The class is imported.', 3000);
     }
 
     /**
@@ -94,7 +93,7 @@ export class ImportManager {
         }
 
         if (this.hasConflict(useStatements, alias)) {
-            showError('This alias is already in use.');
+            vscode.window.setStatusBarMessage('This alias is already in use.', 3000);
             return this.insertAsAlias(editor, selection, fqcn, useStatements, declarationLines);
         }
 

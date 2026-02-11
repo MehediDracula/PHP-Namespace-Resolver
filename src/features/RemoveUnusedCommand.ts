@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { PhpClassDetector } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
 import { requireActiveEditor } from '../utils/editor';
-import { showMessage, showError } from '../utils/messages';
 
 /**
  * Removes all unused use statements from the active PHP file.
@@ -18,12 +17,12 @@ export class RemoveUnusedCommand {
             const editor = requireActiveEditor();
             const removed = await this.removeUnused(editor);
             if (removed > 0) {
-                showMessage(`$(check)  Removed ${removed} unused import${removed > 1 ? 's' : ''}.`);
+                vscode.window.setStatusBarMessage(`$(check)  Removed ${removed} unused import${removed > 1 ? 's' : ''}.`, 3000);
             } else {
-                showMessage('$(check)  No unused imports found.');
+                vscode.window.setStatusBarMessage('$(check)  No unused imports found.', 3000);
             }
         } catch (error: any) {
-            showError(error.message);
+            vscode.window.setStatusBarMessage(error.message, 3000);
         }
     }
 

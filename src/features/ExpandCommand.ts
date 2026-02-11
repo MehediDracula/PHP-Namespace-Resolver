@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { NamespaceResolver } from '../core/NamespaceResolver';
 import { ImportManager } from '../core/ImportManager';
 import { requireActiveEditor, resolveClassName } from '../utils/editor';
-import { showError } from '../utils/messages';
 
 /**
  * Handles the Expand Class command — replaces a short class name with its FQCN inline.
@@ -18,13 +17,15 @@ export class ExpandCommand {
         const resolving = resolveClassName(editor, selection);
 
         if (!resolving) {
-            return showError('No class is selected.');
+            vscode.window.setStatusBarMessage('No class is selected.', 3000);
+            return;
         }
 
         const namespaces = await this.resolver.resolve(resolving);
 
         if (namespaces.length === 0) {
-            return showError('The class is not found.');
+            vscode.window.setStatusBarMessage('The class is not found.', 3000);
+            return;
         }
 
         const fqcn = await this.resolver.pickNamespace(namespaces);

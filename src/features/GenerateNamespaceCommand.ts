@@ -1,6 +1,6 @@
+import * as vscode from 'vscode';
 import { NamespaceGenerator } from '../core/NamespaceGenerator';
 import { requireActiveEditor } from '../utils/editor';
-import { showError } from '../utils/messages';
 
 /**
  * Handles the Generate Namespace command.
@@ -13,7 +13,7 @@ export class GenerateNamespaceCommand {
             const editor = requireActiveEditor();
             await this.generator.generate(editor);
         } catch (error: any) {
-            showError(error.message);
+            vscode.window.setStatusBarMessage(error.message, 3000);
         }
     }
 }
