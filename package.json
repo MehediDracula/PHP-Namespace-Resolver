@@ -1,7 +1,7 @@
 {
     "name": "php-namespace-resolver",
     "displayName": "PHP Namespace Resolver",
-    "description": "Import, expand, and manage PHP namespaces with PHP 8+ support",
+    "description": "Import and expand php namespaces",
     "version": "2.0.0",
     "publisher": "MehediDracula",
     "author": "Mehedi Hasan <mehedi5531@gmail.com>",
