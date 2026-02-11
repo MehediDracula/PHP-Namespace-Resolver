@@ -10,6 +10,7 @@ export interface UseStatement {
 
 export interface DeclarationLines {
     phpTag: number;
+    declare: number | null;
     namespace: number | null;
     firstUseStatement: number | null;
     lastUseStatement: number | null;

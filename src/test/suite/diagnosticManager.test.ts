@@ -27,7 +27,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         manager.update(doc);
         await wait();
 
-        const diagnostics = vscode.languages.getDiagnostics(doc.uri);
+        const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
             d => d.code === DiagnosticCode.ClassNotImported
         );
@@ -52,7 +52,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         manager.update(doc);
         await wait();
 
-        const diagnostics = vscode.languages.getDiagnostics(doc.uri);
+        const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
             d => d.code === DiagnosticCode.ClassNotUsed
         );
@@ -77,7 +77,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         manager.update(doc);
         await wait();
 
-        const diagnostics = vscode.languages.getDiagnostics(doc.uri);
+        const diagnostics = manager.getDiagnostics(doc.uri);
         const userDiags = diagnostics.filter(d => d.message.includes('User'));
         assert.strictEqual(userDiags.length, 0);
     });
@@ -90,7 +90,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         manager.update(doc);
         await wait();
 
-        const diagnostics = vscode.languages.getDiagnostics(doc.uri);
+        const diagnostics = manager.getDiagnostics(doc.uri);
 
         const notImported = diagnostics.filter(d => d.code === DiagnosticCode.ClassNotImported);
         const notUsed = diagnostics.filter(d => d.code === DiagnosticCode.ClassNotUsed);
@@ -107,15 +107,14 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         manager.update(doc);
         await wait();
 
-        let diagnostics = vscode.languages.getDiagnostics(doc.uri);
+        let diagnostics = manager.getDiagnostics(doc.uri);
         assert.ok(diagnostics.length > 0);
 
         manager.clear(doc.uri);
         await wait();
 
-        diagnostics = vscode.languages.getDiagnostics(doc.uri);
-        const ourDiags = diagnostics.filter(d => d.source === 'PHP Namespace Resolver');
-        assert.strictEqual(ourDiags.length, 0);
+        diagnostics = manager.getDiagnostics(doc.uri);
+        assert.strictEqual(diagnostics.length, 0);
     });
 
     test('should not report diagnostics for non-PHP files', async () => {
@@ -128,9 +127,8 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         manager.update(doc);
         await wait();
 
-        const diagnostics = vscode.languages.getDiagnostics(doc.uri);
-        const ourDiags = diagnostics.filter(d => d.source === 'PHP Namespace Resolver');
-        assert.strictEqual(ourDiags.length, 0);
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        assert.strictEqual(diagnostics.length, 0);
     });
 
     test('should handle empty PHP file', async () => {
@@ -139,8 +137,60 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         manager.update(doc);
         await wait();
 
-        const diagnostics = vscode.languages.getDiagnostics(doc.uri);
-        const ourDiags = diagnostics.filter(d => d.source === 'PHP Namespace Resolver');
-        assert.strictEqual(ourDiags.length, 0);
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        assert.strictEqual(diagnostics.length, 0);
+    });
+
+    test('should not report class name that is part of a longer word', async () => {
+        const doc = await createDocument(
+            '<?php\n\nclass Foo {\n    // TestController is not the same as Controller\n    public function getController(): Controller {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const controllerDiags = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Controller')
+        );
+        // Should only report Controller, not from TestController
+        assert.strictEqual(controllerDiags.length, 1);
+    });
+
+    test('should only report first occurrence per unimported class', async () => {
+        const doc = await createDocument(
+            '<?php\n\nclass Foo {\n    public function bar(Request $r): Request {}\n    public function baz(Request $r2) {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const requestDiags = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Request')
+        );
+        assert.strictEqual(requestDiags.length, 1);
+    });
+
+    test('clearAll should remove all diagnostics', async () => {
+        const doc1 = await createDocument(
+            '<?php\n\nuse App\\Models\\User;\n\nclass Foo {}'
+        );
+        const doc2 = await createDocument(
+            '<?php\n\nuse App\\Models\\Post;\n\nclass Bar {}'
+        );
+
+        manager.update(doc1);
+        manager.update(doc2);
+        await wait();
+
+        assert.ok(manager.getDiagnostics(doc1.uri).length > 0);
+        assert.ok(manager.getDiagnostics(doc2.uri).length > 0);
+
+        manager.clearAll();
+        await wait();
+
+        assert.strictEqual(manager.getDiagnostics(doc1.uri).length, 0);
+        assert.strictEqual(manager.getDiagnostics(doc2.uri).length, 0);
     });
 });

@@ -132,4 +132,83 @@ suite('DeclarationParser (VS Code Integration)', () => {
         const pos = parser.getInsertPosition(declarationLines);
         assert.strictEqual(pos.line, 5);
     });
+
+    test('should parse inline <?php namespace syntax with leading whitespace', async () => {
+        const doc = await createDocument(
+            '  <?php namespace App\\Controllers;\n\nclass Foo {}'
+        );
+        const { declarationLines } = parser.parse(doc);
+        // With leading whitespace, startsWith('<?php') is false,
+        // so the else-if regex matches the <?php namespace pattern
+        assert.strictEqual(declarationLines.namespace, 1);
+    });
+
+    test('should set phpTag but not namespace for <?php namespace on same line', async () => {
+        const doc = await createDocument(
+            '<?php namespace App\\Controllers;\n\nclass Foo {}'
+        );
+        const { declarationLines } = parser.parse(doc);
+        // startsWith('<?php') fires first, so phpTag is set but namespace is not
+        assert.strictEqual(declarationLines.phpTag, 1);
+        assert.strictEqual(declarationLines.namespace, null);
+    });
+
+    test('should return null for malformed use statement without semicolon', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\User\n\nclass Foo {}'
+        );
+        const { useStatements } = parser.parse(doc);
+        assert.strictEqual(useStatements.length, 0);
+    });
+
+    test('should break early when all declarations are found', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App;\n\nuse Foo\\Bar;\n\nclass Baz {}\n\nuse Should\\Not\\Parse;'
+        );
+        const { useStatements } = parser.parse(doc);
+        // The early-exit should prevent parsing use statements after the class
+        assert.strictEqual(useStatements.length, 1);
+        assert.strictEqual(useStatements[0].className, 'Bar');
+    });
+
+    test('getImportedClassNames should stop at class declaration', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\User;\n\nclass Foo {\n    // use App\\Fake\\Thing;\n}'
+        );
+        const names = parser.getImportedClassNames(doc);
+        assert.deepStrictEqual(names, ['User']);
+    });
+
+    test('should detect final class declarations', async () => {
+        const doc = await createDocument(
+            '<?php\n\nfinal class UserService {}'
+        );
+        const { declarationLines } = parser.parse(doc);
+        assert.strictEqual(declarationLines.classDeclaration, 3);
+    });
+
+    test('should parse declare statement line', async () => {
+        const doc = await createDocument(
+            '<?php\ndeclare(strict_types=1);\n\nnamespace App;\n\nclass Foo {}'
+        );
+        const { declarationLines } = parser.parse(doc);
+        assert.strictEqual(declarationLines.declare, 2);
+        assert.strictEqual(declarationLines.namespace, 4);
+    });
+
+    test('should parse declare with spaces', async () => {
+        const doc = await createDocument(
+            '<?php\n  declare( strict_types = 1 );\n\nclass Foo {}'
+        );
+        const { declarationLines } = parser.parse(doc);
+        assert.strictEqual(declarationLines.declare, 2);
+    });
+
+    test('should return null declare when no declare statement exists', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App;\n\nclass Foo {}'
+        );
+        const { declarationLines } = parser.parse(doc);
+        assert.strictEqual(declarationLines.declare, null);
+    });
 });

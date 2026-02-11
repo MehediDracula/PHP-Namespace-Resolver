@@ -167,4 +167,29 @@ suite('PhpCodeActionProvider (VS Code Integration)', () => {
             assert.strictEqual(action.kind?.value, vscode.CodeActionKind.QuickFix.value);
         }
     });
+
+    test('should return no actions for diagnostic with correct source but unrecognized code', async () => {
+        const doc = await vscode.workspace.openTextDocument({
+            language: 'php',
+            content: '<?php\n',
+        });
+
+        const range = new vscode.Range(0, 0, 0, 5);
+        const diag = new vscode.Diagnostic(
+            range,
+            'Some unknown diagnostic',
+            vscode.DiagnosticSeverity.Warning
+        );
+        diag.code = 'unknown-code';
+        diag.source = 'PHP Namespace Resolver';
+
+        const context: vscode.CodeActionContext = {
+            diagnostics: [diag],
+            triggerKind: vscode.CodeActionTriggerKind.Automatic,
+            only: undefined,
+        };
+
+        const actions = provider.provideCodeActions(doc, range, context, new vscode.CancellationTokenSource().token);
+        assert.strictEqual(actions.length, 0);
+    });
 });

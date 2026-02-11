@@ -98,4 +98,71 @@ suite('ImportManager (VS Code Integration)', () => {
         const text = getText(editor);
         assert.ok(text.includes('\\App\\Http\\Controllers\\Controller'));
     });
+
+    test('changeSelectedClass should not prepend backslash when prependBackslash is false', async () => {
+        const { editor } = await openEditor('<?php\n\nclass Foo extends Controller {}');
+
+        const pos = new vscode.Position(2, 22);
+        editor.selection = new vscode.Selection(pos, pos);
+
+        await importManager.changeSelectedClass(
+            editor,
+            editor.selection,
+            'App\\Http\\Controllers\\Controller',
+            false
+        );
+        await wait();
+
+        const text = getText(editor);
+        assert.ok(text.includes('App\\Http\\Controllers\\Controller'));
+        assert.ok(!text.includes('\\\\App'));
+    });
+
+    test('changeSelectedClass should return early when no word at cursor', async () => {
+        const { editor } = await openEditor('<?php\n\n');
+
+        // Position cursor on empty line
+        const pos = new vscode.Position(2, 0);
+        editor.selection = new vscode.Selection(pos, pos);
+
+        // Should not throw
+        await importManager.changeSelectedClass(
+            editor,
+            editor.selection,
+            'SomeClass',
+            true
+        );
+        await wait();
+
+        const text = getText(editor);
+        assert.ok(!text.includes('SomeClass'));
+    });
+
+    test('importClass should show status message when class is already imported', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nuse App\\Models\\User;\n\nclass Foo {}'
+        );
+
+        // Should not throw, just set status bar message
+        await importManager.importClass(editor, editor.selection, 'App\\Models\\User');
+        await wait();
+
+        // The class should still be there unchanged
+        const text = getText(editor);
+        const count = (text.match(/use App\\Models\\User;/g) || []).length;
+        assert.strictEqual(count, 1);
+    });
+
+    test('importClass should return early when fqcn has no valid class name', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nclass Foo {}'
+        );
+
+        // Should not throw for empty/invalid fqcn
+        await importManager.importClass(editor, editor.selection, '');
+        await wait();
+
+        const text = getText(editor);
+        assert.ok(!text.includes('use ;'));
+    });
 });

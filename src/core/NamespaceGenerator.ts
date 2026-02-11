@@ -51,8 +51,9 @@ export class NamespaceGenerator {
         if (declarationLines.namespace !== null) {
             await this.replaceNamespaceStatement(editor, namespaceStatement, declarationLines.namespace);
         } else {
+            const insertLine = declarationLines.declare ?? declarationLines.phpTag;
             await editor.edit(textEdit => {
-                textEdit.insert(new vscode.Position(1, 0), '\n' + namespaceStatement);
+                textEdit.insert(new vscode.Position(insertLine, 0), '\n' + namespaceStatement);
             });
         }
     }

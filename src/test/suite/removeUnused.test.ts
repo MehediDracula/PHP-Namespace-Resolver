@@ -80,4 +80,36 @@ suite('RemoveUnusedCommand (VS Code Integration)', () => {
         assert.ok(!text.includes('App\\Models\\User'));
         assert.ok(!text.includes('App\\Models\\Post'));
     });
+
+    test('should clean up consecutive blank lines after removal', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nnamespace App;\n\nuse App\\Models\\User;\n\nuse App\\Models\\Post;\n\nclass Foo {\n    public function bar(): Post {}\n}'
+        );
+
+        const removed = await command.removeUnused(editor);
+        await wait(200);
+
+        assert.strictEqual(removed, 1);
+        const text = getText(editor);
+        assert.ok(!text.includes('App\\Models\\User'));
+        assert.ok(text.includes('App\\Models\\Post'));
+        // Should not have more than 2 consecutive newlines in the use area
+        assert.ok(!text.match(/use App\\Models\\Post;\n\n\n/), 'Should not have triple newlines after cleanup');
+    });
+
+    test('should correctly remove imports in reverse order to avoid line shifting', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nnamespace App;\n\nuse App\\A;\nuse App\\B;\nuse App\\C;\nuse App\\D;\n\nclass Foo {\n    public function bar(): B {}\n}'
+        );
+
+        const removed = await command.removeUnused(editor);
+        await wait();
+
+        assert.strictEqual(removed, 3);
+        const text = getText(editor);
+        assert.ok(text.includes('use App\\B;'));
+        assert.ok(!text.includes('use App\\A;'));
+        assert.ok(!text.includes('use App\\C;'));
+        assert.ok(!text.includes('use App\\D;'));
+    });
 });

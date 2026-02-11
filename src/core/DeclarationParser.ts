@@ -8,6 +8,7 @@ export class DeclarationParser {
         const useStatements: UseStatement[] = [];
         const declarationLines: DeclarationLines = {
             phpTag: 0,
+            declare: null,
             namespace: null,
             firstUseStatement: null,
             lastUseStatement: null,
@@ -34,6 +35,8 @@ export class DeclarationParser {
 
             if (text.startsWith('<?php')) {
                 declarationLines.phpTag = line + 1;
+            } else if (/^\s*declare\s*\(/.test(text)) {
+                declarationLines.declare = line + 1;
             } else if (/^\s*(namespace\s|<\?php\s+namespace\s)/.test(text)) {
                 declarationLines.namespace = line + 1;
             } else if (/^\s*use\s+/.test(text) && !/^\s*use\s*\(/.test(text)) {

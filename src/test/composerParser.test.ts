@@ -177,4 +177,31 @@ describe('resolveNamespace', () => {
         assert.strictEqual(resolveNamespace('/tests/Unit', autoload), 'Tests\\Unit');
         assert.strictEqual(resolveNamespace('/tests/Feature', autoload), 'Tests\\Feature');
     });
+
+    it('should resolve PSR-0 namespace at base path (empty remaining)', () => {
+        const autoload = parseAutoload({
+            autoload: { 'psr-0': { 'Legacy\\': 'lib/' } }
+        });
+        const result = resolveNamespace('/lib', autoload);
+        assert.strictEqual(result, 'Legacy');
+    });
+
+    it('should handle autoload-dev overriding autoload for same namespace', () => {
+        const autoload = parseAutoload({
+            autoload: { 'psr-4': { 'App\\': 'src/' } },
+            'autoload-dev': { 'psr-4': { 'App\\': 'app/' } }
+        });
+        // autoload-dev should override autoload due to spread order
+        const appMapping = autoload.psr4.find(m => m.namespace === 'App');
+        assert.ok(appMapping);
+        assert.deepStrictEqual(appMapping!.paths, ['app']);
+    });
+
+    it('should handle path that already has trailing slash in input', () => {
+        const autoload = parseAutoload({
+            autoload: { 'psr-4': { 'App\\': 'src/' } }
+        });
+        const result = resolveNamespace('/src/', autoload);
+        assert.strictEqual(result, 'App');
+    });
 });

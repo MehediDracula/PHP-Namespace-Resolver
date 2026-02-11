@@ -94,3 +94,29 @@ describe('Alphabetical Sort', () => {
         ]);
     });
 });
+
+describe('Natural Sort - edge cases', () => {
+    it('should sort purely numeric strings numerically', () => {
+        const items = ['100', '20', '3', '1'];
+        items.sort(naturalCompare);
+        assert.deepStrictEqual(items, ['1', '3', '20', '100']);
+    });
+
+    it('should handle empty strings', () => {
+        const items = ['b', '', 'a'];
+        items.sort(naturalCompare);
+        assert.deepStrictEqual(items, ['', 'a', 'b']);
+    });
+
+    it('should handle strings where one is prefix of another', () => {
+        const items = ['item10', 'item1', 'item'];
+        items.sort(naturalCompare);
+        assert.deepStrictEqual(items, ['item', 'item1', 'item10']);
+    });
+
+    it('should handle strings with consecutive numbers', () => {
+        const items = ['file100part2', 'file100part1', 'file2part10'];
+        items.sort(naturalCompare);
+        assert.deepStrictEqual(items, ['file2part10', 'file100part1', 'file100part2']);
+    });
+});

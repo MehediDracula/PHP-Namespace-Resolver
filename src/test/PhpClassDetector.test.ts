@@ -327,6 +327,42 @@ class UserController extends Controller {
         });
     });
 
+    describe('edge cases - empty and boundary inputs', () => {
+        it('should return empty array for empty text', () => {
+            assert.deepStrictEqual(detector.detectAll(''), []);
+        });
+
+        it('should return empty array for detectAllWithPositions on empty text', () => {
+            assert.deepStrictEqual(detector.detectAllWithPositions(''), []);
+        });
+
+        it('should deduplicate same class at same position in detectAllWithPositions', () => {
+            const text = `<?php
+
+class Foo extends Bar {
+    public function test(): Bar {}
+}`;
+            const results = detector.detectAllWithPositions(text);
+            // Bar should only appear once per unique position
+            const barResults = results.filter(r => r.name === 'Bar');
+            const uniqueKeys = new Set(barResults.map(r => `${r.name}:${r.line}:${r.character}`));
+            assert.strictEqual(barResults.length, uniqueKeys.size);
+        });
+
+        it('should detect property types with protected static readonly modifiers', () => {
+            const text = 'protected static readonly Collection $items;';
+            // The regex handles optional static then optional readonly
+            assert.deepStrictEqual(detector.getPropertyTypes(text), ['Collection']);
+        });
+
+        it('should detect intersection types in property declarations', () => {
+            const text = 'private Countable&Iterator $items;';
+            const result = detector.getPropertyTypes(text);
+            assert.ok(result.includes('Countable'));
+            assert.ok(result.includes('Iterator'));
+        });
+    });
+
     describe('detectAll', () => {
         it('should return unique class names from all patterns', () => {
             const text = `<?php

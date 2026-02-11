@@ -7,7 +7,7 @@ import { DeclarationLines, InsertPosition } from '../types';
 export function getInsertPosition(declarationLines: DeclarationLines): InsertPosition {
     let prepend = declarationLines.phpTag === 0 ? '' : '\n';
     let append = '\n';
-    let line = declarationLines.phpTag;
+    let line = declarationLines.declare ?? declarationLines.phpTag;
 
     if (prepend === '' && declarationLines.namespace !== null) {
         prepend = '\n';
@@ -24,6 +24,7 @@ export function getInsertPosition(declarationLines: DeclarationLines): InsertPos
         const classLine = declarationLines.classDeclaration;
         const refLine = declarationLines.lastUseStatement
             ?? declarationLines.namespace
+            ?? declarationLines.declare
             ?? declarationLines.phpTag;
 
         if (classLine - refLine <= 1) {

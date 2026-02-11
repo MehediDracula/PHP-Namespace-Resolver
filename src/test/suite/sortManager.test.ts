@@ -73,4 +73,47 @@ suite('SortManager (VS Code Integration)', () => {
         const text = getText(editor);
         assert.ok(text.indexOf('App\\User') < text.indexOf('Illuminate\\Support\\Collection'));
     });
+
+    test('should sort alphabetically when configured', async () => {
+        const config = vscode.workspace.getConfiguration('phpNamespaceResolver');
+        await config.update('sortMode', 'alphabetical', vscode.ConfigurationTarget.Global);
+        await wait(500);
+
+        const { editor } = await openEditor(
+            '<?php\n\nuse Zzz\\Short;\nuse Aaa\\VeryLongClassName;\n\nclass Foo {}'
+        );
+
+        sortManager.sort(editor);
+        await wait(500);
+
+        const text = getText(editor);
+        // Alphabetical: Aaa before Zzz, regardless of length
+        assert.ok(text.indexOf('Aaa\\VeryLongClassName') < text.indexOf('Zzz\\Short'),
+            `Expected Aaa before Zzz. Text:\n${text}`);
+
+        await config.update('sortMode', undefined, vscode.ConfigurationTarget.Global);
+        await wait(500);
+    });
+
+    test('should sort naturally when configured', async () => {
+        const config = vscode.workspace.getConfiguration('phpNamespaceResolver');
+        await config.update('sortMode', 'natural', vscode.ConfigurationTarget.Global);
+        await wait(500);
+
+        const { editor } = await openEditor(
+            '<?php\n\nuse App\\Handler10;\nuse App\\Handler2;\nuse App\\Handler1;\n\nclass Foo {}'
+        );
+
+        sortManager.sort(editor);
+        await wait(500);
+
+        const text = getText(editor);
+        assert.ok(text.indexOf('Handler1;') < text.indexOf('Handler2'),
+            `Expected Handler1 before Handler2. Text:\n${text}`);
+        assert.ok(text.indexOf('Handler2') < text.indexOf('Handler10'),
+            `Expected Handler2 before Handler10. Text:\n${text}`);
+
+        await config.update('sortMode', undefined, vscode.ConfigurationTarget.Global);
+        await wait(500);
+    });
 });

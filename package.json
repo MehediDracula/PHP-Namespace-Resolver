@@ -39,7 +39,7 @@
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTests.js",
+        "test": "npm run test:unit && npm run test:integration",
         "test:unit": "npx mocha out/test/*.test.js",
         "test:integration": "node ./out/test/runTests.js"
     },
@@ -99,7 +99,11 @@
                 },
                 "phpNamespaceResolver.sortMode": {
                     "type": "string",
-                    "enum": ["natural", "length", "alphabetical"],
+                    "enum": [
+                        "natural",
+                        "length",
+                        "alphabetical"
+                    ],
                     "default": "natural",
                     "description": "How to sort imports: natural order, line length, or alphabetically"
                 },
@@ -198,9 +202,9 @@
         "url": "https://github.com/MehediDracula/PHP-Namespace-Resolver/issues"
     },
     "devDependencies": {
-        "@types/vscode": "^1.75.0",
-        "@types/node": "18.x",
         "@types/mocha": "^10.0.0",
+        "@types/node": "18.x",
+        "@types/vscode": "^1.75.0",
         "@vscode/test-electron": "^2.3.0",
         "mocha": "^10.2.0",
         "typescript": "^5.3.0"
