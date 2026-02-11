@@ -1,8 +1,6 @@
 # PHP Namespace Resolver
 
-[![Latest Release](https://vsmarketplacebadge.apphb.com/version-short/MehediDracula.php-namespace-resolver.svg
-)](https://marketplace.visualstudio.com/items?itemName=MehediDracula.php-namespace-resolver) [![Installs](https://vsmarketplacebadge.apphb.com/installs-short/MehediDracula.php-namespace-resolver.svg
-)](https://marketplace.visualstudio.com/items?itemName=MehediDracula.php-namespace-resolver) [![Rating](https://vsmarketplacebadge.apphb.com/rating-short/MehediDracula.php-namespace-resolver.svg)](https://marketplace.visualstudio.com/items?itemName=MehediDracula.php-namespace-resolver#review-details)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/MehediDracula.php-namespace-resolver)](https://marketplace.visualstudio.com/items?itemName=MehediDracula.php-namespace-resolver)
 
 Import, expand, sort, and manage PHP namespaces with full PHP 8+ support. Detects unimported and unused classes, offers quick fixes, and keeps your imports clean.
 

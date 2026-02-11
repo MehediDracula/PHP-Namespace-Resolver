@@ -1,36 +1,28 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
-## [2.0.0] - 2026-02-11
-### Changed
-- **Complete TypeScript rewrite** — entire codebase converted from JavaScript to TypeScript with strict mode and modular architecture
-- Messages always display on the status bar (removed notification popup option)
-- Removed highlight commands (`highlightNotImported`, `highlightNotUsed`) in favor of diagnostics panel
-- Removed `showMessageOnStatusBar`, `highlightOnSave`, `highlightOnOpen`, `highlightNotImportedColor`, `highlightNotUsedColor` settings
-- Removed `node-natural-sort` dependency — natural sort is now implemented natively
-- Sort algorithm uses alphabetical tiebreaker for equal-length imports
-
+## [2.0.0] - 2026-02-12
 ### Added
-- **PHP 8.0–8.3 language support**
-  - Union types (`Request|Response`)
-  - Intersection types (`Countable&Iterator`)
-  - Return type declarations (`function get(): User`)
-  - Typed properties (`private UserService $service`)
-  - Constructor promotion (`private readonly UserRepository $repo`)
-  - Nullable types (`?User`)
-  - Attribute classes (`#[Route("/api")]`, `#[ORM\Entity]`)
-  - Catch block types (`catch (NotFoundException | AuthorizationException $e)`)
-  - Enum declarations with implements (`enum Status: string implements HasLabel`)
-- **Remove Unused Imports command** (`Ctrl+Alt+R`) — removes all unused `use` statements with blank line cleanup
-- **`removeOnSave` setting** — automatically strip unused imports on save
-- **`autoImportOnSave` setting** — automatically import detected classes on save
-- **Diagnostics panel integration** — unimported classes shown as Warnings, unused imports shown as Hints with "unnecessary" fade in the Problems panel
-- **Code Actions (Quick Fixes)** — lightbulb menu offering "Import class", "Expand to fully qualified name", and "Remove unused import"
-- **Namespace caching** — in-memory index built on activation with `FileSystemWatcher` for incremental updates; `Rebuild Namespace Index` command for manual refresh
-- **Multi-root workspace support** — file searching scoped to the workspace folder containing the active file
-- **PSR-0 autoload support** — `generateNamespace` reads both `psr-4` and `psr-0` from composer.json
-- **Built-in PHP class database** — 200+ classes through PHP 8.3 to avoid unnecessary import prompts
-- **Comprehensive test suite** — 85 unit tests (PhpClassDetector, composer parsing, insert position, sort logic, built-in classes) and 45 VS Code integration tests (DeclarationParser, SortManager, ImportManager, RemoveUnusedCommand, DiagnosticManager, CodeActionProvider)
+- Rewrite extension in TypeScript with modular architecture
+- Real-time diagnostics for not-imported and unused classes (warnings and hints)
+- Quick Fix code actions: import class, expand to FQCN, and remove unused imports
+- `Remove Unused Imports` command (`phpNamespaceResolver.removeUnused`)
+- `Rebuild Index` command (`phpNamespaceResolver.rebuildIndex`)
+- `removeOnSave` setting to auto-remove unused imports on save
+- `declare(strict_types=1)` support in insert position calculation and namespace generation
+- PHP 8+ support: enums, named arguments, union/intersection types, match expressions, `readonly` classes, attributes, first-class callables, fibers, and `never`/`null`/`true`/`false` types
+- Comprehensive test suite: unit tests and VS Code integration tests
+
+### Changed
+- Rename all command/config prefixes from `namespaceResolver` to `phpNamespaceResolver`
+- Replace `sortAlphabetically` and `sortNatural` boolean settings with a single `sortMode` enum (`"length"` | `"alphabetical"` | `"natural"`)
+- Status bar messages replace the old highlight decorations for all notifications
+- Require VS Code `^1.75.0` (previously `^1.68.0`)
+
+### Removed
+- `Highlight Not Imported Classes` command (replaced by real-time diagnostics)
+- `Highlight Not Used Classes` command (replaced by real-time diagnostics)
+- `highlightOnOpen`, `highlightOnSave`, and highlight-related settings
 
 ## [1.1.8] - 2019-05-13
 ### Fixed
