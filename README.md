@@ -63,8 +63,7 @@ You can override these defaults in your VS Code settings.
     "phpNamespaceResolver.exclude": "**/node_modules/**",  // Glob pattern to exclude when searching files
     "phpNamespaceResolver.autoSort": true,                 // Auto sort after importing a class
     "phpNamespaceResolver.sortOnSave": false,              // Sort imports when a file is saved
-    "phpNamespaceResolver.sortAlphabetically": false,      // Sort alphabetically instead of by line length
-    "phpNamespaceResolver.sortNatural": false,             // Sort using natural order algorithm
+    "phpNamespaceResolver.sortMode": "natural",             // Sort mode: "natural", "length", or "alphabetical"
     "phpNamespaceResolver.leadingSeparator": true,         // Prepend leading backslash when expanding
     "phpNamespaceResolver.removeOnSave": false,            // Remove unused imports on save
     "phpNamespaceResolver.autoImportOnSave": false         // Auto import all detected classes on save

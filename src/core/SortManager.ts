@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { UseStatement, SortMode } from '../types';
 import { DeclarationParser } from './DeclarationParser';
-import { getSortMode } from '../utils/config';
+import { getConfig } from '../utils/config';
 
 /**
  * Handles sorting of PHP use statements with multiple sorting strategies.
@@ -19,7 +19,7 @@ export class SortManager {
             throw new Error('Nothing to sort.');
         }
 
-        const mode = getSortMode();
+        const mode = getConfig('sortMode');
         const sorted = this.sortStatements(useStatements, mode);
 
         editor.edit(textEdit => {

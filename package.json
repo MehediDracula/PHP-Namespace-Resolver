@@ -97,15 +97,11 @@
                     "default": false,
                     "description": "Automatically sort imports when a file is saved"
                 },
-                "phpNamespaceResolver.sortAlphabetically": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Sort imports alphabetically instead of by line length"
-                },
-                "phpNamespaceResolver.sortNatural": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Sort imports using a natural order algorithm"
+                "phpNamespaceResolver.sortMode": {
+                    "type": "string",
+                    "enum": ["natural", "length", "alphabetical"],
+                    "default": "natural",
+                    "description": "How to sort imports: natural order, line length, or alphabetically"
                 },
                 "phpNamespaceResolver.leadingSeparator": {
                     "type": "boolean",

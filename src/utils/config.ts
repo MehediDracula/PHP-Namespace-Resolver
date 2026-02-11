@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ExtensionConfig, SortMode } from '../types';
+import { ExtensionConfig } from '../types';
 
 const SECTION = 'phpNamespaceResolver';
 
@@ -10,23 +10,12 @@ export function getConfig<K extends keyof ExtensionConfig>(key: K): ExtensionCon
     );
 }
 
-export function getSortMode(): SortMode {
-    if (getConfig('sortNatural')) {
-        return 'natural';
-    }
-    if (getConfig('sortAlphabetically')) {
-        return 'alphabetical';
-    }
-    return 'length';
-}
-
 function getDefault<K extends keyof ExtensionConfig>(key: K): ExtensionConfig[K] {
     const defaults: ExtensionConfig = {
         exclude: '**/node_modules/**',
         autoSort: true,
         sortOnSave: false,
-        sortAlphabetically: false,
-        sortNatural: false,
+        sortMode: 'natural',
         leadingSeparator: true,
         removeOnSave: false,
         autoImportOnSave: false,
