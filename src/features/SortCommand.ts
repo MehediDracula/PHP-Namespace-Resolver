@@ -2,9 +2,6 @@ import * as vscode from 'vscode';
 import { SortManager } from '../core/SortManager';
 import { requireActiveEditor } from '../utils/editor';
 
-/**
- * Handles the Sort Imports command.
- */
 export class SortCommand {
     constructor(private sortManager: SortManager) {}
 

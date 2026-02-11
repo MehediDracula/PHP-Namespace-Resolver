@@ -5,9 +5,6 @@ import { NamespaceResolver } from '../core/NamespaceResolver';
 import { ImportManager } from '../core/ImportManager';
 import { requireActiveEditor, resolveClassName } from '../utils/editor';
 
-/**
- * Handles the Import Class and Import All Classes commands.
- */
 export class ImportCommand {
     constructor(
         private detector: PhpClassDetector,
@@ -16,9 +13,6 @@ export class ImportCommand {
         private importManager: ImportManager
     ) {}
 
-    /**
-     * Import a single class at the cursor position (or from a string).
-     */
     async importSingle(selection: vscode.Selection | string): Promise<void> {
         const editor = requireActiveEditor();
         const resolving = resolveClassName(editor, selection);
@@ -32,7 +26,6 @@ export class ImportCommand {
         let replaceClassAfterImport = false;
 
         if (/\\/.test(resolving)) {
-            // User selected a FQCN — import it directly
             fqcn = resolving.replace(/^\\?/, '');
             replaceClassAfterImport = true;
         } else {
@@ -51,9 +44,6 @@ export class ImportCommand {
         await this.importManager.importClass(editor, selection, fqcn, replaceClassAfterImport);
     }
 
-    /**
-     * Import all unimported classes detected in the current file.
-     */
     async importAll(): Promise<void> {
         const editor = requireActiveEditor();
         const text = editor.document.getText();
@@ -63,7 +53,6 @@ export class ImportCommand {
         for (const phpClass of detectedClasses) {
             if (!importedClasses.includes(phpClass)) {
                 await this.importSingle(phpClass);
-                // Refresh imported list after each import
                 importedClasses.push(phpClass);
             }
         }

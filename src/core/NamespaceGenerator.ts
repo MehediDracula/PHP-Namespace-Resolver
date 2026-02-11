@@ -2,21 +2,14 @@ import * as vscode from 'vscode';
 import { DeclarationParser } from './DeclarationParser';
 import { parseAutoload, resolveNamespace } from './composerParser';
 
-/**
- * Generates PHP namespace declarations based on composer.json PSR-4 and PSR-0 autoload mappings.
- */
 export class NamespaceGenerator {
     constructor(private parser: DeclarationParser) {}
 
-    /**
-     * Generate and insert/replace the namespace for the current file.
-     */
     async generate(editor: vscode.TextEditor): Promise<void> {
         const currentUri = editor.document.uri;
         const currentFile = currentUri.fsPath;
         const currentPath = currentFile.substring(0, currentFile.lastIndexOf('/'));
 
-        // Normalize for Windows
         const normalizedCurrentPath = currentPath.replace(/\\/g, '/');
         const normalizedCurrentFile = currentFile.replace(/\\/g, '/');
 
@@ -25,7 +18,6 @@ export class NamespaceGenerator {
             return void vscode.window.setStatusBarMessage('No folder opened in workspace, cannot find composer.json', 3000);
         }
 
-        // Search for composer.json recursively up from the current file
         const composerFile = await this.findComposerJson(normalizedCurrentFile, workspaceFolder);
         if (!composerFile) {
             return void vscode.window.setStatusBarMessage('No composer.json file found, automatic namespace generation failed', 3000);
@@ -88,9 +80,6 @@ export class NamespaceGenerator {
         return null;
     }
 
-    /**
-     * Replace an existing namespace statement in the document.
-     */
     private async replaceNamespaceStatement(
         editor: vscode.TextEditor,
         namespace: string,

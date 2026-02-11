@@ -1,26 +1,8 @@
 import { DetectedClass } from '../types';
 
-/**
- * Detects PHP class references in source code.
- * Supports PHP 5.x through PHP 8.3 syntax patterns including:
- * - Class inheritance (extends)
- * - Interface implementation (implements)
- * - Function parameter type hints (including union & intersection types)
- * - Return type declarations
- * - Property type declarations (typed properties, promoted constructor params)
- * - new ClassName instantiation
- * - Static method calls (ClassName::)
- * - instanceof checks
- * - Catch block exception types (including multi-catch)
- * - PHP 8 Attributes (#[Attribute])
- * - Enum declarations with implements
- */
 export class PhpClassDetector {
     private static readonly CLASS_NAME = '[A-Z][A-Za-z0-9_]*';
 
-    /**
-     * Get all unique PHP class names detected in the given text.
-     */
     detectAll(text: string): string[] {
         const classes = new Set<string>();
 
@@ -39,9 +21,6 @@ export class PhpClassDetector {
         return Array.from(classes);
     }
 
-    /**
-     * Get all detected classes with their positions for diagnostics/highlighting.
-     */
     detectAllWithPositions(text: string): DetectedClass[] {
         const results: DetectedClass[] = [];
         const seen = new Map<string, boolean>();
@@ -50,7 +29,6 @@ export class PhpClassDetector {
         const classNames = this.detectAll(text);
 
         for (const name of classNames) {
-            // Escape special regex characters in the class name
             const pattern = new RegExp(`(?<![a-zA-Z0-9_\\\\])${escapeRegex(name)}(?![a-zA-Z0-9_\\\\])`, 'g');
             let match: RegExpExecArray | null;
 
@@ -58,7 +36,6 @@ export class PhpClassDetector {
                 const offset = match.index;
                 const pos = offsetToPosition(text, offset, lines);
 
-                // Skip if on a namespace declaration line
                 const lineText = lines[pos.line];
                 if (/^\s*(namespace|use)\s/.test(lineText)) {
                     continue;
@@ -80,12 +57,10 @@ export class PhpClassDetector {
         return results;
     }
 
-    /** Classes after `extends` keyword */
     getExtended(text: string): string[] {
         return matchAll(text, new RegExp(`extends\\s+(${PhpClassDetector.CLASS_NAME})`, 'gm'));
     }
 
-    /** Interfaces after `implements` keyword (comma-separated) */
     getImplemented(text: string): string[] {
         const regex = /implements\s+([A-Z][A-Za-z0-9_,\s\\]+?)(?:\s*\{|\s*$)/gm;
         const results: string[] = [];
@@ -103,10 +78,6 @@ export class PhpClassDetector {
         return results;
     }
 
-    /**
-     * Type hints from function/method parameters.
-     * Handles union types (A|B), intersection types (A&B), and nullable (?A).
-     */
     getFromFunctionParameters(text: string): string[] {
         const regex = /function\s+\S+\s*\(([\s\S]*?)\)/gm;
         const results: string[] = [];
@@ -119,7 +90,6 @@ export class PhpClassDetector {
         return results;
     }
 
-    /** Return type declarations after ): */
     getReturnTypes(text: string): string[] {
         const regex = /\)\s*:\s*([\w\s|&?\\]+?)(?:\s*\{|\s*;|\s*$)/gm;
         const results: string[] = [];
@@ -131,10 +101,6 @@ export class PhpClassDetector {
         return results;
     }
 
-    /**
-     * Typed properties: visibility modifiers followed by type hints.
-     * Also handles constructor promotion (public readonly Type $var).
-     */
     getPropertyTypes(text: string): string[] {
         const regex = /(?:public|protected|private)\s+(?:readonly\s+|static\s+)?(?:readonly\s+)?([\w|&?\\]+)\s+\$/gm;
         const results: string[] = [];
@@ -146,22 +112,18 @@ export class PhpClassDetector {
         return results;
     }
 
-    /** new ClassName(...) */
     getInitializedWithNew(text: string): string[] {
         return matchAll(text, new RegExp(`new\\s+(${PhpClassDetector.CLASS_NAME})`, 'gm'));
     }
 
-    /** ClassName::method() or ClassName::CONSTANT */
     getFromStaticCalls(text: string): string[] {
         return matchAll(text, new RegExp(`(${PhpClassDetector.CLASS_NAME})::`, 'gm'));
     }
 
-    /** instanceof ClassName */
     getFromInstanceof(text: string): string[] {
         return matchAll(text, new RegExp(`instanceof\\s+(${PhpClassDetector.CLASS_NAME})`, 'gm'));
     }
 
-    /** catch (ExceptionType | AnotherException $e) */
     getFromCatchBlocks(text: string): string[] {
         const regex = /catch\s*\(\s*([\w\s|\\]+)\s+\$/gm;
         const results: string[] = [];
@@ -179,7 +141,6 @@ export class PhpClassDetector {
         return results;
     }
 
-    /** PHP 8 Attributes: #[AttributeName(...)] */
     getFromAttributes(text: string): string[] {
         const regex = /#\[\s*([\w\\]+)/gm;
         const results: string[] = [];
@@ -194,7 +155,6 @@ export class PhpClassDetector {
         return results;
     }
 
-    /** enum Foo: string implements Bar, Baz */
     getEnumImplements(text: string): string[] {
         const regex = /enum\s+\w+(?:\s*:\s*\w+)?\s+implements\s+([A-Z][A-Za-z0-9_,\s\\]+?)(?:\s*\{)/gm;
         const results: string[] = [];
@@ -212,20 +172,13 @@ export class PhpClassDetector {
         return results;
     }
 
-    /**
-     * Extract class names from a type expression that may contain
-     * union types (|), intersection types (&), nullable (?), and scalar types.
-     */
     private extractTypeNames(typeExpr: string): string[] {
         const results: string[] = [];
-        // Split on | and & to handle union and intersection types
         const types = typeExpr.split(/[|&]/);
 
         for (const type of types) {
             let trimmed = type.trim();
-            // Remove nullable prefix
             trimmed = trimmed.replace(/^\?/, '');
-            // Get the short class name (last part after \)
             const shortName = trimmed.split('\\').pop()?.trim();
             if (shortName && /^[A-Z]/.test(shortName) && !isScalarType(shortName)) {
                 results.push(shortName);
@@ -234,9 +187,6 @@ export class PhpClassDetector {
         return results;
     }
 
-    /**
-     * Extract type hints from a function parameter list string.
-     */
     private extractTypesFromParameterList(params: string): string[] {
         const results: string[] = [];
         const parts = params.split(',');
@@ -245,7 +195,6 @@ export class PhpClassDetector {
             const trimmed = part.trim();
             if (!trimmed) { continue; }
 
-            // Match everything before the $ sign as potential type hint
             const typeMatch = trimmed.match(/^([\w\s|&?\\]+?)\s*\$/);
             if (typeMatch) {
                 results.push(...this.extractTypeNames(typeMatch[1]));
@@ -255,7 +204,6 @@ export class PhpClassDetector {
     }
 }
 
-/** Simple extraction of capture group 1 from all regex matches */
 function matchAll(text: string, regex: RegExp): string[] {
     const results: string[] = [];
     let match: RegExpExecArray | null;
@@ -266,7 +214,6 @@ function matchAll(text: string, regex: RegExp): string[] {
     return results;
 }
 
-/** Check if a type name is a PHP scalar/special type that doesn't need importing */
 function isScalarType(name: string): boolean {
     const scalars = new Set([
         'String', 'Int', 'Float', 'Bool', 'Array', 'Object',

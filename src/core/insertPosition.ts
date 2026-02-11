@@ -20,7 +20,6 @@ export function getInsertPosition(declarationLines: DeclarationLines): InsertPos
         line = declarationLines.namespace;
     }
 
-    // Add extra newline if class declaration is directly adjacent
     if (declarationLines.classDeclaration !== null) {
         const classLine = declarationLines.classDeclaration;
         const refLine = declarationLines.lastUseStatement

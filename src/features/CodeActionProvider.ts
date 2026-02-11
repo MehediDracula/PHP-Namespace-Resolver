@@ -1,17 +1,6 @@
 import * as vscode from 'vscode';
 import { DiagnosticCode } from '../types';
 
-/**
- * Provides code actions (quick fixes) for PHP namespace diagnostics.
- *
- * When the cursor is on an unimported class:
- *   - Offers "Import Class" action
- *   - Offers "Expand to FQCN" action
- *
- * When the cursor is on an unused import:
- *   - Offers "Remove unused import" action
- *   - Offers "Remove all unused imports" action
- */
 export class PhpCodeActionProvider implements vscode.CodeActionProvider {
     static readonly providedCodeActionKinds = [
         vscode.CodeActionKind.QuickFix,

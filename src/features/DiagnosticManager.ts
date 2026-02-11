@@ -5,9 +5,6 @@ import { DiagnosticCode } from '../types';
 
 const DIAGNOSTIC_SOURCE = 'PHP Namespace Resolver';
 
-/**
- * Provides VS Code Diagnostics (Problems panel) for unimported and unused classes.
- */
 export class DiagnosticManager implements vscode.Disposable {
     private collection: vscode.DiagnosticCollection;
 
@@ -18,9 +15,6 @@ export class DiagnosticManager implements vscode.Disposable {
         this.collection = vscode.languages.createDiagnosticCollection('phpNamespaceResolver');
     }
 
-    /**
-     * Update diagnostics for a given document.
-     */
     update(document: vscode.TextDocument): void {
         if (document.languageId !== 'php') {
             this.collection.delete(document.uri);
@@ -35,16 +29,14 @@ export class DiagnosticManager implements vscode.Disposable {
         this.collection.set(document.uri, diagnostics);
     }
 
-    /**
-     * Clear diagnostics for a document.
-     */
+    getDiagnostics(uri: vscode.Uri): readonly vscode.Diagnostic[] {
+        return this.collection.get(uri) ?? [];
+    }
+
     clear(uri: vscode.Uri): void {
         this.collection.delete(uri);
     }
 
-    /**
-     * Clear all diagnostics.
-     */
     clearAll(): void {
         this.collection.clear();
     }
@@ -53,9 +45,6 @@ export class DiagnosticManager implements vscode.Disposable {
         this.collection.dispose();
     }
 
-    /**
-     * Generate diagnostics for classes that are used but not imported.
-     */
     private getNotImportedDiagnostics(document: vscode.TextDocument): vscode.Diagnostic[] {
         const text = document.getText();
         const detectedClasses = this.detector.detectAll(text);
@@ -75,7 +64,6 @@ export class DiagnosticManager implements vscode.Disposable {
                 const startPos = document.positionAt(match.index);
                 const textLine = document.lineAt(startPos);
 
-                // Skip namespace and use statement lines
                 if (/^\s*(namespace|use)\s/.test(textLine.text)) {
                     continue;
                 }
@@ -105,9 +93,6 @@ export class DiagnosticManager implements vscode.Disposable {
         return diagnostics;
     }
 
-    /**
-     * Generate diagnostics for classes that are imported but not used.
-     */
     private getNotUsedDiagnostics(document: vscode.TextDocument): vscode.Diagnostic[] {
         const text = document.getText();
         const detectedClasses = this.detector.detectAll(text);

@@ -3,15 +3,9 @@ import { UseStatement, SortMode } from '../types';
 import { DeclarationParser } from './DeclarationParser';
 import { getConfig } from '../utils/config';
 
-/**
- * Handles sorting of PHP use statements with multiple sorting strategies.
- */
 export class SortManager {
     constructor(private parser: DeclarationParser) {}
 
-    /**
-     * Sort imports in the given editor. Throws if nothing to sort.
-     */
     sort(editor: vscode.TextEditor): void {
         const { useStatements } = this.parser.parse(editor.document);
 
@@ -33,9 +27,6 @@ export class SortManager {
         });
     }
 
-    /**
-     * Sort an array of use statements according to the given mode.
-     */
     private sortStatements(statements: UseStatement[], mode: SortMode): UseStatement[] {
         const sorted = [...statements];
 
@@ -67,9 +58,6 @@ export class SortManager {
     }
 }
 
-/**
- * Natural sort comparison that handles embedded numbers intelligently.
- */
 function naturalCompare(a: string, b: string): number {
     const aParts = a.split(/(\d+)/);
     const bParts = b.split(/(\d+)/);

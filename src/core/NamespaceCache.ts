@@ -2,10 +2,6 @@ import * as vscode from 'vscode';
 import { CacheEntry } from '../types';
 import { getConfig } from '../utils/config';
 
-/**
- * In-memory namespace index for fast class resolution.
- * Uses a FileSystemWatcher to stay up-to-date.
- */
 export class NamespaceCache implements vscode.Disposable {
     private cache = new Map<string, CacheEntry[]>();
     private watcher: vscode.FileSystemWatcher | undefined;
@@ -24,24 +20,15 @@ export class NamespaceCache implements vscode.Disposable {
         this.watcher.onDidDelete(uri => this.removeFile(uri));
     }
 
-    /**
-     * Look up cached entries for a given short class name.
-     */
     lookup(className: string): CacheEntry[] {
         return this.cache.get(className) ?? [];
     }
 
-    /**
-     * Force a full rebuild of the index.
-     */
     async rebuild(): Promise<void> {
         this.cache.clear();
         await this.buildIndex();
     }
 
-    /**
-     * Check if the cache has any entries for a class name.
-     */
     has(className: string): boolean {
         return this.cache.has(className) && this.cache.get(className)!.length > 0;
     }
@@ -72,16 +59,13 @@ export class NamespaceCache implements vscode.Disposable {
             const doc = await vscode.workspace.openTextDocument(uri);
             const text = doc.getText();
 
-            // Remove old entries for this file
             this.removeFile(uri);
 
-            // Extract namespace
             const nsMatch = text.match(/^(?:namespace|<\?php\s+namespace)\s+(.+?);/m);
             if (!nsMatch) { return; }
 
             const namespace = nsMatch[1].trim();
 
-            // Find class/interface/trait/enum declarations
             const declRegex = /^\s*(?:abstract\s+|final\s+)?(?:class|trait|interface|enum)\s+(\w+)/gm;
             let match: RegExpExecArray | null;
 
@@ -96,9 +80,7 @@ export class NamespaceCache implements vscode.Disposable {
                 }
                 this.cache.get(className)!.push(entry);
             }
-        } catch {
-            // File might be deleted or unreadable — ignore
-        }
+        } catch {}
     }
 
     private removeFile(uri: vscode.Uri): void {

@@ -3,19 +3,12 @@ import { UseStatement, DeclarationLines, InsertPosition } from '../types';
 import { DeclarationParser } from './DeclarationParser';
 import { getConfig } from '../utils/config';
 
-/**
- * Manages the insertion, replacement, and conflict resolution of PHP use statements.
- */
 export class ImportManager {
     constructor(
         private parser: DeclarationParser,
         private sortCallback: (editor: vscode.TextEditor) => void
     ) {}
 
-    /**
-     * Import a fully qualified class name into the active document.
-     * Handles conflict detection and alias resolution.
-     */
     async importClass(
         editor: vscode.TextEditor,
         selection: vscode.Selection | string,
@@ -43,9 +36,6 @@ export class ImportManager {
         }
     }
 
-    /**
-     * Insert a use statement at the appropriate location.
-     */
     async insert(
         editor: vscode.TextEditor,
         fqcn: string,
@@ -67,16 +57,10 @@ export class ImportManager {
         vscode.window.setStatusBarMessage('$(check)  The class is imported.', 3000);
     }
 
-    /**
-     * Check if a class name conflicts with an existing import.
-     */
     hasConflict(useStatements: UseStatement[], className: string): boolean {
         return useStatements.some(stmt => stmt.className === className);
     }
 
-    /**
-     * Prompt for an alias and insert with that alias.
-     */
     private async insertAsAlias(
         editor: vscode.TextEditor,
         selection: vscode.Selection | string,
@@ -89,7 +73,7 @@ export class ImportManager {
         });
 
         if (alias === undefined) {
-            return; // User cancelled
+            return;
         }
 
         if (this.hasConflict(useStatements, alias)) {
@@ -104,9 +88,6 @@ export class ImportManager {
         }
     }
 
-    /**
-     * Replace an existing use statement that has a conflicting class name.
-     */
     private async replaceUseStatement(
         editor: vscode.TextEditor,
         fqcn: string,
@@ -129,9 +110,6 @@ export class ImportManager {
         }
     }
 
-    /**
-     * Import a class and simultaneously replace the selected text in the editor.
-     */
     private async importAndReplaceSelectedClass(
         editor: vscode.TextEditor,
         selection: vscode.Selection | string,
@@ -146,9 +124,6 @@ export class ImportManager {
         await this.insert(editor, fqcn, declarationLines, alias);
     }
 
-    /**
-     * Replace the word at the cursor position with a different class name or FQCN.
-     */
     async changeSelectedClass(
         editor: vscode.TextEditor,
         selection: vscode.Selection,

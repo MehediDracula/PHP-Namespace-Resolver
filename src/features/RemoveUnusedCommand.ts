@@ -3,9 +3,6 @@ import { PhpClassDetector } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
 import { requireActiveEditor } from '../utils/editor';
 
-/**
- * Removes all unused use statements from the active PHP file.
- */
 export class RemoveUnusedCommand {
     constructor(
         private detector: PhpClassDetector,
@@ -26,15 +23,11 @@ export class RemoveUnusedCommand {
         }
     }
 
-    /**
-     * Remove unused imports from the editor. Returns the count of removed statements.
-     */
     async removeUnused(editor: vscode.TextEditor): Promise<number> {
         const text = editor.document.getText();
         const detectedClasses = this.detector.detectAll(text);
         const { useStatements } = this.parser.parse(editor.document);
 
-        // Find use statements whose class name is not referenced in code
         const unusedStatements = useStatements.filter(
             stmt => !detectedClasses.includes(stmt.className)
         );
@@ -54,15 +47,11 @@ export class RemoveUnusedCommand {
             }
         });
 
-        // Clean up consecutive blank lines that may remain
         await this.cleanupBlankLines(editor);
 
         return unusedStatements.length;
     }
 
-    /**
-     * Remove extra consecutive blank lines in the use statement area.
-     */
     private async cleanupBlankLines(editor: vscode.TextEditor): Promise<void> {
         const document = editor.document;
         const linesToDelete: number[] = [];
@@ -82,7 +71,6 @@ export class RemoveUnusedCommand {
                 }
                 prevBlank = true;
             } else if (inUseArea && text !== '') {
-                // Exited use area
                 break;
             }
         }
