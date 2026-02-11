@@ -33,13 +33,13 @@ Search these commands by the title on command palette.
 
 | Command | Title |
 |---------|-------|
-| `namespaceResolver.import` | Import Class |
-| `namespaceResolver.importAll` | Import All Classes |
-| `namespaceResolver.expand` | Expand Class |
-| `namespaceResolver.sort` | Sort Imports |
-| `namespaceResolver.removeUnused` | Remove Unused Imports |
-| `namespaceResolver.generateNamespace` | Generate Namespace |
-| `namespaceResolver.rebuildIndex` | Rebuild Namespace Index |
+| `phpNamespaceResolver.import` | Import Class |
+| `phpNamespaceResolver.importAll` | Import All Classes |
+| `phpNamespaceResolver.expand` | Expand Class |
+| `phpNamespaceResolver.sort` | Sort Imports |
+| `phpNamespaceResolver.removeUnused` | Remove Unused Imports |
+| `phpNamespaceResolver.generateNamespace` | Generate Namespace |
+| `phpNamespaceResolver.rebuildIndex` | Rebuild Namespace Index |
 
 ## Keybindings
 
@@ -60,14 +60,14 @@ You can override these defaults in your VS Code settings.
 
 ```jsonc
 {
-    "namespaceResolver.exclude": "**/node_modules/**",  // Glob pattern to exclude when searching files
-    "namespaceResolver.autoSort": true,                 // Auto sort after importing a class
-    "namespaceResolver.sortOnSave": false,              // Sort imports when a file is saved
-    "namespaceResolver.sortAlphabetically": false,      // Sort alphabetically instead of by line length
-    "namespaceResolver.sortNatural": false,             // Sort using natural order algorithm
-    "namespaceResolver.leadingSeparator": true,         // Prepend leading backslash when expanding
-    "namespaceResolver.removeOnSave": false,            // Remove unused imports on save
-    "namespaceResolver.autoImportOnSave": false         // Auto import all detected classes on save
+    "phpNamespaceResolver.exclude": "**/node_modules/**",  // Glob pattern to exclude when searching files
+    "phpNamespaceResolver.autoSort": true,                 // Auto sort after importing a class
+    "phpNamespaceResolver.sortOnSave": false,              // Sort imports when a file is saved
+    "phpNamespaceResolver.sortAlphabetically": false,      // Sort alphabetically instead of by line length
+    "phpNamespaceResolver.sortNatural": false,             // Sort using natural order algorithm
+    "phpNamespaceResolver.leadingSeparator": true,         // Prepend leading backslash when expanding
+    "phpNamespaceResolver.removeOnSave": false,            // Remove unused imports on save
+    "phpNamespaceResolver.autoImportOnSave": false         // Auto import all detected classes on save
 }
 ```
 

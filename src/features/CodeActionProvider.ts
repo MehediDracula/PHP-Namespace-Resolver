@@ -45,26 +45,24 @@ export class PhpCodeActionProvider implements vscode.CodeActionProvider {
     private createImportActions(diagnostic: vscode.Diagnostic): vscode.CodeAction[] {
         const actions: vscode.CodeAction[] = [];
 
-        // Import Class action
         const importAction = new vscode.CodeAction(
             `Import class`,
             vscode.CodeActionKind.QuickFix
         );
         importAction.command = {
-            command: 'namespaceResolver.import',
+            command: 'phpNamespaceResolver.import',
             title: 'Import Class',
         };
         importAction.diagnostics = [diagnostic];
         importAction.isPreferred = true;
         actions.push(importAction);
 
-        // Expand to FQCN action
         const expandAction = new vscode.CodeAction(
             `Expand to fully qualified name`,
             vscode.CodeActionKind.QuickFix
         );
         expandAction.command = {
-            command: 'namespaceResolver.expand',
+            command: 'phpNamespaceResolver.expand',
             title: 'Expand Class',
         };
         expandAction.diagnostics = [diagnostic];
@@ -76,13 +74,12 @@ export class PhpCodeActionProvider implements vscode.CodeActionProvider {
     private createRemoveActions(diagnostic: vscode.Diagnostic): vscode.CodeAction[] {
         const actions: vscode.CodeAction[] = [];
 
-        // Remove this unused import
         const removeOneAction = new vscode.CodeAction(
             `Remove unused import`,
             vscode.CodeActionKind.QuickFix
         );
         removeOneAction.command = {
-            command: 'namespaceResolver.removeUnused',
+            command: 'phpNamespaceResolver.removeUnused',
             title: 'Remove Unused Imports',
         };
         removeOneAction.diagnostics = [diagnostic];

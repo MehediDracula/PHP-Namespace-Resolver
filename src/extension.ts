@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 
-// Core
 import { PhpClassDetector } from './core/PhpClassDetector';
 import { DeclarationParser } from './core/DeclarationParser';
 import { NamespaceCache } from './core/NamespaceCache';
@@ -8,8 +7,6 @@ import { NamespaceResolver } from './core/NamespaceResolver';
 import { ImportManager } from './core/ImportManager';
 import { SortManager } from './core/SortManager';
 import { NamespaceGenerator } from './core/NamespaceGenerator';
-
-// Features
 import { ImportCommand } from './features/ImportCommand';
 import { ExpandCommand } from './features/ExpandCommand';
 import { SortCommand } from './features/SortCommand';
@@ -21,7 +18,6 @@ import { PhpCodeActionProvider } from './features/CodeActionProvider';
 import { getConfig } from './utils/config';
 
 export function activate(context: vscode.ExtensionContext): void {
-    // --- Core services ---
     const detector = new PhpClassDetector();
     const parser = new DeclarationParser();
     const cache = new NamespaceCache();
@@ -30,7 +26,6 @@ export function activate(context: vscode.ExtensionContext): void {
     const importManager = new ImportManager(parser, (editor) => sortManager.sort(editor));
     const generator = new NamespaceGenerator(parser);
 
-    // --- Feature handlers ---
     const importCommand = new ImportCommand(detector, parser, resolver, importManager);
     const expandCommand = new ExpandCommand(resolver, importManager);
     const sortCommand = new SortCommand(sortManager);
@@ -38,12 +33,10 @@ export function activate(context: vscode.ExtensionContext): void {
     const removeUnusedCommand = new RemoveUnusedCommand(detector, parser);
     const diagnosticManager = new DiagnosticManager(detector, parser);
 
-    // --- Initialize cache in background ---
     cache.initialize();
 
-    // --- Register commands ---
     context.subscriptions.push(
-        vscode.commands.registerCommand('namespaceResolver.import', async () => {
+        vscode.commands.registerCommand('phpNamespaceResolver.import', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor) { return; }
             for (const selection of editor.selections) {
@@ -51,11 +44,11 @@ export function activate(context: vscode.ExtensionContext): void {
             }
         }),
 
-        vscode.commands.registerCommand('namespaceResolver.importAll', () => {
+        vscode.commands.registerCommand('phpNamespaceResolver.importAll', () => {
             return importCommand.importAll();
         }),
 
-        vscode.commands.registerCommand('namespaceResolver.expand', async () => {
+        vscode.commands.registerCommand('phpNamespaceResolver.expand', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor) { return; }
             for (const selection of editor.selections) {
@@ -63,25 +56,24 @@ export function activate(context: vscode.ExtensionContext): void {
             }
         }),
 
-        vscode.commands.registerCommand('namespaceResolver.sort', () => {
+        vscode.commands.registerCommand('phpNamespaceResolver.sort', () => {
             sortCommand.execute();
         }),
 
-        vscode.commands.registerCommand('namespaceResolver.generateNamespace', () => {
+        vscode.commands.registerCommand('phpNamespaceResolver.generateNamespace', () => {
             return generateNsCommand.execute();
         }),
 
-        vscode.commands.registerCommand('namespaceResolver.removeUnused', () => {
+        vscode.commands.registerCommand('phpNamespaceResolver.removeUnused', () => {
             return removeUnusedCommand.execute();
         }),
 
-        vscode.commands.registerCommand('namespaceResolver.rebuildIndex', async () => {
+        vscode.commands.registerCommand('phpNamespaceResolver.rebuildIndex', async () => {
             await cache.rebuild();
             vscode.window.setStatusBarMessage('PHP Namespace Resolver: Index rebuilt.', 3000);
         }),
     );
 
-    // --- Register code action provider ---
     context.subscriptions.push(
         vscode.languages.registerCodeActionsProvider(
             { language: 'php', scheme: 'file' },
@@ -90,9 +82,6 @@ export function activate(context: vscode.ExtensionContext): void {
         )
     );
 
-    // --- Event handlers ---
-
-    // On save
     context.subscriptions.push(
         vscode.workspace.onWillSaveTextDocument(event => {
             if (!event || event.document.languageId !== 'php') { return; }
@@ -110,7 +99,6 @@ export function activate(context: vscode.ExtensionContext): void {
         })
     );
 
-    // On editor change — update diagnostics
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(editor => {
             if (!editor || editor.document.languageId !== 'php') { return; }
@@ -118,7 +106,6 @@ export function activate(context: vscode.ExtensionContext): void {
         })
     );
 
-    // On document change (for diagnostics)
     context.subscriptions.push(
         vscode.workspace.onDidChangeTextDocument(event => {
             if (event.document.languageId !== 'php') { return; }
@@ -126,22 +113,17 @@ export function activate(context: vscode.ExtensionContext): void {
         })
     );
 
-    // On document close (clear diagnostics)
     context.subscriptions.push(
         vscode.workspace.onDidCloseTextDocument(document => {
             diagnosticManager.clear(document.uri);
         })
     );
 
-    // --- Register disposables ---
     context.subscriptions.push(cache, diagnosticManager);
 
-    // --- Initial diagnostics for already open editors ---
     if (vscode.window.activeTextEditor?.document.languageId === 'php') {
         diagnosticManager.update(vscode.window.activeTextEditor.document);
     }
 }
 
-export function deactivate(): void {
-    // Cleanup handled by disposables
-}
+export function deactivate(): void {}

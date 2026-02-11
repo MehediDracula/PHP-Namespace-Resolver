@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ExtensionConfig, SortMode } from '../types';
 
-const SECTION = 'namespaceResolver';
+const SECTION = 'phpNamespaceResolver';
 
 export function getConfig<K extends keyof ExtensionConfig>(key: K): ExtensionConfig[K] {
     return vscode.workspace.getConfiguration(SECTION).get<ExtensionConfig[K]>(
