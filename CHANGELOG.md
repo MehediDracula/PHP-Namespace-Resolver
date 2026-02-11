@@ -1,6 +1,37 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [2.0.0] - 2026-02-11
+### Changed
+- **Complete TypeScript rewrite** — entire codebase converted from JavaScript to TypeScript with strict mode and modular architecture
+- Messages always display on the status bar (removed notification popup option)
+- Removed highlight commands (`highlightNotImported`, `highlightNotUsed`) in favor of diagnostics panel
+- Removed `showMessageOnStatusBar`, `highlightOnSave`, `highlightOnOpen`, `highlightNotImportedColor`, `highlightNotUsedColor` settings
+- Removed `node-natural-sort` dependency — natural sort is now implemented natively
+- Sort algorithm uses alphabetical tiebreaker for equal-length imports
+
+### Added
+- **PHP 8.0–8.3 language support**
+  - Union types (`Request|Response`)
+  - Intersection types (`Countable&Iterator`)
+  - Return type declarations (`function get(): User`)
+  - Typed properties (`private UserService $service`)
+  - Constructor promotion (`private readonly UserRepository $repo`)
+  - Nullable types (`?User`)
+  - Attribute classes (`#[Route("/api")]`, `#[ORM\Entity]`)
+  - Catch block types (`catch (NotFoundException | AuthorizationException $e)`)
+  - Enum declarations with implements (`enum Status: string implements HasLabel`)
+- **Remove Unused Imports command** (`Ctrl+Alt+R`) — removes all unused `use` statements with blank line cleanup
+- **`removeOnSave` setting** — automatically strip unused imports on save
+- **`autoImportOnSave` setting** — automatically import detected classes on save
+- **Diagnostics panel integration** — unimported classes shown as Warnings, unused imports shown as Hints with "unnecessary" fade in the Problems panel
+- **Code Actions (Quick Fixes)** — lightbulb menu offering "Import class", "Expand to fully qualified name", and "Remove unused import"
+- **Namespace caching** — in-memory index built on activation with `FileSystemWatcher` for incremental updates; `Rebuild Namespace Index` command for manual refresh
+- **Multi-root workspace support** — file searching scoped to the workspace folder containing the active file
+- **PSR-0 autoload support** — `generateNamespace` reads both `psr-4` and `psr-0` from composer.json
+- **Built-in PHP class database** — 200+ classes through PHP 8.3 to avoid unnecessary import prompts
+- **Comprehensive test suite** — 85 unit tests (PhpClassDetector, composer parsing, insert position, sort logic, built-in classes) and 45 VS Code integration tests (DeclarationParser, SortManager, ImportManager, RemoveUnusedCommand, DiagnosticManager, CodeActionProvider)
+
 ## [1.1.8] - 2019-05-13
 ### Fixed
 - Cannot read property 'document' of undefined [#61](https://github.com/MehediDracula/PHP-Namespace-Resolver/pull/#61)
