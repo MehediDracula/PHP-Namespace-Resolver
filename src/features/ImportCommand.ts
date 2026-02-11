@@ -44,6 +44,49 @@ export class ImportCommand {
         await this.importManager.importClass(editor, selection, fqcn, replaceClassAfterImport);
     }
 
+    async importMultiple(selections: readonly vscode.Selection[]): Promise<void> {
+        const editor = requireActiveEditor();
+
+        const classMap = new Map<string, vscode.Selection[]>();
+        for (const selection of selections) {
+            const className = resolveClassName(editor, selection);
+            if (!className) { continue; }
+            const existing = classMap.get(className) ?? [];
+            existing.push(selection);
+            classMap.set(className, existing);
+        }
+
+        if (classMap.size === 0) {
+            vscode.window.setStatusBarMessage('No class is selected.', 3000);
+            return;
+        }
+
+        let importedCount = 0;
+
+        for (const [className, classSelections] of classMap) {
+            let fqcn: string | undefined;
+            let replaceClassAfterImport = false;
+
+            if (/\\/.test(className)) {
+                fqcn = className.replace(/^\\?/, '');
+                replaceClassAfterImport = true;
+            } else {
+                const namespaces = await this.resolver.resolve(className);
+                if (namespaces.length === 0) { continue; }
+                fqcn = await this.resolver.pickNamespace(namespaces);
+            }
+
+            if (!fqcn) { continue; }
+
+            await this.importManager.importClass(editor, classSelections[0], fqcn, replaceClassAfterImport);
+            importedCount++;
+        }
+
+        if (importedCount > 1) {
+            vscode.window.setStatusBarMessage(`$(check)  Imported ${importedCount} class(es).`, 3000);
+        }
+    }
+
     async importAll(): Promise<void> {
         const editor = requireActiveEditor();
         const text = editor.document.getText();

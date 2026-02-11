@@ -165,4 +165,112 @@ suite('ImportManager (VS Code Integration)', () => {
         const text = getText(editor);
         assert.ok(!text.includes('use ;'));
     });
+
+    test('changeMultipleSelectedClasses should replace multiple cursors in a single edit', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nclass Foo extends Controller {\n    public function bar(Request $r) {}\n}'
+        );
+
+        // Position cursors on "Controller" (line 2, col 22) and "Request" (line 3, col 24)
+        const sel1 = new vscode.Selection(new vscode.Position(2, 22), new vscode.Position(2, 22));
+        const sel2 = new vscode.Selection(new vscode.Position(3, 24), new vscode.Position(3, 24));
+
+        await importManager.changeMultipleSelectedClasses(
+            editor,
+            [
+                { selection: sel1, fqcn: 'App\\Http\\Controllers\\Controller' },
+                { selection: sel2, fqcn: 'Illuminate\\Http\\Request' },
+            ],
+            true
+        );
+        await wait();
+
+        const text = getText(editor);
+        assert.ok(text.includes('\\App\\Http\\Controllers\\Controller'));
+        assert.ok(text.includes('\\Illuminate\\Http\\Request'));
+    });
+
+    test('changeMultipleSelectedClasses should replace duplicate cursors on same class name', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nfunction a(Request $a) {}\nfunction b(Request $b) {}'
+        );
+
+        const sel1 = new vscode.Selection(new vscode.Position(2, 11), new vscode.Position(2, 11));
+        const sel2 = new vscode.Selection(new vscode.Position(3, 11), new vscode.Position(3, 11));
+
+        await importManager.changeMultipleSelectedClasses(
+            editor,
+            [
+                { selection: sel1, fqcn: 'Illuminate\\Http\\Request' },
+                { selection: sel2, fqcn: 'Illuminate\\Http\\Request' },
+            ],
+            true
+        );
+        await wait();
+
+        const text = getText(editor);
+        const matches = text.match(/\\Illuminate\\Http\\Request/g) || [];
+        assert.strictEqual(matches.length, 2);
+        assert.ok(!text.includes('Request $a') || text.includes('\\Illuminate\\Http\\Request $a'));
+    });
+
+    test('changeMultipleSelectedClasses should skip selections with no word at cursor', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nfunction a(Request $a) {}\n'
+        );
+
+        // sel1 on "Request", sel2 on empty line
+        const sel1 = new vscode.Selection(new vscode.Position(2, 11), new vscode.Position(2, 11));
+        const sel2 = new vscode.Selection(new vscode.Position(3, 0), new vscode.Position(3, 0));
+
+        await importManager.changeMultipleSelectedClasses(
+            editor,
+            [
+                { selection: sel1, fqcn: 'Illuminate\\Http\\Request' },
+                { selection: sel2, fqcn: 'Illuminate\\Http\\Request' },
+            ],
+            true
+        );
+        await wait();
+
+        const text = getText(editor);
+        const matches = text.match(/\\Illuminate\\Http\\Request/g) || [];
+        assert.strictEqual(matches.length, 1);
+    });
+
+    test('changeMultipleSelectedClasses should not prepend backslash when prependBackslash is false', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nfunction a(Request $a) {}\nfunction b(Controller $b) {}'
+        );
+
+        const sel1 = new vscode.Selection(new vscode.Position(2, 11), new vscode.Position(2, 11));
+        const sel2 = new vscode.Selection(new vscode.Position(3, 11), new vscode.Position(3, 11));
+
+        await importManager.changeMultipleSelectedClasses(
+            editor,
+            [
+                { selection: sel1, fqcn: 'Illuminate\\Http\\Request' },
+                { selection: sel2, fqcn: 'App\\Http\\Controllers\\Controller' },
+            ],
+            false
+        );
+        await wait();
+
+        const text = getText(editor);
+        assert.ok(text.includes('Illuminate\\Http\\Request'));
+        assert.ok(text.includes('App\\Http\\Controllers\\Controller'));
+        assert.ok(!text.includes('\\\\Illuminate'));
+        assert.ok(!text.includes('\\\\App'));
+    });
+
+    test('changeMultipleSelectedClasses should return early for empty replacements array', async () => {
+        const { editor } = await openEditor('<?php\n\nclass Foo {}');
+
+        const textBefore = getText(editor);
+
+        await importManager.changeMultipleSelectedClasses(editor, [], true);
+        await wait();
+
+        assert.strictEqual(getText(editor), textBefore);
+    });
 });

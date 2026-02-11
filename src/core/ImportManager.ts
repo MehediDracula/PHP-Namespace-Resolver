@@ -146,4 +146,31 @@ export class ImportManager {
         const newPos = new vscode.Position(selection.active.line, selection.active.character);
         editor.selection = new vscode.Selection(newPos, newPos);
     }
+
+    async changeMultipleSelectedClasses(
+        editor: vscode.TextEditor,
+        replacements: { selection: vscode.Selection; fqcn: string }[],
+        prependBackslash: boolean
+    ): Promise<void> {
+        const prefix = prependBackslash && getConfig('leadingSeparator') ? '\\' : '';
+
+        const edits: { range: vscode.Range; text: string }[] = [];
+        for (const { selection, fqcn } of replacements) {
+            const wordRange = editor.document.getWordRangeAtPosition(
+                selection.active,
+                /[a-zA-Z0-9\\]+/
+            );
+            if (wordRange) {
+                edits.push({ range: wordRange, text: prefix + fqcn });
+            }
+        }
+
+        if (edits.length === 0) { return; }
+
+        await editor.edit(textEdit => {
+            for (const { range, text } of edits) {
+                textEdit.replace(range, text);
+            }
+        });
+    }
 }

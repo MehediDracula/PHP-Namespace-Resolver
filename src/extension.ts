@@ -39,8 +39,10 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('phpNamespaceResolver.import', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor) { return; }
-            for (const selection of editor.selections) {
-                await importCommand.importSingle(selection);
+            if (editor.selections.length === 1) {
+                await importCommand.importSingle(editor.selections[0]);
+            } else {
+                await importCommand.importMultiple(editor.selections);
             }
         }),
 
@@ -51,8 +53,10 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('phpNamespaceResolver.expand', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor) { return; }
-            for (const selection of editor.selections) {
-                await expandCommand.expand(selection);
+            if (editor.selections.length === 1) {
+                await expandCommand.expand(editor.selections[0]);
+            } else {
+                await expandCommand.expandMultiple(editor.selections);
             }
         }),
 
