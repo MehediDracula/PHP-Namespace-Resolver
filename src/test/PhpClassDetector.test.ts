@@ -171,6 +171,162 @@ describe('PhpClassDetector', () => {
         });
     });
 
+    describe('edge cases - false positive prevention', () => {
+        it('should not detect lowercase variable-like words', () => {
+            const text = 'function handle(string $request) {}';
+            assert.deepStrictEqual(detector.getFromFunctionParameters(text), []);
+        });
+
+        it('should not detect scalar return types', () => {
+            const text = 'function count(): int {';
+            assert.deepStrictEqual(detector.getReturnTypes(text), []);
+        });
+
+        it('should not detect void return type', () => {
+            const text = 'function save(): void {';
+            assert.deepStrictEqual(detector.getReturnTypes(text), []);
+        });
+
+        it('should not detect mixed return type', () => {
+            const text = 'function get(): mixed {';
+            assert.deepStrictEqual(detector.getReturnTypes(text), []);
+        });
+
+        it('should not detect self or static as types to import', () => {
+            const text = 'function create(): static {';
+            assert.deepStrictEqual(detector.getReturnTypes(text), []);
+        });
+
+        it('should handle union types with scalars mixed in', () => {
+            const text = 'function get(): string|Collection {';
+            const result = detector.getReturnTypes(text);
+            assert.ok(result.includes('Collection'));
+            assert.ok(!result.includes('string'));
+            assert.strictEqual(result.length, 1);
+        });
+
+        it('should handle nullable union with scalar', () => {
+            const text = 'function find(?int $id, ?User $user) {}';
+            const result = detector.getFromFunctionParameters(text);
+            assert.ok(result.includes('User'));
+            assert.ok(!result.includes('int'));
+        });
+    });
+
+    describe('edge cases - multiline and complex patterns', () => {
+        it('should detect types in multiline function parameters', () => {
+            const text = `function handle(
+    Request $request,
+    Response $response
+) {}`;
+            const result = detector.getFromFunctionParameters(text);
+            assert.ok(result.includes('Request'));
+            assert.ok(result.includes('Response'));
+        });
+
+        it('should detect abstract class inheritance', () => {
+            const text = 'abstract class BaseController extends Controller {';
+            assert.deepStrictEqual(detector.getExtended(text), ['Controller']);
+        });
+
+        it('should detect final class inheritance', () => {
+            const text = 'final class UserService extends Service {';
+            assert.deepStrictEqual(detector.getExtended(text), ['Service']);
+        });
+
+        it('should detect static property types', () => {
+            const text = 'private static Collection $items;';
+            assert.deepStrictEqual(detector.getPropertyTypes(text), ['Collection']);
+        });
+
+        it('should detect multiple new instantiations on same line', () => {
+            const text = '$a = new Foo(); $b = new Bar();';
+            const result = detector.getInitializedWithNew(text);
+            assert.ok(result.includes('Foo'));
+            assert.ok(result.includes('Bar'));
+        });
+
+        it('should detect multiple static calls on same line', () => {
+            const text = '$result = Cache::get("key") ?? Config::get("default");';
+            const result = detector.getFromStaticCalls(text);
+            assert.ok(result.includes('Cache'));
+            assert.ok(result.includes('Config'));
+        });
+
+        it('should detect multiple attributes on separate lines', () => {
+            const text = `#[Route("/api")]
+#[Middleware("auth")]
+public function index() {}`;
+            const result = detector.getFromAttributes(text);
+            assert.ok(result.includes('Route'));
+            assert.ok(result.includes('Middleware'));
+        });
+
+        it('should detect attribute with complex arguments', () => {
+            const text = '#[Assert\\NotBlank(message: "Required")]';
+            const result = detector.getFromAttributes(text);
+            assert.ok(result.includes('NotBlank'));
+        });
+
+        it('should detect FQCN catch blocks', () => {
+            const text = 'catch (\\App\\Exceptions\\NotFoundException $e)';
+            const result = detector.getFromCatchBlocks(text);
+            assert.ok(result.includes('NotFoundException'));
+        });
+    });
+
+    describe('edge cases - enum detection', () => {
+        it('should detect basic backed enum', () => {
+            const text = 'enum Status: string implements HasLabel {';
+            const result = detector.getEnumImplements(text);
+            assert.deepStrictEqual(result, ['HasLabel']);
+        });
+
+        it('should detect unit enum with implements', () => {
+            const text = 'enum Direction implements Printable {';
+            const result = detector.getEnumImplements(text);
+            assert.deepStrictEqual(result, ['Printable']);
+        });
+    });
+
+    describe('detectAllWithPositions', () => {
+        it('should return positions for detected classes', () => {
+            const text = `<?php
+
+class Foo extends Bar {
+    public function test(): Baz {}
+}`;
+            const results = detector.detectAllWithPositions(text);
+            assert.ok(results.length > 0);
+
+            const barResult = results.find(r => r.name === 'Bar');
+            assert.ok(barResult);
+            assert.strictEqual(barResult!.line, 2);
+
+            const bazResult = results.find(r => r.name === 'Baz');
+            assert.ok(bazResult);
+            assert.strictEqual(bazResult!.line, 3);
+        });
+
+        it('should skip classes on namespace and use lines', () => {
+            const text = `<?php
+namespace App\\Controllers;
+use App\\Models\\User;
+
+class UserController extends Controller {
+    public function show(): User {}
+}`;
+            const results = detector.detectAllWithPositions(text);
+
+            // User should appear only from the method return type, not from the use statement
+            const userPositions = results.filter(r => r.name === 'User');
+            for (const pos of userPositions) {
+                assert.notStrictEqual(pos.line, 1); // not namespace line
+                assert.notStrictEqual(pos.line, 2); // not use line
+            }
+        });
+    });
+
     describe('detectAll', () => {
         it('should return unique class names from all patterns', () => {
             const text = `<?php
