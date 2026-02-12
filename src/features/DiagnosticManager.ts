@@ -143,7 +143,8 @@ export class DiagnosticManager implements vscode.Disposable {
         const diagnostics: vscode.Diagnostic[] = [];
 
         for (const stmt of useStatements) {
-            if (!detectedClasses.includes(stmt.className)) {
+            if (!detectedClasses.includes(stmt.className) &&
+                !text.includes(`${stmt.className}\\`)) {
                 const lineText = document.lineAt(stmt.line).text;
                 const startChar = lineText.indexOf(stmt.className);
                 const range = new vscode.Range(

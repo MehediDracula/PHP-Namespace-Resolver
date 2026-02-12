@@ -354,4 +354,42 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             'Should not report class names that appear only in inline comments'
         );
     });
+
+    test('should not report import as unused when used as namespace prefix', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nuse App\\Models;\n\nclass Foo {\n    public function bar() {\n        return Models\\User::query();\n    }\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notUsed = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotUsed && d.message.includes('Models')
+        );
+
+        assert.strictEqual(
+            notUsed.length, 0,
+            'Should not report import as unused when used as a namespace prefix'
+        );
+    });
+
+    test('should not report import as unused when used as namespace prefix with new', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nuse App\\Models;\n\nclass Foo {\n    public function bar() {\n        return new Models\\User();\n    }\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notUsed = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotUsed && d.message.includes('Models')
+        );
+
+        assert.strictEqual(
+            notUsed.length, 0,
+            'Should not report import as unused when used as namespace prefix with new'
+        );
+    });
 });
