@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import { DeclarationParser } from '../../core/DeclarationParser';
-import { openEditor, createDocument } from './helper';
+import { createDocument } from './helper';
 
 suite('DeclarationParser (VS Code Integration)', () => {
     const parser = new DeclarationParser();

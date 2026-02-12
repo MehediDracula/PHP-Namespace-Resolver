@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { UseStatement, DeclarationLines, InsertPosition } from '../types';
+import { UseStatement, DeclarationLines } from '../types';
 import { DeclarationParser } from './DeclarationParser';
 import { getConfig } from '../utils/config';
 import { showStatusMessage } from '../utils/statusBar';

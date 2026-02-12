@@ -2,7 +2,6 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { PhpCodeActionProvider } from '../../features/CodeActionProvider';
 import { DiagnosticCode } from '../../types';
-import { wait } from './helper';
 
 suite('PhpCodeActionProvider (VS Code Integration)', () => {
     const provider = new PhpCodeActionProvider();
