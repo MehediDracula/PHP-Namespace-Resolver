@@ -78,7 +78,7 @@ export class DiagnosticManager implements vscode.Disposable {
                 const startPos = document.positionAt(match.index);
                 const textLine = document.lineAt(startPos);
 
-                if (/^\s*(namespace|use)\s/.test(textLine.text)) {
+                if (/^(?:namespace|use)\s/.test(textLine.text)) {
                     continue;
                 }
 

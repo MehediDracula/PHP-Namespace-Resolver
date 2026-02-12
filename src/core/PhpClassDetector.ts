@@ -18,6 +18,9 @@ export class PhpClassDetector {
         for (const name of this.getFromAttributes(text)) { classes.add(name); }
         for (const name of this.getFromTraitUse(text)) { classes.add(name); }
         for (const name of this.getEnumImplements(text)) { classes.add(name); }
+        for (const name of this.getFromPhpDoc(text)) { classes.add(name); }
+        for (const name of this.getFromTraitUse(text)) { classes.add(name); }
+        for (const name of this.getFromTypedConstants(text)) { classes.add(name); }
 
         return Array.from(classes);
     }
@@ -59,7 +62,20 @@ export class PhpClassDetector {
     }
 
     getExtended(text: string): string[] {
-        return matchAll(text, new RegExp(`extends\\s+(${PhpClassDetector.CLASS_NAME})`, 'gm'));
+        const regex = /extends\s+([A-Z][A-Za-z0-9_,\s\\]+?)(?:\s*\{|\s*implements\s|\s*$)/gm;
+        const results: string[] = [];
+        let match: RegExpExecArray | null;
+
+        while ((match = regex.exec(text)) !== null) {
+            const parents = match[1].split(',');
+            for (const parent of parents) {
+                const trimmed = parent.trim().split('\\').pop();
+                if (trimmed && /^[A-Z]/.test(trimmed)) {
+                    results.push(trimmed);
+                }
+            }
+        }
+        return results;
     }
 
     getImplemented(text: string): string[] {
@@ -80,7 +96,7 @@ export class PhpClassDetector {
     }
 
     getFromFunctionParameters(text: string): string[] {
-        const regex = /function\s+\S+\s*\(([\s\S]*?)\)/gm;
+        const regex = /(?:function\s+\w+|function|fn|set)\s*\(((?:[^()]*|\([^()]*\))*)\)/gm;
         const results: string[] = [];
         let match: RegExpExecArray | null;
 
@@ -92,7 +108,7 @@ export class PhpClassDetector {
     }
 
     getReturnTypes(text: string): string[] {
-        const regex = /\)\s*:\s*([\w\s|&?\\]+?)(?:\s*\{|\s*;|\s*$)/gm;
+        const regex = /\)\s*:\s*([\w\s|&?\\()]+?)(?:\s*\{|\s*;|\s*=>|\s*$)/gm;
         const results: string[] = [];
         let match: RegExpExecArray | null;
 
@@ -103,7 +119,7 @@ export class PhpClassDetector {
     }
 
     getPropertyTypes(text: string): string[] {
-        const regex = /(?:public|protected|private)\s+(?:readonly\s+|static\s+)?(?:readonly\s+)?([\w|&?\\]+)\s+\$/gm;
+        const regex = /(?:public|protected|private)\s+(?:(?:public|protected|private)\(set\)\s+)?(?:readonly\s+|static\s+)?(?:readonly\s+)?([\w|&?\\()]+)\s+\$/gm;
         const results: string[] = [];
         let match: RegExpExecArray | null;
 
@@ -126,7 +142,7 @@ export class PhpClassDetector {
     }
 
     getFromCatchBlocks(text: string): string[] {
-        const regex = /catch\s*\(\s*([\w\s|\\]+)\s+\$/gm;
+        const regex = /catch\s*\(\s*([\w\s|\\]+?)(?:\s+\$\w+)?\s*\)/gm;
         const results: string[] = [];
         let match: RegExpExecArray | null;
 
@@ -143,14 +159,20 @@ export class PhpClassDetector {
     }
 
     getFromAttributes(text: string): string[] {
-        const regex = /#\[\s*([\w\\]+)/gm;
+        const blockRegex = /#\[([^\]]+)\]/gm;
         const results: string[] = [];
-        let match: RegExpExecArray | null;
+        let blockMatch: RegExpExecArray | null;
 
-        while ((match = regex.exec(text)) !== null) {
-            const name = match[1].split('\\').pop();
-            if (name && /^[A-Z]/.test(name)) {
-                results.push(name);
+        while ((blockMatch = blockRegex.exec(text)) !== null) {
+            const content = blockMatch[1];
+            // Match each attribute name (handling nested parens for args)
+            const attrRegex = /(?:^|,)\s*([\w\\]+)/g;
+            let match: RegExpExecArray | null;
+            while ((match = attrRegex.exec(content)) !== null) {
+                const name = match[1].split('\\').pop();
+                if (name && /^[A-Z]/.test(name)) {
+                    results.push(name);
+                }
             }
         }
         return results;
@@ -190,6 +212,118 @@ export class PhpClassDetector {
         return results;
     }
 
+    getFromPhpDoc(text: string): string[] {
+        const results: string[] = [];
+        const docBlockRegex = /\/\*\*[\s\S]*?\*\//g;
+        let blockMatch: RegExpExecArray | null;
+
+        while ((blockMatch = docBlockRegex.exec(text)) !== null) {
+            const block = blockMatch[0];
+
+            // @param Type $var, @var Type [$var], @property[-read|-write] Type $name
+            const paramRegex = /@(?:param|var|property(?:-read|-write)?)\s+(.+?)\s+\$/gm;
+            let match: RegExpExecArray | null;
+            while ((match = paramRegex.exec(block)) !== null) {
+                results.push(...this.extractClassNamesFromDocType(match[1]));
+            }
+
+            // @return Type, @throws Type, @psalm-return Type, @phpstan-return Type
+            const returnRegex = /@(?:return|throws|psalm-return|phpstan-return|psalm-param|phpstan-param|psalm-var|phpstan-var)\s+(\S+)/gm;
+            while ((match = returnRegex.exec(block)) !== null) {
+                results.push(...this.extractClassNamesFromDocType(match[1]));
+            }
+
+            // @mixin Type, @see Type
+            const simpleRefRegex = /@(?:mixin|see)\s+(\S+)/gm;
+            while ((match = simpleRefRegex.exec(block)) !== null) {
+                results.push(...this.extractClassNamesFromDocType(match[1]));
+            }
+
+            // @extends Type<...>, @implements Type<...>
+            const extendsRegex = /@(?:extends|implements|template-extends|template-implements)\s+(\S+)/gm;
+            while ((match = extendsRegex.exec(block)) !== null) {
+                results.push(...this.extractClassNamesFromDocType(match[1]));
+            }
+
+            // @template T of Type
+            const templateRegex = /@template\s+\w+\s+of\s+(\S+)/gm;
+            while ((match = templateRegex.exec(block)) !== null) {
+                results.push(...this.extractClassNamesFromDocType(match[1]));
+            }
+
+            // @method [static] ReturnType methodName(ParamType $param)
+            const methodRegex = /@method\s+(?:static\s+)?(\S+)\s+\w+\s*\(([^)]*)\)/gm;
+            while ((match = methodRegex.exec(block)) !== null) {
+                results.push(...this.extractClassNamesFromDocType(match[1]));
+                if (match[2]) {
+                    const params = match[2].split(',');
+                    for (const param of params) {
+                        const typeMatch = param.trim().match(/^(\S+)/);
+                        if (typeMatch) {
+                            results.push(...this.extractClassNamesFromDocType(typeMatch[1]));
+                        }
+                    }
+                }
+            }
+        }
+
+        return results;
+    }
+
+    getFromTypedConstants(text: string): string[] {
+        const regex = /(?:(?:public|protected|private)\s+)?const\s+([\w|&?\\()]+)\s+[A-Z_]/gm;
+        const results: string[] = [];
+        let match: RegExpExecArray | null;
+
+        while ((match = regex.exec(text)) !== null) {
+            results.push(...this.extractTypeNames(match[1]));
+        }
+        return results;
+    }
+
+    getFromTraitUse(text: string): string[] {
+        const results: string[] = [];
+        const lines = text.split('\n');
+        let pastClassDeclaration = false;
+
+        for (const line of lines) {
+            if (!pastClassDeclaration) {
+                if (/^\s*(?:abstract\s+|final\s+|readonly\s+)*(?:class|trait|interface|enum)\s+\w+/.test(line)) {
+                    pastClassDeclaration = true;
+                }
+                continue;
+            }
+
+            if (/^\s*use\s+/.test(line) && !/^\s*use\s*\(/.test(line)) {
+                const match = line.match(/^\s*use\s+(.+?)\s*[;{]/);
+                if (match) {
+                    const traits = match[1].split(',');
+                    for (const trait of traits) {
+                        const name = trait.trim().split('\\').pop()?.trim();
+                        if (name && /^[A-Z]/.test(name)) {
+                            results.push(name);
+                        }
+                    }
+                }
+            }
+        }
+
+        return results;
+    }
+
+    private extractClassNamesFromDocType(typeExpr: string): string[] {
+        const results: string[] = [];
+        const parts = typeExpr.split(/[|&<>,\[\](){}:?]/);
+        for (const part of parts) {
+            let name = part.trim();
+            name = name.split('\\').pop()?.trim() || '';
+            if (name && /^[A-Z]/.test(name) && !isScalarType(name)) {
+                results.push(name);
+            }
+        }
+        return results;
+    }
+
     private extractTypeNames(typeExpr: string): string[] {
         const results: string[] = [];
         const types = typeExpr.split(/[|&]/);
@@ -197,6 +331,7 @@ export class PhpClassDetector {
         for (const type of types) {
             let trimmed = type.trim();
             trimmed = trimmed.replace(/^\?/, '');
+            trimmed = trimmed.replace(/[()]/g, '');
             const shortName = trimmed.split('\\').pop()?.trim();
             if (shortName && /^[A-Z]/.test(shortName) && !isScalarType(shortName)) {
                 results.push(shortName);
@@ -210,10 +345,14 @@ export class PhpClassDetector {
         const parts = params.split(',');
 
         for (const part of parts) {
-            const trimmed = part.trim();
+            let trimmed = part.trim();
             if (!trimmed) { continue; }
 
-            const typeMatch = trimmed.match(/^([\w\s|&?\\]+?)\s*\$/);
+            // Strip constructor promotion modifiers
+            trimmed = trimmed.replace(/^(?:public|protected|private)\s+/, '');
+            trimmed = trimmed.replace(/^readonly\s+/, '');
+
+            const typeMatch = trimmed.match(/^([\w\s|&?\\()]+?)\s*(?:\.{3})?\s*\$/);
             if (typeMatch) {
                 results.push(...this.extractTypeNames(typeMatch[1]));
             }

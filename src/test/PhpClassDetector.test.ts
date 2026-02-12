@@ -396,6 +396,347 @@ class Foo extends Bar {
         });
     });
 
+    describe('getFromPhpDoc', () => {
+        it('should detect @param types', () => {
+            const text = `/**
+ * @param User $user
+ */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('User'));
+        });
+
+        it('should detect @return types', () => {
+            const text = `/**
+ * @return Collection
+ */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('Collection'));
+        });
+
+        it('should detect @var types', () => {
+            const text = `/** @var User $user */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('User'));
+        });
+
+        it('should detect @throws types', () => {
+            const text = `/**
+ * @throws NotFoundException
+ */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('NotFoundException'));
+        });
+
+        it('should detect union types in PHPDoc', () => {
+            const text = `/**
+ * @param User|null $user
+ */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('User'));
+        });
+
+        it('should detect generic types in PHPDoc', () => {
+            const text = `/**
+ * @return Collection<User>
+ */`;
+            const result = detector.getFromPhpDoc(text);
+            assert.ok(result.includes('Collection'));
+            assert.ok(result.includes('User'));
+        });
+
+        it('should detect @property types', () => {
+            const text = `/**
+ * @property Carbon $created_at
+ * @property-read Collection $comments
+ */`;
+            const result = detector.getFromPhpDoc(text);
+            assert.ok(result.includes('Carbon'));
+            assert.ok(result.includes('Collection'));
+        });
+
+        it('should detect @mixin types', () => {
+            const text = `/**
+ * @mixin Builder
+ */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('Builder'));
+        });
+
+        it('should detect @extends and @implements types', () => {
+            const text = `/**
+ * @extends Collection<User>
+ * @implements Repository<Post>
+ */`;
+            const result = detector.getFromPhpDoc(text);
+            assert.ok(result.includes('Collection'));
+            assert.ok(result.includes('User'));
+            assert.ok(result.includes('Repository'));
+            assert.ok(result.includes('Post'));
+        });
+
+        it('should detect @template of constraint', () => {
+            const text = `/**
+ * @template T of Model
+ */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('Model'));
+        });
+
+        it('should detect @method types', () => {
+            const text = `/**
+ * @method static Builder query()
+ * @method User find(int $id)
+ */`;
+            const result = detector.getFromPhpDoc(text);
+            assert.ok(result.includes('Builder'));
+            assert.ok(result.includes('User'));
+        });
+
+        it('should detect @see references', () => {
+            const text = `/**
+ * @see UserController
+ */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('UserController'));
+        });
+
+        it('should detect FQCN in PHPDoc and extract short name', () => {
+            const text = `/**
+ * @param \\App\\Models\\User $user
+ */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('User'));
+        });
+
+        it('should not detect scalar types in PHPDoc', () => {
+            const text = `/**
+ * @param string $name
+ * @return void
+ */`;
+            assert.deepStrictEqual(detector.getFromPhpDoc(text), []);
+        });
+
+        it('should detect array notation types', () => {
+            const text = `/**
+ * @return User[]
+ */`;
+            assert.ok(detector.getFromPhpDoc(text).includes('User'));
+        });
+    });
+
+    describe('getFromTraitUse', () => {
+        it('should detect single trait use', () => {
+            const text = `class User extends Model {
+    use HasFactory;
+}`;
+            assert.deepStrictEqual(detector.getFromTraitUse(text), ['HasFactory']);
+        });
+
+        it('should detect multiple trait use on same line', () => {
+            const text = `class User extends Model {
+    use HasFactory, SoftDeletes;
+}`;
+            const result = detector.getFromTraitUse(text);
+            assert.ok(result.includes('HasFactory'));
+            assert.ok(result.includes('SoftDeletes'));
+        });
+
+        it('should detect FQCN trait use and extract short name', () => {
+            const text = `class User extends Model {
+    use App\\Traits\\HasFactory;
+}`;
+            assert.deepStrictEqual(detector.getFromTraitUse(text), ['HasFactory']);
+        });
+
+        it('should not detect use statements before class declaration', () => {
+            const text = `use App\\Models\\User;
+
+class Foo {}`;
+            assert.deepStrictEqual(detector.getFromTraitUse(text), []);
+        });
+
+        it('should detect trait use with conflict resolution', () => {
+            const text = `class Foo {
+    use TraitA, TraitB {
+        TraitA::method as aliasMethod;
+    }
+}`;
+            const result = detector.getFromTraitUse(text);
+            assert.ok(result.includes('TraitA'));
+            assert.ok(result.includes('TraitB'));
+        });
+    });
+
+    describe('closure and arrow function detection', () => {
+        it('should detect closure parameter types', () => {
+            const text = 'function (Request $request) {}';
+            assert.ok(detector.getFromFunctionParameters(text).includes('Request'));
+        });
+
+        it('should detect arrow function parameter types', () => {
+            const text = 'fn(User $user) => $user->name';
+            assert.ok(detector.getFromFunctionParameters(text).includes('User'));
+        });
+
+        it('should detect arrow function return types', () => {
+            const text = 'fn(int $id): User => findUser($id)';
+            assert.ok(detector.getReturnTypes(text).includes('User'));
+        });
+
+        it('should detect closure return types', () => {
+            const text = 'function (int $id): Response {}';
+            assert.ok(detector.getReturnTypes(text).includes('Response'));
+        });
+    });
+
+    describe('constructor promotion detection', () => {
+        it('should detect types with public modifier', () => {
+            const text = 'function __construct(public User $user) {}';
+            assert.ok(detector.getFromFunctionParameters(text).includes('User'));
+        });
+
+        it('should detect types with private readonly modifier', () => {
+            const text = 'function __construct(private readonly Request $request) {}';
+            assert.ok(detector.getFromFunctionParameters(text).includes('Request'));
+        });
+
+        it('should detect types with protected modifier', () => {
+            const text = 'function __construct(protected Logger $logger) {}';
+            assert.ok(detector.getFromFunctionParameters(text).includes('Logger'));
+        });
+    });
+
+    describe('no-capture catch (PHP 8.0)', () => {
+        it('should detect type in catch without variable', () => {
+            const text = 'try {} catch (RuntimeException) {}';
+            assert.ok(detector.getFromCatchBlocks(text).includes('RuntimeException'));
+        });
+
+        it('should detect union types in no-capture catch', () => {
+            const text = 'try {} catch (InvalidArgumentException | LogicException) {}';
+            const result = detector.getFromCatchBlocks(text);
+            assert.ok(result.includes('InvalidArgumentException'));
+            assert.ok(result.includes('LogicException'));
+        });
+
+        it('should still detect types in catch with variable', () => {
+            const text = 'try {} catch (Exception $e) {}';
+            assert.ok(detector.getFromCatchBlocks(text).includes('Exception'));
+        });
+    });
+
+    describe('DNF types (PHP 8.2)', () => {
+        it('should detect DNF types in parameters', () => {
+            const text = 'function foo((Countable&Iterator)|null $items) {}';
+            const result = detector.getFromFunctionParameters(text);
+            assert.ok(result.includes('Countable'));
+            assert.ok(result.includes('Iterator'));
+        });
+
+        it('should detect DNF types in return type', () => {
+            const text = 'function foo(): (Stringable&Countable)|null {}';
+            const result = detector.getReturnTypes(text);
+            assert.ok(result.includes('Stringable'));
+            assert.ok(result.includes('Countable'));
+        });
+
+        it('should detect DNF types in property type', () => {
+            const text = 'private (Iterator&Countable)|null $items;';
+            const result = detector.getPropertyTypes(text);
+            assert.ok(result.includes('Iterator'));
+            assert.ok(result.includes('Countable'));
+        });
+    });
+
+    describe('variadic parameters', () => {
+        it('should detect type of variadic parameter', () => {
+            const text = 'function merge(Collection ...$collections) {}';
+            assert.ok(detector.getFromFunctionParameters(text).includes('Collection'));
+        });
+
+        it('should detect type in mixed variadic and normal params', () => {
+            const text = 'function foo(Request $request, Middleware ...$middleware) {}';
+            const result = detector.getFromFunctionParameters(text);
+            assert.ok(result.includes('Request'));
+            assert.ok(result.includes('Middleware'));
+        });
+    });
+
+    describe('typed class constants (PHP 8.3)', () => {
+        it('should detect typed constant', () => {
+            const text = 'const Status STATUS_ACTIVE = "active";';
+            assert.ok(detector.getFromTypedConstants(text).includes('Status'));
+        });
+
+        it('should detect typed constant with visibility', () => {
+            const text = 'public const ResponseType DEFAULT_TYPE = "json";';
+            assert.ok(detector.getFromTypedConstants(text).includes('ResponseType'));
+        });
+
+        it('should detect union typed constant', () => {
+            const text = 'const ErrorCode|Status RESULT = null;';
+            const result = detector.getFromTypedConstants(text);
+            assert.ok(result.includes('ErrorCode'));
+            assert.ok(result.includes('Status'));
+        });
+    });
+
+    describe('interface multi-extends', () => {
+        it('should detect multiple parent interfaces', () => {
+            const text = 'interface Foo extends Countable, Serializable {';
+            const result = detector.getExtended(text);
+            assert.ok(result.includes('Countable'));
+            assert.ok(result.includes('Serializable'));
+        });
+
+        it('should detect single interface extend', () => {
+            const text = 'interface Foo extends JsonSerializable {';
+            assert.ok(detector.getExtended(text).includes('JsonSerializable'));
+        });
+    });
+
+    describe('readonly class (PHP 8.2)', () => {
+        it('should detect trait use inside readonly class', () => {
+            const text = `readonly class User extends Model {
+    use HasFactory;
+}`;
+            assert.ok(detector.getFromTraitUse(text).includes('HasFactory'));
+        });
+
+        it('should detect trait use inside final readonly class', () => {
+            const text = `final readonly class Config {
+    use Singleton;
+}`;
+            assert.ok(detector.getFromTraitUse(text).includes('Singleton'));
+        });
+    });
+
+    describe('asymmetric visibility (PHP 8.4)', () => {
+        it('should detect property type with asymmetric set visibility', () => {
+            const text = 'public private(set) User $user;';
+            assert.ok(detector.getPropertyTypes(text).includes('User'));
+        });
+
+        it('should detect property type with protected(set)', () => {
+            const text = 'public protected(set) Collection $items;';
+            assert.ok(detector.getPropertyTypes(text).includes('Collection'));
+        });
+    });
+
+    describe('multiple attributes in one block', () => {
+        it('should detect multiple comma-separated attributes', () => {
+            const text = '#[Route("/api"), Middleware("auth")]';
+            const result = detector.getFromAttributes(text);
+            assert.ok(result.includes('Route'));
+            assert.ok(result.includes('Middleware'));
+        });
+
+        it('should detect single attribute', () => {
+            const text = '#[Override]';
+            assert.ok(detector.getFromAttributes(text).includes('Override'));
+        });
+    });
+
+    describe('property hook set params (PHP 8.4)', () => {
+        it('should detect type in property hook set parameter', () => {
+            const text = `set(User $value) {
+    $this->user = $value;
+}`;
+            assert.ok(detector.getFromFunctionParameters(text).includes('User'));
+        });
+    });
+
     describe('detectAll', () => {
         it('should return unique class names from all patterns', () => {
             const text = `<?php
@@ -430,6 +771,29 @@ class UserController extends Controller implements JsonSerializable {
             assert.ok(result.includes('Admin'));
             assert.ok(result.includes('NotFoundException'));
             assert.ok(result.includes('AuthorizationException'));
+        });
+
+        it('should detect classes from PHPDoc and trait use in detectAll', () => {
+            const text = `<?php
+
+/**
+ * @mixin Builder
+ */
+class User extends Model {
+    use HasFactory, SoftDeletes;
+
+    /**
+     * @return Collection<Post>
+     */
+    public function posts() {}
+}`;
+            const result = detector.detectAll(text);
+            assert.ok(result.includes('Builder'));
+            assert.ok(result.includes('Model'));
+            assert.ok(result.includes('HasFactory'));
+            assert.ok(result.includes('SoftDeletes'));
+            assert.ok(result.includes('Collection'));
+            assert.ok(result.includes('Post'));
         });
     });
 });

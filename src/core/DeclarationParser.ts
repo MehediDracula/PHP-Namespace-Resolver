@@ -49,7 +49,7 @@ export class DeclarationParser {
                     }
                     declarationLines.lastUseStatement = line + 1;
                 }
-            } else if (/^\s*(?:abstract\s+|final\s+)?(?:class|trait|interface|enum)\s+\w+/.test(text)) {
+            } else if (/^\s*(?:abstract\s+|final\s+|readonly\s+)*(?:class|trait|interface|enum)\s+\w+/.test(text)) {
                 declarationLines.classDeclaration = line + 1;
             }
         }
@@ -78,7 +78,7 @@ export class DeclarationParser {
                         names.push(aliasMatch ? aliasMatch[2] : lastName.trim());
                     }
                 }
-            } else if (/^\s*(?:abstract\s+|final\s+)?(?:class|trait|interface|enum)\s+\w+/.test(text)) {
+            } else if (/^\s*(?:abstract\s+|final\s+|readonly\s+)*(?:class|trait|interface|enum)\s+\w+/.test(text)) {
                 break;
             }
         }
@@ -93,7 +93,7 @@ export class DeclarationParser {
             if (match) {
                 return match[1].trim();
             }
-            if (/^\s*(?:abstract\s+|final\s+)?(?:class|trait|interface|enum)\s+\w+/.test(text)) {
+            if (/^\s*(?:abstract\s+|final\s+|readonly\s+)*(?:class|trait|interface|enum)\s+\w+/.test(text)) {
                 break;
             }
         }
