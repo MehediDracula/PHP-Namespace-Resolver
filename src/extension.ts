@@ -21,7 +21,7 @@ import { showStatusMessage, disposeStatusBar } from './utils/statusBar';
 export function activate(context: vscode.ExtensionContext): void {
     const detector = new PhpClassDetector();
     const parser = new DeclarationParser();
-    const cache = new NamespaceCache();
+    const cache = new NamespaceCache(context.storageUri);
     const resolver = new NamespaceResolver(cache);
     const sortManager = new SortManager(parser);
     const importManager = new ImportManager(parser, (editor) => sortManager.sort(editor));

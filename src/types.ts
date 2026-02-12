@@ -68,6 +68,21 @@ export interface ExtensionConfig {
     autoImportOnSave: boolean;
 }
 
+export interface PersistedFileEntry {
+    fqcn: string;
+    className: string;
+}
+
+export interface PersistedFileData {
+    mtime: number;
+    entries: PersistedFileEntry[];
+}
+
+export interface PersistedIndex {
+    version: number;
+    files: { [uriString: string]: PersistedFileData };
+}
+
 export enum DiagnosticCode {
     ClassNotImported = 'class-not-imported',
     ClassNotUsed = 'class-not-used',
