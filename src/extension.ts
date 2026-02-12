@@ -31,9 +31,13 @@ export function activate(context: vscode.ExtensionContext): void {
     const sortCommand = new SortCommand(sortManager);
     const generateNsCommand = new GenerateNamespaceCommand(generator);
     const removeUnusedCommand = new RemoveUnusedCommand(detector, parser);
-    const diagnosticManager = new DiagnosticManager(detector, parser);
+    const diagnosticManager = new DiagnosticManager(detector, parser, cache);
 
-    cache.initialize();
+    cache.initialize().then(() => {
+        if (vscode.window.activeTextEditor?.document.languageId === 'php') {
+            diagnosticManager.update(vscode.window.activeTextEditor.document);
+        }
+    });
 
     context.subscriptions.push(
         vscode.commands.registerCommand('phpNamespaceResolver.import', async () => {
@@ -124,10 +128,6 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     context.subscriptions.push(cache, diagnosticManager);
-
-    if (vscode.window.activeTextEditor?.document.languageId === 'php') {
-        diagnosticManager.update(vscode.window.activeTextEditor.document);
-    }
 }
 
 export function deactivate(): void {}
