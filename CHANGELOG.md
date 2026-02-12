@@ -1,6 +1,28 @@
 # Change Log
 All notable changes to the "php-namespace-resolver" extension will be documented in this file.
 
+## [2.1.0] - 2026-02-13
+### Added
+- Persistent namespace cache that survives VS Code restarts
+- Unimported class warnings now cover PHPDoc blocks
+- PHP 8.0–8.4 class detection (enums, readonly classes, intersection types)
+- Grouped use statement support (`use Prefix\{Class1, Class2}`)
+- Quick Pick results sorted by source: builtin → global → project → vendor
+- Event-driven cache→diagnostic lifecycle with status bar feedback
+
+### Fixed
+- Excessive CPU usage during file indexing caused by `openTextDocument()`
+- False unused-import warnings for imports used as namespace prefixes
+- False unused-import warnings for traits used in class bodies
+- False not-imported warnings for same-namespace classes
+- Unused import warning highlighting wrong occurrence in namespace path
+- Nested parentheses handling in class detection
+- Duplicate `getFromTraitUse` method
+
+### Performance
+- Batched file indexing with reverse index and debounced persistence
+- Debounced diagnostics with deduplicated detection work
+
 ## [2.0.0] - 2026-02-12
 ### Added
 - Rewrite extension in TypeScript with modular architecture
