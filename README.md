@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/banner.svg" alt="PHP Namespace Resolver" />
+  <img src="images/banner.png" alt="PHP Namespace Resolver" />
 </p>
 
 # PHP Namespace Resolver
