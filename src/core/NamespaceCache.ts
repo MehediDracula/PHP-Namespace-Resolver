@@ -12,6 +12,7 @@ export class NamespaceCache implements vscode.Disposable {
     private watcher: vscode.FileSystemWatcher | undefined;
     private initialized = false;
     private _indexed = true;
+    private persistTimer: ReturnType<typeof setTimeout> | undefined;
 
     private readonly _onDidFinishIndexing = new vscode.EventEmitter<void>();
     readonly onDidFinishIndexing = this._onDidFinishIndexing.event;
@@ -59,6 +60,7 @@ export class NamespaceCache implements vscode.Disposable {
     }
 
     dispose(): void {
+        clearTimeout(this.persistTimer);
         this.watcher?.dispose();
         this._onDidFinishIndexing.dispose();
         this.cache.clear();
@@ -122,43 +124,46 @@ export class NamespaceCache implements vscode.Disposable {
         try {
             const exclude = getConfig('exclude');
             const files = await vscode.workspace.findFiles('**/*.php', exclude);
-            const currentFiles = new Set(files.map(f => f.toString()));
 
-            // Remove entries for files that no longer exist
-            for (const uriString of [...this.fileIndex.keys()]) {
-                if (!currentFiles.has(uriString)) {
+            const STAT_BATCH = 256;
+            const toIndex: vscode.Uri[] = [];
+            const seenUris = new Set<string>();
+
+            for (let i = 0; i < files.length; i += STAT_BATCH) {
+                const batch = files.slice(i, i + STAT_BATCH);
+                const results = await Promise.all(batch.map(async (uri) => {
+                    const uriString = uri.toString();
+                    seenUris.add(uriString);
+                    const existing = this.fileIndex.get(uriString);
+
+                    if (!existing) { return uri; }
+
+                    try {
+                        const stat = await vscode.workspace.fs.stat(uri);
+                        if (stat.mtime !== existing.mtime) { return uri; }
+                    } catch {
+                        this.removeFile(uri);
+                    }
+                    return null;
+                }));
+                for (const uri of results) {
+                    if (uri) { toIndex.push(uri); }
+                }
+            }
+
+            for (const uriString of this.fileIndex.keys()) {
+                if (!seenUris.has(uriString)) {
                     this.removeFile(vscode.Uri.parse(uriString));
                 }
             }
 
-            let changed = false;
-
-            const BATCH_SIZE = 64;
-            for (let i = 0; i < files.length; i += BATCH_SIZE) {
-                const batch = files.slice(i, i + BATCH_SIZE);
-                const results = await Promise.all(batch.map(async (uri) => {
-                    const uriString = uri.toString();
-                    const existing = this.fileIndex.get(uriString);
-
-                    if (!existing) {
-                        await this.indexFile(uri);
-                        return true;
-                    }
-
-                    try {
-                        const stat = await vscode.workspace.fs.stat(uri);
-                        if (stat.mtime !== existing.mtime) {
-                            await this.indexFile(uri);
-                            return true;
-                        }
-                    } catch {
-                        this.removeFile(uri);
-                        return true;
-                    }
-                    return false;
-                }));
-                if (results.some(Boolean)) { changed = true; }
+            const INDEX_BATCH = 64;
+            for (let i = 0; i < toIndex.length; i += INDEX_BATCH) {
+                const batch = toIndex.slice(i, i + INDEX_BATCH);
+                await Promise.all(batch.map(uri => this.indexFile(uri)));
             }
+
+            const changed = toIndex.length > 0;
 
             if (changed) {
                 this._onDidFinishIndexing.fire();
@@ -211,13 +216,19 @@ export class NamespaceCache implements vscode.Disposable {
 
     private removeFile(uri: vscode.Uri): void {
         const uriStr = uri.toString();
+        const existing = this.fileIndex.get(uriStr);
         this.fileIndex.delete(uriStr);
-        for (const [className, entries] of this.cache) {
-            const filtered = entries.filter(e => e.uri.toString() !== uriStr);
+
+        if (!existing || existing.entries.length === 0) { return; }
+
+        for (const entry of existing.entries) {
+            const cached = this.cache.get(entry.className);
+            if (!cached) { continue; }
+            const filtered = cached.filter(e => e.uri.toString() !== uriStr);
             if (filtered.length === 0) {
-                this.cache.delete(className);
+                this.cache.delete(entry.className);
             } else {
-                this.cache.set(className, filtered);
+                this.cache.set(entry.className, filtered);
             }
         }
     }
@@ -245,11 +256,16 @@ export class NamespaceCache implements vscode.Disposable {
 
     private async onFileChange(uri: vscode.Uri): Promise<void> {
         await this.indexFile(uri);
-        await this.persistIndex();
+        this.debouncedPersist();
     }
 
     private async onFileDelete(uri: vscode.Uri): Promise<void> {
         this.removeFile(uri);
-        await this.persistIndex();
+        this.debouncedPersist();
+    }
+
+    private debouncedPersist(): void {
+        clearTimeout(this.persistTimer);
+        this.persistTimer = setTimeout(() => this.persistIndex(), 2000);
     }
 }
