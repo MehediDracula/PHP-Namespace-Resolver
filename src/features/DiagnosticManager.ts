@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { PhpClassDetector } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
+import { NamespaceCache } from '../core/NamespaceCache';
 import { DiagnosticCode } from '../types';
 
 const DIAGNOSTIC_SOURCE = 'PHP Namespace Resolver';
@@ -10,7 +11,8 @@ export class DiagnosticManager implements vscode.Disposable {
 
     constructor(
         private detector: PhpClassDetector,
-        private parser: DeclarationParser
+        private parser: DeclarationParser,
+        private cache: NamespaceCache
     ) {
         this.collection = vscode.languages.createDiagnosticCollection('phpNamespaceResolver');
     }
@@ -49,7 +51,21 @@ export class DiagnosticManager implements vscode.Disposable {
         const text = document.getText();
         const detectedClasses = this.detector.detectAll(text);
         const importedClasses = this.parser.getImportedClassNames(document);
-        const notImported = detectedClasses.filter(cls => !importedClasses.includes(cls));
+        const currentNamespace = this.extractNamespace(document);
+
+        const notImported = detectedClasses.filter(cls => {
+            if (importedClasses.includes(cls)) { return false; }
+
+            // Classes in the same namespace don't need a use statement
+            if (currentNamespace) {
+                const entries = this.cache.lookup(cls);
+                if (entries.some(e => e.fqcn === `${currentNamespace}\\${cls}`)) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
 
         const diagnostics: vscode.Diagnostic[] = [];
 
@@ -65,6 +81,21 @@ export class DiagnosticManager implements vscode.Disposable {
                 const textLine = document.lineAt(startPos);
 
                 if (/^\s*(namespace|use)\s/.test(textLine.text)) {
+                    continue;
+                }
+
+                // Skip matches inside comments
+                const trimmedLine = textLine.text.trimStart();
+                if (
+                    trimmedLine.startsWith('//') ||
+                    trimmedLine.startsWith('/*') ||
+                    trimmedLine.startsWith('*') ||
+                    (trimmedLine.startsWith('#') && !trimmedLine.startsWith('#['))
+                ) {
+                    continue;
+                }
+                const textBeforeMatch = textLine.text.substring(0, startPos.character);
+                if (textBeforeMatch.includes('//')) {
                     continue;
                 }
 
@@ -93,6 +124,17 @@ export class DiagnosticManager implements vscode.Disposable {
         return diagnostics;
     }
 
+    private extractNamespace(document: vscode.TextDocument): string | null {
+        for (let line = 0; line < document.lineCount; line++) {
+            const text = document.lineAt(line).text;
+            if (text.startsWith('namespace ') || text.startsWith('<?php namespace ')) {
+                const match = text.match(/^(?:namespace|<\?php\s+namespace)\s+(.+?);/);
+                if (match) { return match[1].trim(); }
+            }
+        }
+        return null;
+    }
+
     private getNotUsedDiagnostics(document: vscode.TextDocument): vscode.Diagnostic[] {
         const text = document.getText();
         const detectedClasses = this.detector.detectAll(text);
@@ -101,7 +143,8 @@ export class DiagnosticManager implements vscode.Disposable {
         const diagnostics: vscode.Diagnostic[] = [];
 
         for (const stmt of useStatements) {
-            if (!detectedClasses.includes(stmt.className)) {
+            if (!detectedClasses.includes(stmt.className) &&
+                !text.includes(`${stmt.className}\\`)) {
                 const lineText = document.lineAt(stmt.line).text;
                 const startChar = lineText.indexOf(stmt.className);
                 const range = new vscode.Range(
