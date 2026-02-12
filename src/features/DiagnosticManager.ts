@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import { PhpClassDetector } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
 import { NamespaceCache } from '../core/NamespaceCache';
@@ -47,10 +49,26 @@ export class DiagnosticManager implements vscode.Disposable {
         this.collection.dispose();
     }
 
-    private isInSameNamespace(className: string, currentNamespace: string | null): boolean {
+    private isInSameNamespace(className: string, currentNamespace: string | null, documentUri: vscode.Uri): boolean {
         if (!currentNamespace) { return false; }
+
         const entries = this.cache.lookup(className);
-        return entries.some(e => e.fqcn === `${currentNamespace}\\${className}`);
+        if (entries.some(e => e.fqcn === `${currentNamespace}\\${className}`)) {
+            return true;
+        }
+
+        // Fallback: check if a file with the class name exists in the same directory.
+        // Covers cases where the cache hasn't finished building yet.
+        if (documentUri.scheme === 'file') {
+            const siblingPath = path.join(path.dirname(documentUri.fsPath), `${className}.php`);
+            try {
+                return fs.existsSync(siblingPath);
+            } catch {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private getNotImportedDiagnostics(document: vscode.TextDocument): vscode.Diagnostic[] {
@@ -62,7 +80,7 @@ export class DiagnosticManager implements vscode.Disposable {
         const notImported = detectedClasses.filter(cls =>
             !importedClasses.includes(cls) &&
             !declaredClasses.includes(cls) &&
-            !this.isInSameNamespace(cls, currentNamespace)
+            !this.isInSameNamespace(cls, currentNamespace, document.uri)
         );
 
         const diagnostics: vscode.Diagnostic[] = [];
