@@ -86,7 +86,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         assert.ok(classNames.some(m => m.includes('Post')));
 
         for (const d of notUsed) {
-            assert.strictEqual(d.severity, vscode.DiagnosticSeverity.Hint);
+            assert.strictEqual(d.severity, vscode.DiagnosticSeverity.Warning);
             assert.ok(d.tags?.includes(vscode.DiagnosticTag.Unnecessary));
         }
     });

@@ -86,6 +86,32 @@ export class DeclarationParser {
         return names;
     }
 
+    getNamespace(document: vscode.TextDocument): string | null {
+        for (let line = 0; line < document.lineCount; line++) {
+            const text = document.lineAt(line).text;
+            const match = text.match(/^\s*(?:namespace|<\?php\s+namespace)\s+(.+?)\s*;/);
+            if (match) {
+                return match[1].trim();
+            }
+            if (/^\s*(?:abstract\s+|final\s+)?(?:class|trait|interface|enum)\s+\w+/.test(text)) {
+                break;
+            }
+        }
+        return null;
+    }
+
+    getDeclaredClassNames(document: vscode.TextDocument): string[] {
+        const names: string[] = [];
+        const regex = /^\s*(?:abstract\s+|final\s+)?(?:class|trait|interface|enum)\s+(\w+)/;
+        for (let line = 0; line < document.lineCount; line++) {
+            const match = document.lineAt(line).text.match(regex);
+            if (match) {
+                names.push(match[1]);
+            }
+        }
+        return names;
+    }
+
     private parseUseStatement(text: string, line: number): UseStatement | null {
         const match = text.match(/^\s*use\s+(.+);/);
         if (!match) { return null; }

@@ -47,25 +47,23 @@ export class DiagnosticManager implements vscode.Disposable {
         this.collection.dispose();
     }
 
+    private isInSameNamespace(className: string, currentNamespace: string | null): boolean {
+        if (!currentNamespace) { return false; }
+        const entries = this.cache.lookup(className);
+        return entries.some(e => e.fqcn === `${currentNamespace}\\${className}`);
+    }
+
     private getNotImportedDiagnostics(document: vscode.TextDocument): vscode.Diagnostic[] {
         const text = document.getText();
         const detectedClasses = this.detector.detectAll(text);
         const importedClasses = this.parser.getImportedClassNames(document);
-        const currentNamespace = this.extractNamespace(document);
-
-        const notImported = detectedClasses.filter(cls => {
-            if (importedClasses.includes(cls)) { return false; }
-
-            // Classes in the same namespace don't need a use statement
-            if (currentNamespace) {
-                const entries = this.cache.lookup(cls);
-                if (entries.some(e => e.fqcn === `${currentNamespace}\\${cls}`)) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
+        const currentNamespace = this.parser.getNamespace(document);
+        const declaredClasses = this.parser.getDeclaredClassNames(document);
+        const notImported = detectedClasses.filter(cls =>
+            !importedClasses.includes(cls) &&
+            !declaredClasses.includes(cls) &&
+            !this.isInSameNamespace(cls, currentNamespace)
+        );
 
         const diagnostics: vscode.Diagnostic[] = [];
 
@@ -124,17 +122,6 @@ export class DiagnosticManager implements vscode.Disposable {
         return diagnostics;
     }
 
-    private extractNamespace(document: vscode.TextDocument): string | null {
-        for (let line = 0; line < document.lineCount; line++) {
-            const text = document.lineAt(line).text;
-            if (text.startsWith('namespace ') || text.startsWith('<?php namespace ')) {
-                const match = text.match(/^(?:namespace|<\?php\s+namespace)\s+(.+?);/);
-                if (match) { return match[1].trim(); }
-            }
-        }
-        return null;
-    }
-
     private getNotUsedDiagnostics(document: vscode.TextDocument): vscode.Diagnostic[] {
         const text = document.getText();
         const detectedClasses = this.detector.detectAll(text);
@@ -155,7 +142,7 @@ export class DiagnosticManager implements vscode.Disposable {
                 const diag = new vscode.Diagnostic(
                     range,
                     `Imported class '${stmt.className}' is not used.`,
-                    vscode.DiagnosticSeverity.Hint
+                    vscode.DiagnosticSeverity.Warning
                 );
                 diag.code = DiagnosticCode.ClassNotUsed;
                 diag.source = DIAGNOSTIC_SOURCE;
