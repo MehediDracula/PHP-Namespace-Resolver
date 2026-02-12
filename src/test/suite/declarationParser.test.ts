@@ -211,4 +211,106 @@ suite('DeclarationParser (VS Code Integration)', () => {
         const { declarationLines } = parser.parse(doc);
         assert.strictEqual(declarationLines.declare, null);
     });
+
+    test('should parse single-line grouped use statement', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App;\n\nuse App\\Models\\{User, Post};\n\nclass Foo {}'
+        );
+        const { useStatements, declarationLines } = parser.parse(doc);
+
+        assert.strictEqual(useStatements.length, 2);
+        assert.strictEqual(useStatements[0].className, 'User');
+        assert.strictEqual(useStatements[0].fqcn, 'App\\Models\\User');
+        assert.strictEqual(useStatements[1].className, 'Post');
+        assert.strictEqual(useStatements[1].fqcn, 'App\\Models\\Post');
+        assert.strictEqual(declarationLines.firstUseStatement, 5);
+        assert.strictEqual(declarationLines.lastUseStatement, 5);
+    });
+
+    test('should parse grouped use statement with single class', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse Example1\\Example2\\Models\\{SomeClass};\n\nclass Foo {}'
+        );
+        const { useStatements } = parser.parse(doc);
+
+        assert.strictEqual(useStatements.length, 1);
+        assert.strictEqual(useStatements[0].className, 'SomeClass');
+        assert.strictEqual(useStatements[0].fqcn, 'Example1\\Example2\\Models\\SomeClass');
+    });
+
+    test('should parse grouped use statement with alias', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\{User as AppUser, Post};\n\nclass Foo {}'
+        );
+        const { useStatements } = parser.parse(doc);
+
+        assert.strictEqual(useStatements.length, 2);
+        assert.strictEqual(useStatements[0].className, 'AppUser');
+        assert.strictEqual(useStatements[0].alias, 'AppUser');
+        assert.strictEqual(useStatements[0].fqcn, 'App\\Models\\User');
+        assert.strictEqual(useStatements[1].className, 'Post');
+        assert.strictEqual(useStatements[1].alias, null);
+    });
+
+    test('should parse grouped use statement with nested namespaces', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\{Models\\User, Http\\Request};\n\nclass Foo {}'
+        );
+        const { useStatements } = parser.parse(doc);
+
+        assert.strictEqual(useStatements.length, 2);
+        assert.strictEqual(useStatements[0].className, 'User');
+        assert.strictEqual(useStatements[0].fqcn, 'App\\Models\\User');
+        assert.strictEqual(useStatements[1].className, 'Request');
+        assert.strictEqual(useStatements[1].fqcn, 'App\\Http\\Request');
+    });
+
+    test('should parse multi-line grouped use statement', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\{\n    User,\n    Post,\n};\n\nclass Foo {}'
+        );
+        const { useStatements, declarationLines } = parser.parse(doc);
+
+        assert.strictEqual(useStatements.length, 2);
+        assert.strictEqual(useStatements[0].className, 'User');
+        assert.strictEqual(useStatements[0].fqcn, 'App\\Models\\User');
+        assert.strictEqual(useStatements[1].className, 'Post');
+        assert.strictEqual(useStatements[1].fqcn, 'App\\Models\\Post');
+        assert.strictEqual(declarationLines.firstUseStatement, 3);
+        assert.strictEqual(declarationLines.lastUseStatement, 6);
+    });
+
+    test('getImportedClassNames should handle grouped use statements', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\{User, Post};\n\nclass Foo {}'
+        );
+        const names = parser.getImportedClassNames(doc);
+        assert.deepStrictEqual(names, ['User', 'Post']);
+    });
+
+    test('getImportedClassNames should handle multi-line grouped use statements', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\{\n    User,\n    Post,\n};\n\nclass Foo {}'
+        );
+        const names = parser.getImportedClassNames(doc);
+        assert.deepStrictEqual(names, ['User', 'Post']);
+    });
+
+    test('getImportedClassNames should handle grouped use with alias', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\{User as AppUser, Post};\n\nclass Foo {}'
+        );
+        const names = parser.getImportedClassNames(doc);
+        assert.deepStrictEqual(names, ['AppUser', 'Post']);
+    });
+
+    test('should throw when class in grouped import is already imported', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\{User, Post};\n\nclass Foo {}'
+        );
+        assert.throws(
+            () => parser.parse(doc, 'App\\Models\\User'),
+            /already imported/
+        );
+    });
 });

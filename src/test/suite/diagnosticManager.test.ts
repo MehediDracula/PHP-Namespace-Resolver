@@ -194,6 +194,36 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         assert.strictEqual(requestDiags.length, 1);
     });
 
+    test('should not report class imported via grouped use statement', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse Example1\\Example2\\Models\\{SomeClass};\n\nclass Foo {\n    public function example(): SomeClass {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('SomeClass')
+        );
+        assert.strictEqual(notImported.length, 0, 'SomeClass should be recognized as imported via grouped use');
+    });
+
+    test('should not report classes imported via multi-class grouped use statement', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\{User, Post};\n\nclass Foo {\n    public function bar(): User {}\n    public function baz(): Post {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported
+        );
+        assert.strictEqual(notImported.length, 0, 'Both User and Post should be recognized as imported');
+    });
+
     test('clearAll should remove all diagnostics', async () => {
         const doc1 = await createDocument(
             '<?php\n\nuse App\\Models\\User;\n\nclass Foo {}'
