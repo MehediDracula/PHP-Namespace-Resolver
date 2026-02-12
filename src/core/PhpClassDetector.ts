@@ -19,7 +19,6 @@ export class PhpClassDetector {
         for (const name of this.getFromTraitUse(text)) { classes.add(name); }
         for (const name of this.getEnumImplements(text)) { classes.add(name); }
         for (const name of this.getFromPhpDoc(text)) { classes.add(name); }
-        for (const name of this.getFromTraitUse(text)) { classes.add(name); }
         for (const name of this.getFromTypedConstants(text)) { classes.add(name); }
 
         return Array.from(classes);
@@ -172,23 +171,6 @@ export class PhpClassDetector {
                 const name = match[1].split('\\').pop();
                 if (name && /^[A-Z]/.test(name)) {
                     results.push(name);
-                }
-            }
-        }
-        return results;
-    }
-
-    getFromTraitUse(text: string): string[] {
-        const regex = /^\s+use\s+([A-Z][\w\s,]+)\s*[;{]/gm;
-        const results: string[] = [];
-        let match: RegExpExecArray | null;
-
-        while ((match = regex.exec(text)) !== null) {
-            const traits = match[1].split(',');
-            for (const trait of traits) {
-                const trimmed = trait.trim();
-                if (trimmed && /^[A-Z]/.test(trimmed)) {
-                    results.push(trimmed);
                 }
             }
         }
