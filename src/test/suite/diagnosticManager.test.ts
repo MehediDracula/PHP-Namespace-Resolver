@@ -276,7 +276,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         assert.strictEqual(hiddenDiags.length, 0, 'Should not report class names in block comments');
     });
 
-    test('should not report class names inside comments (combined)', async () => {
+    test('should not report class names inside comments', async () => {
         const doc = await createDocument(
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    // Hidden is used here\n    /* Hidden block comment */\n    /** @var Hidden $h */\n}'
         );
@@ -289,10 +289,71 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Hidden')
         );
 
+        // Hidden in // and /* */ should not be reported,
         assert.strictEqual(
-            notImported.length, 0,
-            `Expected no diagnostics for class names in comments, got: ${notImported.map(d => d.message).join(', ')}`
+            notImported.length, 1,
+            `Expected 1 diagnostic for PHPDoc type reference, got: ${notImported.length}`
         );
+    });
+
+    test('should report unimported class in PHPDoc @param', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /**\n     * @param Request $request\n     */\n    public function bar($request) {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Request')
+        );
+        assert.strictEqual(notImported.length, 1, 'Should report unimported class in PHPDoc @param');
+    });
+
+    test('should report unimported class in PHPDoc @return', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /**\n     * @return Collection\n     */\n    public function bar() {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Collection')
+        );
+        assert.strictEqual(notImported.length, 1, 'Should report unimported class in PHPDoc @return');
+    });
+
+    test('should report unimported class in inline PHPDoc @var', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /** @var Request $r */\n    private $r;\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Request')
+        );
+        assert.strictEqual(notImported.length, 1, 'Should report unimported class in inline PHPDoc @var');
+    });
+
+    test('should not report imported class in PHPDoc', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nuse Illuminate\\Http\\Request;\n\nclass Foo {\n    /**\n     * @param Request $request\n     * @return Request\n     */\n    public function bar($request) {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Request')
+        );
+        assert.strictEqual(notImported.length, 0, 'Should not report imported class used in PHPDoc');
     });
 
     test('should not report class names after inline // comment', async () => {

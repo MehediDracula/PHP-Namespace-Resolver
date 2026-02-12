@@ -115,12 +115,11 @@ export class DiagnosticManager implements vscode.Disposable {
                     continue;
                 }
 
-                // Skip matches inside comments
+                // Skip matches inside comments (not PHPDoc — handled by isInsideComment above)
                 const trimmedLine = textLine.text.trimStart();
                 if (
                     trimmedLine.startsWith('//') ||
-                    trimmedLine.startsWith('/*') ||
-                    trimmedLine.startsWith('*') ||
+                    (trimmedLine.startsWith('/*') && !trimmedLine.startsWith('/**')) ||
                     (trimmedLine.startsWith('#') && !trimmedLine.startsWith('#['))
                 ) {
                     continue;
