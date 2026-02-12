@@ -13,7 +13,8 @@ export class NamespaceResolver {
         const cached = this.cache.lookup(className);
         if (cached.length > 0) {
             for (const entry of cached) {
-                results.push({ fqcn: entry.fqcn, source: 'project' });
+                const source = entry.uri.fsPath.includes('/vendor/') ? 'vendor' : 'project';
+                results.push({ fqcn: entry.fqcn, source });
             }
         } else {
             const found = await this.searchFiles(className);
@@ -30,6 +31,9 @@ export class NamespaceResolver {
                 results.push({ fqcn: className, source: 'global' });
             }
         }
+
+        const priority: Record<string, number> = { builtin: 0, global: 1, project: 2, vendor: 3 };
+        results.sort((a, b) => priority[a.source] - priority[b.source]);
 
         return results;
     }
@@ -87,7 +91,8 @@ export class NamespaceResolver {
                     const fqcn = `${namespace}\\${className}`;
                     if (!seen.has(fqcn)) {
                         seen.add(fqcn);
-                        results.push({ fqcn, source: 'project' });
+                        const source = file.fsPath.includes('/vendor/') ? 'vendor' : 'project';
+                        results.push({ fqcn, source });
                     }
                 }
             } catch {}

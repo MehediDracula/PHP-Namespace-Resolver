@@ -37,7 +37,7 @@ export interface DetectedClass {
 
 export interface ResolvedNamespace {
     fqcn: string;
-    source: 'project' | 'builtin' | 'global';
+    source: 'builtin' | 'global' | 'project' | 'vendor';
 }
 
 export interface PsrMapping {
