@@ -151,7 +151,7 @@ export class DiagnosticManager implements vscode.Disposable {
             if (!detectedClasses.includes(stmt.className) &&
                 !text.includes(`${stmt.className}\\`)) {
                 const lineText = document.lineAt(stmt.line).text;
-                const startChar = lineText.indexOf(stmt.className);
+                const startChar = lineText.lastIndexOf(stmt.className);
                 const range = new vscode.Range(
                     stmt.line, Math.max(0, startChar),
                     stmt.line, Math.max(0, startChar) + stmt.className.length
