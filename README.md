@@ -18,7 +18,7 @@ Import, expand, sort, and manage PHP namespaces with full PHP 8+ support. Detect
 - **Generate Namespace** — generate a PSR-4/PSR-0 namespace from the file path and `composer.json`
 - **Diagnostics** — unimported classes appear as warnings and unused imports as hints in the Problems panel
 - **Quick Fixes** — lightbulb actions to import, expand, or remove directly from diagnostics
-- **Namespace Caching** — in-memory index with file watcher for fast resolution
+- **Namespace Caching** — persistent index with file watcher for fast resolution
 - **Multi-Root Workspace** — file searching scoped to the correct workspace folder
 
 ### PHP 8+ Support
