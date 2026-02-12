@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/banner.svg" alt="PHP Namespace Resolver" />
+</p>
+
 # PHP Namespace Resolver
 
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/MehediDracula.php-namespace-resolver)](https://marketplace.visualstudio.com/items?itemName=MehediDracula.php-namespace-resolver)
