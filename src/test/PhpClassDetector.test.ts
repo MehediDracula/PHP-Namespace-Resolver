@@ -327,6 +327,39 @@ class UserController extends Controller {
         });
     });
 
+    describe('getFromTraitUse', () => {
+        it('should detect single trait usage inside a class', () => {
+            const text = `class Foo {\n    use HasLogger;\n}`;
+            assert.deepStrictEqual(detector.getFromTraitUse(text), ['HasLogger']);
+        });
+
+        it('should detect multiple traits on one line', () => {
+            const text = `class Foo {\n    use HasLogger, Notifiable, SoftDeletes;\n}`;
+            const result = detector.getFromTraitUse(text);
+            assert.ok(result.includes('HasLogger'));
+            assert.ok(result.includes('Notifiable'));
+            assert.ok(result.includes('SoftDeletes'));
+        });
+
+        it('should not detect namespace use statements as traits', () => {
+            const text = `use App\\Models\\User;\n\nclass Foo {\n    use HasLogger;\n}`;
+            const result = detector.getFromTraitUse(text);
+            assert.deepStrictEqual(result, ['HasLogger']);
+        });
+
+        it('should not detect closure use as trait', () => {
+            const text = `$fn = function () use ($var) {};`;
+            assert.deepStrictEqual(detector.getFromTraitUse(text), []);
+        });
+
+        it('should detect trait use with curly brace block (conflict resolution)', () => {
+            const text = `class Foo {\n    use A, B {\n        B::method insteadof A;\n    }\n}`;
+            const result = detector.getFromTraitUse(text);
+            assert.ok(result.includes('A'));
+            assert.ok(result.includes('B'));
+        });
+    });
+
     describe('edge cases - empty and boundary inputs', () => {
         it('should return empty array for empty text', () => {
             assert.deepStrictEqual(detector.detectAll(''), []);

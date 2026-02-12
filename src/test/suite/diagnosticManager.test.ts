@@ -277,6 +277,44 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
     });
 
+    test('should not report imported trait used inside class body as unused', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nuse App\\Traits\\HasLogger;\n\nclass UserService {\n    use HasLogger;\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notUsed = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotUsed && d.message.includes('HasLogger')
+        );
+
+        assert.strictEqual(
+            notUsed.length, 0,
+            'Should not report imported trait that is used in a class body'
+        );
+    });
+
+    test('should not report imported traits used with multiple traits on one line', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Models;\n\nuse App\\Traits\\HasLogger;\nuse App\\Traits\\SoftDeletes;\n\nclass User {\n    use HasLogger, SoftDeletes;\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notUsed = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotUsed
+        );
+
+        assert.strictEqual(
+            notUsed.length, 0,
+            `Expected no unused warnings for traits, got: ${notUsed.map(d => d.message).join(', ')}`
+        );
+    });
+
     test('should not report class names inside comments', async () => {
         const doc = await createDocument(
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    // Hidden is used here\n    /* Hidden block comment */\n    /** @var Hidden $h */\n}'
