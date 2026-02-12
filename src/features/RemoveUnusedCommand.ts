@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { PhpClassDetector } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
 import { requireActiveEditor } from '../utils/editor';
+import { showStatusMessage } from '../utils/statusBar';
 
 export class RemoveUnusedCommand {
     constructor(
@@ -14,12 +15,12 @@ export class RemoveUnusedCommand {
             const editor = requireActiveEditor();
             const removed = await this.removeUnused(editor);
             if (removed > 0) {
-                vscode.window.setStatusBarMessage(`$(check)  Removed ${removed} unused import${removed > 1 ? 's' : ''}.`, 3000);
+                showStatusMessage(`$(check) Removed ${removed} unused import${removed > 1 ? 's' : ''}.`);
             } else {
-                vscode.window.setStatusBarMessage('$(check)  No unused imports found.', 3000);
+                showStatusMessage('$(check) No unused imports found.');
             }
         } catch (error: any) {
-            vscode.window.setStatusBarMessage(error.message, 3000);
+            showStatusMessage(error.message);
         }
     }
 

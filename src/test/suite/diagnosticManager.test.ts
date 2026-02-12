@@ -179,7 +179,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         assert.strictEqual(controllerDiags.length, 1);
     });
 
-    test('should only report first occurrence per unimported class', async () => {
+    test('should report all occurrences of unimported class', async () => {
         const doc = await createDocument(
             '<?php\n\nclass Foo {\n    public function bar(Request $r): Request {}\n    public function baz(Request $r2) {}\n}'
         );
@@ -191,7 +191,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         const requestDiags = diagnostics.filter(
             d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Request')
         );
-        assert.strictEqual(requestDiags.length, 1);
+        assert.strictEqual(requestDiags.length, 3);
     });
 
     test('should not report class imported via grouped use statement', async () => {
@@ -246,106 +246,37 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         assert.strictEqual(manager.getDiagnostics(doc2.uri).length, 0);
     });
 
-    test('should not report class that exists in the same namespace', async () => {
-        cache.addEntry('UserRepository', 'App\\Services\\UserRepository');
-
+    test('should not report class names inside single-line comments', async () => {
         const doc = await createDocument(
-            '<?php\n\nnamespace App\\Services;\n\nclass UserService {\n    public function find(): UserRepository {}\n}'
+            '<?php\n\nclass Foo {\n    // Hidden is used here\n}'
         );
 
         manager.update(doc);
         await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
-        const notImported = diagnostics.filter(
-            d => d.code === DiagnosticCode.ClassNotImported
+        const hiddenDiags = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Hidden')
         );
-
-        assert.strictEqual(
-            notImported.length, 0,
-            `Expected no unimported warnings for same-namespace class, got: ${notImported.map(d => d.message).join(', ')}`
-        );
+        assert.strictEqual(hiddenDiags.length, 0, 'Should not report class names in // comments');
     });
 
-    test('should still report class from a different namespace as not imported', async () => {
-        cache.addEntry('User', 'App\\Models\\User');
-
+    test('should not report class names inside block comments', async () => {
         const doc = await createDocument(
-            '<?php\n\nnamespace App\\Services;\n\nclass UserService {\n    public function find(): User {}\n}'
+            '<?php\n\nclass Foo {\n    /* Hidden block comment */\n}'
         );
 
         manager.update(doc);
         await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
-        const notImported = diagnostics.filter(
-            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('User')
+        const hiddenDiags = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Hidden')
         );
-
-        assert.strictEqual(notImported.length, 1, 'Should report class from different namespace');
+        assert.strictEqual(hiddenDiags.length, 0, 'Should not report class names in block comments');
     });
 
-    test('should not report same-namespace class when cache has multiple entries', async () => {
-        cache.addEntry('Event', 'App\\Events\\Event');
-        cache.addEntry('Event', 'Illuminate\\Support\\Facades\\Event');
-
-        const doc = await createDocument(
-            '<?php\n\nnamespace App\\Events;\n\nclass OrderCreated {\n    public function dispatch(): Event {}\n}'
-        );
-
-        manager.update(doc);
-        await wait();
-
-        const diagnostics = manager.getDiagnostics(doc.uri);
-        const notImported = diagnostics.filter(
-            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Event')
-        );
-
-        assert.strictEqual(
-            notImported.length, 0,
-            'Should not report class that has a matching entry in the same namespace'
-        );
-    });
-
-    test('should not report imported trait used inside class body as unused', async () => {
-        const doc = await createDocument(
-            '<?php\n\nnamespace App\\Services;\n\nuse App\\Traits\\HasLogger;\n\nclass UserService {\n    use HasLogger;\n}'
-        );
-
-        manager.update(doc);
-        await wait();
-
-        const diagnostics = manager.getDiagnostics(doc.uri);
-        const notUsed = diagnostics.filter(
-            d => d.code === DiagnosticCode.ClassNotUsed && d.message.includes('HasLogger')
-        );
-
-        assert.strictEqual(
-            notUsed.length, 0,
-            'Should not report imported trait that is used in a class body'
-        );
-    });
-
-    test('should not report imported traits used with multiple traits on one line', async () => {
-        const doc = await createDocument(
-            '<?php\n\nnamespace App\\Models;\n\nuse App\\Traits\\HasLogger;\nuse App\\Traits\\SoftDeletes;\n\nclass User {\n    use HasLogger, SoftDeletes;\n}'
-        );
-
-        manager.update(doc);
-        await wait();
-
-        const diagnostics = manager.getDiagnostics(doc.uri);
-        const notUsed = diagnostics.filter(
-            d => d.code === DiagnosticCode.ClassNotUsed
-        );
-
-        assert.strictEqual(
-            notUsed.length, 0,
-            `Expected no unused warnings for traits, got: ${notUsed.map(d => d.message).join(', ')}`
-        );
-    });
-
-    test('should not report class names inside comments', async () => {
+    test('should not report class names inside comments (combined)', async () => {
         const doc = await createDocument(
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    // Hidden is used here\n    /* Hidden block comment */\n    /** @var Hidden $h */\n}'
         );
@@ -364,9 +295,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
     });
 
-    test('should not report class names after inline comments', async () => {
-        cache.addEntry('Request', 'Illuminate\\Http\\Request');
-
+    test('should not report class names after inline // comment', async () => {
         const doc = await createDocument(
             '<?php\n\nuse Illuminate\\Http\\Request;\n\nclass Foo {\n    public function bar(Request $r) {} // Controller handles this\n}'
         );
@@ -378,11 +307,37 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         const controllerDiags = diagnostics.filter(
             d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Controller')
         );
+        assert.strictEqual(controllerDiags.length, 0, 'Should not report class names in inline comments');
+    });
 
-        assert.strictEqual(
-            controllerDiags.length, 0,
-            'Should not report class names that appear only in inline comments'
+    test('should not report class names inside # comments', async () => {
+        const doc = await createDocument(
+            '<?php\n\nclass Foo {\n    # Hidden in hash comment\n}'
         );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const hiddenDiags = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Hidden')
+        );
+        assert.strictEqual(hiddenDiags.length, 0, 'Should not report class names in # comments');
+    });
+
+    test('should still report class names in attributes (not confused with # comments)', async () => {
+        const doc = await createDocument(
+            '<?php\n\nclass Foo {\n    #[Route("/api")]\n    public function index() {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const routeDiags = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Route')
+        );
+        assert.strictEqual(routeDiags.length, 1, 'Should still report class names in #[] attributes');
     });
 
     test('should not report import as unused when used as namespace prefix', async () => {
@@ -397,11 +352,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         const notUsed = diagnostics.filter(
             d => d.code === DiagnosticCode.ClassNotUsed && d.message.includes('Models')
         );
-
-        assert.strictEqual(
-            notUsed.length, 0,
-            'Should not report import as unused when used as a namespace prefix'
-        );
+        assert.strictEqual(notUsed.length, 0, 'Should not report import as unused when used as namespace prefix');
     });
 
     test('should not report import as unused when used as namespace prefix with new', async () => {
@@ -416,10 +367,88 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         const notUsed = diagnostics.filter(
             d => d.code === DiagnosticCode.ClassNotUsed && d.message.includes('Models')
         );
+        assert.strictEqual(notUsed.length, 0, 'Should not report import as unused when used as namespace prefix with new');
+    });
 
-        assert.strictEqual(
-            notUsed.length, 0,
-            'Should not report import as unused when used as namespace prefix with new'
+    test('should not report imported trait as unused', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nuse App\\Traits\\HasLogger;\n\nclass UserService {\n    use HasLogger;\n}'
         );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notUsed = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotUsed && d.message.includes('HasLogger')
+        );
+        assert.strictEqual(notUsed.length, 0, 'Should not report imported trait that is used in a class body');
+    });
+
+    test('should not report imported traits used with multiple traits on one line', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Models;\n\nuse App\\Traits\\HasLogger;\nuse App\\Traits\\SoftDeletes;\n\nclass User {\n    use HasLogger, SoftDeletes;\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notUsed = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotUsed
+        );
+        assert.strictEqual(notUsed.length, 0, 'Should not report unused warnings for used traits');
+    });
+
+    test('should not report class that exists in the same namespace', async () => {
+        cache.addEntry('UserRepository', 'App\\Services\\UserRepository');
+
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nclass UserService {\n    public function find(): UserRepository {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported
+        );
+        assert.strictEqual(notImported.length, 0, 'Should not report same-namespace class as unimported');
+    });
+
+    test('should still report class from a different namespace as not imported', async () => {
+        cache.addEntry('User', 'App\\Models\\User');
+
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nclass UserService {\n    public function find(): User {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('User')
+        );
+        assert.strictEqual(notImported.length, 1, 'Should report class from different namespace');
+    });
+
+    test('should not report same-namespace class when cache has multiple entries', async () => {
+        cache.addEntry('Event', 'App\\Events\\Event');
+        cache.addEntry('Event', 'Illuminate\\Support\\Facades\\Event');
+
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Events;\n\nclass OrderCreated {\n    public function dispatch(): Event {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Event')
+        );
+        assert.strictEqual(notImported.length, 0, 'Should not report class that has a matching entry in the same namespace');
     });
 });

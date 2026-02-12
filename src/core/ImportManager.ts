@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { UseStatement, DeclarationLines, InsertPosition } from '../types';
 import { DeclarationParser } from './DeclarationParser';
 import { getConfig } from '../utils/config';
+import { showStatusMessage } from '../utils/statusBar';
 
 export class ImportManager {
     constructor(
@@ -20,7 +21,7 @@ export class ImportManager {
         try {
             result = this.parser.parse(editor.document, fqcn);
         } catch (error: any) {
-            vscode.window.setStatusBarMessage(error.message, 3000);
+            showStatusMessage(error.message);
             return;
         }
 
@@ -54,7 +55,7 @@ export class ImportManager {
             this.sortCallback(editor);
         }
 
-        vscode.window.setStatusBarMessage('$(check)  The class is imported.', 3000);
+        showStatusMessage('$(check) The class is imported.');
     }
 
     hasConflict(useStatements: UseStatement[], className: string): boolean {
@@ -77,7 +78,7 @@ export class ImportManager {
         }
 
         if (this.hasConflict(useStatements, alias)) {
-            vscode.window.setStatusBarMessage('This alias is already in use.', 3000);
+            showStatusMessage('This alias is already in use.');
             return this.insertAsAlias(editor, selection, fqcn, useStatements, declarationLines);
         }
 

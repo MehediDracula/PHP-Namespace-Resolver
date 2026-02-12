@@ -1,6 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 import { PhpClassDetector } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
 import { NamespaceCache } from '../core/NamespaceCache';
@@ -10,6 +8,7 @@ const DIAGNOSTIC_SOURCE = 'PHP Namespace Resolver';
 
 export class DiagnosticManager implements vscode.Disposable {
     private collection: vscode.DiagnosticCollection;
+    private disposables: vscode.Disposable[] = [];
 
     constructor(
         private detector: PhpClassDetector,
@@ -17,6 +16,29 @@ export class DiagnosticManager implements vscode.Disposable {
         private cache: NamespaceCache
     ) {
         this.collection = vscode.languages.createDiagnosticCollection('phpNamespaceResolver');
+
+        this.disposables.push(
+            cache.onDidFinishIndexing(() => this.refreshVisible()),
+            vscode.window.onDidChangeActiveTextEditor(editor => {
+                if (!editor || editor.document.languageId !== 'php') { return; }
+                this.update(editor.document);
+            }),
+            vscode.workspace.onDidChangeTextDocument(event => {
+                if (event.document.languageId !== 'php') { return; }
+                this.update(event.document);
+            }),
+            vscode.workspace.onDidCloseTextDocument(document => {
+                this.clear(document.uri);
+            })
+        );
+    }
+
+    refreshVisible(): void {
+        for (const editor of vscode.window.visibleTextEditors) {
+            if (editor.document.languageId === 'php') {
+                this.update(editor.document);
+            }
+        }
     }
 
     update(document: vscode.TextDocument): void {
@@ -27,7 +49,9 @@ export class DiagnosticManager implements vscode.Disposable {
 
         const diagnostics: vscode.Diagnostic[] = [];
 
-        diagnostics.push(...this.getNotImportedDiagnostics(document));
+        if (this.cache.indexed) {
+            diagnostics.push(...this.getNotImportedDiagnostics(document));
+        }
         diagnostics.push(...this.getNotUsedDiagnostics(document));
 
         this.collection.set(document.uri, diagnostics);
@@ -46,29 +70,15 @@ export class DiagnosticManager implements vscode.Disposable {
     }
 
     dispose(): void {
+        this.disposables.forEach(d => d.dispose());
         this.collection.dispose();
     }
 
-    private isInSameNamespace(className: string, currentNamespace: string | null, documentUri: vscode.Uri): boolean {
+    private isInSameNamespace(className: string, currentNamespace: string | null): boolean {
         if (!currentNamespace) { return false; }
 
         const entries = this.cache.lookup(className);
-        if (entries.some(e => e.fqcn === `${currentNamespace}\\${className}`)) {
-            return true;
-        }
-
-        // Fallback: check if a file with the class name exists in the same directory.
-        // Covers cases where the cache hasn't finished building yet.
-        if (documentUri.scheme === 'file') {
-            const siblingPath = path.join(path.dirname(documentUri.fsPath), `${className}.php`);
-            try {
-                return fs.existsSync(siblingPath);
-            } catch {
-                return false;
-            }
-        }
-
-        return false;
+        return entries.some(e => e.fqcn === `${currentNamespace}\\${className}`);
     }
 
     private getNotImportedDiagnostics(document: vscode.TextDocument): vscode.Diagnostic[] {
@@ -80,9 +90,10 @@ export class DiagnosticManager implements vscode.Disposable {
         const notImported = detectedClasses.filter(cls =>
             !importedClasses.includes(cls) &&
             !declaredClasses.includes(cls) &&
-            !this.isInSameNamespace(cls, currentNamespace, document.uri)
+            !this.isInSameNamespace(cls, currentNamespace)
         );
 
+        const commentRanges = getCommentRanges(text);
         const diagnostics: vscode.Diagnostic[] = [];
 
         for (const className of notImported) {
@@ -93,6 +104,10 @@ export class DiagnosticManager implements vscode.Disposable {
             let match: RegExpExecArray | null;
 
             while ((match = regex.exec(text)) !== null) {
+                if (isInsideComment(match.index, commentRanges)) {
+                    continue;
+                }
+
                 const startPos = document.positionAt(match.index);
                 const textLine = document.lineAt(startPos);
 
@@ -131,9 +146,6 @@ export class DiagnosticManager implements vscode.Disposable {
                 diag.code = DiagnosticCode.ClassNotImported;
                 diag.source = DIAGNOSTIC_SOURCE;
                 diagnostics.push(diag);
-
-                // Only report first occurrence per class
-                break;
             }
         }
 
@@ -175,4 +187,25 @@ export class DiagnosticManager implements vscode.Disposable {
 
 function escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+type CommentRange = [start: number, end: number];
+
+function getCommentRanges(text: string): CommentRange[] {
+    const ranges: CommentRange[] = [];
+    const regex = /\/\/[^\n]*|\/\*(?!\*)[\s\S]*?\*\/|#(?!\[)[^\n]*/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+        ranges.push([match.index, match.index + match[0].length]);
+    }
+    return ranges;
+}
+
+function isInsideComment(offset: number, ranges: CommentRange[]): boolean {
+    for (const [start, end] of ranges) {
+        if (offset >= start && offset < end) { return true; }
+        if (start > offset) { break; }
+    }
+    return false;
 }

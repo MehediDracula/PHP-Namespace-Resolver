@@ -4,6 +4,7 @@ import { DeclarationParser } from '../core/DeclarationParser';
 import { NamespaceResolver } from '../core/NamespaceResolver';
 import { ImportManager } from '../core/ImportManager';
 import { requireActiveEditor, resolveClassName } from '../utils/editor';
+import { showStatusMessage } from '../utils/statusBar';
 
 export class ImportCommand {
     constructor(
@@ -18,7 +19,7 @@ export class ImportCommand {
         const resolving = resolveClassName(editor, selection);
 
         if (!resolving) {
-            vscode.window.setStatusBarMessage('No class is selected.', 3000);
+            showStatusMessage('No class is selected.');
             return;
         }
 
@@ -32,7 +33,7 @@ export class ImportCommand {
             const namespaces = await this.resolver.resolve(resolving);
 
             if (namespaces.length === 0) {
-                vscode.window.setStatusBarMessage('The class is not found.', 3000);
+                showStatusMessage('The class is not found.');
                 return;
             }
 
@@ -57,7 +58,7 @@ export class ImportCommand {
         }
 
         if (classMap.size === 0) {
-            vscode.window.setStatusBarMessage('No class is selected.', 3000);
+            showStatusMessage('No class is selected.');
             return;
         }
 
@@ -83,7 +84,7 @@ export class ImportCommand {
         }
 
         if (importedCount > 1) {
-            vscode.window.setStatusBarMessage(`$(check)  Imported ${importedCount} class(es).`, 3000);
+            showStatusMessage(`$(check) Imported ${importedCount} class(es).`);
         }
     }
 

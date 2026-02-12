@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { NamespaceResolver } from '../core/NamespaceResolver';
 import { ImportManager } from '../core/ImportManager';
 import { requireActiveEditor, resolveClassName } from '../utils/editor';
+import { showStatusMessage } from '../utils/statusBar';
 
 export class ExpandCommand {
     constructor(
@@ -22,7 +23,7 @@ export class ExpandCommand {
         }
 
         if (classMap.size === 0) {
-            vscode.window.setStatusBarMessage('No class is selected.', 3000);
+            showStatusMessage('No class is selected.');
             return;
         }
 
@@ -57,14 +58,14 @@ export class ExpandCommand {
         const resolving = resolveClassName(editor, selection);
 
         if (!resolving) {
-            vscode.window.setStatusBarMessage('No class is selected.', 3000);
+            showStatusMessage('No class is selected.');
             return;
         }
 
         const namespaces = await this.resolver.resolve(resolving);
 
         if (namespaces.length === 0) {
-            vscode.window.setStatusBarMessage('The class is not found.', 3000);
+            showStatusMessage('The class is not found.');
             return;
         }
 

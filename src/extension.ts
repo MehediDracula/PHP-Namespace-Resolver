@@ -16,6 +16,7 @@ import { RemoveUnusedCommand } from './features/RemoveUnusedCommand';
 import { DiagnosticManager } from './features/DiagnosticManager';
 import { PhpCodeActionProvider } from './features/CodeActionProvider';
 import { getConfig } from './utils/config';
+import { showStatusMessage, disposeStatusBar } from './utils/statusBar';
 
 export function activate(context: vscode.ExtensionContext): void {
     const detector = new PhpClassDetector();
@@ -33,11 +34,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const removeUnusedCommand = new RemoveUnusedCommand(detector, parser);
     const diagnosticManager = new DiagnosticManager(detector, parser, cache);
 
-    cache.initialize().then(() => {
-        if (vscode.window.activeTextEditor?.document.languageId === 'php') {
-            diagnosticManager.update(vscode.window.activeTextEditor.document);
-        }
-    });
+    cache.initialize();
 
     context.subscriptions.push(
         vscode.commands.registerCommand('phpNamespaceResolver.import', async () => {
@@ -78,7 +75,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
         vscode.commands.registerCommand('phpNamespaceResolver.rebuildIndex', async () => {
             await cache.rebuild();
-            vscode.window.setStatusBarMessage('PHP Namespace Resolver: Index rebuilt.', 3000);
+            showStatusMessage('$(check) PHP Namespace Resolver: Index rebuilt.');
         }),
     );
 
@@ -107,27 +104,9 @@ export function activate(context: vscode.ExtensionContext): void {
         })
     );
 
-    context.subscriptions.push(
-        vscode.window.onDidChangeActiveTextEditor(editor => {
-            if (!editor || editor.document.languageId !== 'php') { return; }
-            diagnosticManager.update(editor.document);
-        })
-    );
-
-    context.subscriptions.push(
-        vscode.workspace.onDidChangeTextDocument(event => {
-            if (event.document.languageId !== 'php') { return; }
-            diagnosticManager.update(event.document);
-        })
-    );
-
-    context.subscriptions.push(
-        vscode.workspace.onDidCloseTextDocument(document => {
-            diagnosticManager.clear(document.uri);
-        })
-    );
-
     context.subscriptions.push(cache, diagnosticManager);
 }
 
-export function deactivate(): void {}
+export function deactivate(): void {
+    disposeStatusBar();
+}

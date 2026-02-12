@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
 import { NamespaceGenerator } from '../core/NamespaceGenerator';
 import { requireActiveEditor } from '../utils/editor';
+import { showStatusMessage } from '../utils/statusBar';
 
 export class GenerateNamespaceCommand {
     constructor(private generator: NamespaceGenerator) {}
@@ -10,7 +10,7 @@ export class GenerateNamespaceCommand {
             const editor = requireActiveEditor();
             await this.generator.generate(editor);
         } catch (error: any) {
-            vscode.window.setStatusBarMessage(error.message, 3000);
+            showStatusMessage(error.message);
         }
     }
 }
