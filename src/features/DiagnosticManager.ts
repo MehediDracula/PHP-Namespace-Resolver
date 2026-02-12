@@ -2,13 +2,14 @@ import * as vscode from 'vscode';
 import { PhpClassDetector } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
 import { NamespaceCache } from '../core/NamespaceCache';
-import { DiagnosticCode } from '../types';
+import { DiagnosticCode, UseStatement } from '../types';
 
 const DIAGNOSTIC_SOURCE = 'PHP Namespace Resolver';
 
 export class DiagnosticManager implements vscode.Disposable {
     private collection: vscode.DiagnosticCollection;
     private disposables: vscode.Disposable[] = [];
+    private debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
     constructor(
         private detector: PhpClassDetector,
@@ -25,7 +26,9 @@ export class DiagnosticManager implements vscode.Disposable {
             }),
             vscode.workspace.onDidChangeTextDocument(event => {
                 if (event.document.languageId !== 'php') { return; }
-                this.update(event.document);
+                clearTimeout(this.debounceTimer);
+                const doc = event.document;
+                this.debounceTimer = setTimeout(() => this.update(doc), 300);
             }),
             vscode.workspace.onDidCloseTextDocument(document => {
                 this.clear(document.uri);
@@ -47,12 +50,19 @@ export class DiagnosticManager implements vscode.Disposable {
             return;
         }
 
+        const text = document.getText();
+        const detectedClasses = this.detector.detectAll(text);
+        const { useStatements } = this.parser.parse(document);
+
         const diagnostics: vscode.Diagnostic[] = [];
 
         if (this.cache.indexed) {
-            diagnostics.push(...this.getNotImportedDiagnostics(document));
+            const importedClasses = useStatements.map(s => s.className);
+            const currentNamespace = this.parser.getNamespace(document);
+            const declaredClasses = this.parser.getDeclaredClassNames(document);
+            diagnostics.push(...this.getNotImportedDiagnostics(document, text, detectedClasses, importedClasses, currentNamespace, declaredClasses));
         }
-        diagnostics.push(...this.getNotUsedDiagnostics(document));
+        diagnostics.push(...this.getNotUsedDiagnostics(document, text, detectedClasses, useStatements));
 
         this.collection.set(document.uri, diagnostics);
     }
@@ -70,6 +80,7 @@ export class DiagnosticManager implements vscode.Disposable {
     }
 
     dispose(): void {
+        clearTimeout(this.debounceTimer);
         this.disposables.forEach(d => d.dispose());
         this.collection.dispose();
     }
@@ -81,12 +92,14 @@ export class DiagnosticManager implements vscode.Disposable {
         return entries.some(e => e.fqcn === `${currentNamespace}\\${className}`);
     }
 
-    private getNotImportedDiagnostics(document: vscode.TextDocument): vscode.Diagnostic[] {
-        const text = document.getText();
-        const detectedClasses = this.detector.detectAll(text);
-        const importedClasses = this.parser.getImportedClassNames(document);
-        const currentNamespace = this.parser.getNamespace(document);
-        const declaredClasses = this.parser.getDeclaredClassNames(document);
+    private getNotImportedDiagnostics(
+        document: vscode.TextDocument,
+        text: string,
+        detectedClasses: string[],
+        importedClasses: string[],
+        currentNamespace: string | null,
+        declaredClasses: string[]
+    ): vscode.Diagnostic[] {
         const notImported = detectedClasses.filter(cls =>
             !importedClasses.includes(cls) &&
             !declaredClasses.includes(cls) &&
@@ -151,10 +164,12 @@ export class DiagnosticManager implements vscode.Disposable {
         return diagnostics;
     }
 
-    private getNotUsedDiagnostics(document: vscode.TextDocument): vscode.Diagnostic[] {
-        const text = document.getText();
-        const detectedClasses = this.detector.detectAll(text);
-        const { useStatements } = this.parser.parse(document);
+    private getNotUsedDiagnostics(
+        document: vscode.TextDocument,
+        text: string,
+        detectedClasses: string[],
+        useStatements: UseStatement[]
+    ): vscode.Diagnostic[] {
 
         const diagnostics: vscode.Diagnostic[] = [];
 

@@ -75,8 +75,10 @@ export class NamespaceCache implements vscode.Disposable {
             const exclude = getConfig('exclude');
             const files = await vscode.workspace.findFiles('**/*.php', exclude);
 
-            for (const uri of files) {
-                await this.indexFile(uri);
+            const BATCH_SIZE = 64;
+            for (let i = 0; i < files.length; i += BATCH_SIZE) {
+                const batch = files.slice(i, i + BATCH_SIZE);
+                await Promise.all(batch.map(uri => this.indexFile(uri)));
             }
         } finally {
             showStatusMessage('$(check) PHP Namespace Resolver: Indexing complete.', 3000);
@@ -131,28 +133,31 @@ export class NamespaceCache implements vscode.Disposable {
 
             let changed = false;
 
-            for (const uri of files) {
-                const uriString = uri.toString();
-                const existing = this.fileIndex.get(uriString);
+            const BATCH_SIZE = 64;
+            for (let i = 0; i < files.length; i += BATCH_SIZE) {
+                const batch = files.slice(i, i + BATCH_SIZE);
+                const results = await Promise.all(batch.map(async (uri) => {
+                    const uriString = uri.toString();
+                    const existing = this.fileIndex.get(uriString);
 
-                if (!existing) {
-                    // New file — index it
-                    await this.indexFile(uri);
-                    changed = true;
-                } else {
-                    // Check if mtime changed
+                    if (!existing) {
+                        await this.indexFile(uri);
+                        return true;
+                    }
+
                     try {
                         const stat = await vscode.workspace.fs.stat(uri);
                         if (stat.mtime !== existing.mtime) {
                             await this.indexFile(uri);
-                            changed = true;
+                            return true;
                         }
                     } catch {
-                        // stat failed — file gone, remove it
                         this.removeFile(uri);
-                        changed = true;
+                        return true;
                     }
-                }
+                    return false;
+                }));
+                if (results.some(Boolean)) { changed = true; }
             }
 
             if (changed) {
