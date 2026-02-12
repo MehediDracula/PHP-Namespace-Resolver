@@ -23,8 +23,8 @@ export class NamespaceGenerator {
             return void vscode.window.setStatusBarMessage('No composer.json file found, automatic namespace generation failed', 3000);
         }
 
-        const composerDoc = await vscode.workspace.openTextDocument(composerFile);
-        const composerJson = JSON.parse(composerDoc.getText());
+        const raw = await vscode.workspace.fs.readFile(composerFile);
+        const composerJson = JSON.parse(Buffer.from(raw).toString('utf8'));
         const autoload = parseAutoload(composerJson);
 
         if (autoload.psr4.length === 0 && autoload.psr0.length === 0) {

@@ -56,8 +56,8 @@ export class NamespaceCache implements vscode.Disposable {
 
     private async indexFile(uri: vscode.Uri): Promise<void> {
         try {
-            const doc = await vscode.workspace.openTextDocument(uri);
-            const text = doc.getText();
+            const raw = await vscode.workspace.fs.readFile(uri);
+            const text = Buffer.from(raw).toString('utf8');
 
             this.removeFile(uri);
 

@@ -79,8 +79,9 @@ export class NamespaceResolver {
             if (fileName !== className) { continue; }
 
             try {
-                const doc = await vscode.workspace.openTextDocument(file);
-                const namespace = this.extractNamespace(doc);
+                const raw = await vscode.workspace.fs.readFile(file);
+                const text = Buffer.from(raw).toString('utf8');
+                const namespace = this.extractNamespace(text);
 
                 if (namespace) {
                     const fqcn = `${namespace}\\${className}`;
@@ -95,17 +96,8 @@ export class NamespaceResolver {
         return results;
     }
 
-    private extractNamespace(doc: vscode.TextDocument): string | null {
-        for (let line = 0; line < doc.lineCount; line++) {
-            const text = doc.lineAt(line).text;
-
-            if (text.startsWith('namespace ') || text.startsWith('<?php namespace ')) {
-                const match = text.match(/^(?:namespace|<\?php\s+namespace)\s+(.+?);/);
-                if (match) {
-                    return match[1].trim();
-                }
-            }
-        }
-        return null;
+    private extractNamespace(text: string): string | null {
+        const match = text.match(/^(?:namespace|<\?php\s+namespace)\s+(.+?);/m);
+        return match ? match[1].trim() : null;
     }
 }
