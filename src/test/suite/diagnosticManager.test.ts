@@ -495,6 +495,37 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         assert.strictEqual(notImported.length, 1, 'Should report class from different namespace');
     });
 
+    test('should not report built-in classes as unimported in files without namespace', async () => {
+        const doc = await createDocument(
+            '<?php\n\nclass Foo {\n    public function bar(): DateTime {\n        throw new Exception("error");\n    }\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported
+        );
+        assert.strictEqual(notImported.length, 0, 'Built-in classes should not be reported as unimported in global namespace files');
+    });
+
+    test('should still report non-built-in classes as unimported in files without namespace', async () => {
+        const doc = await createDocument(
+            '<?php\n\nclass Foo extends Controller {\n    public function bar(): DateTime {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported
+        );
+        assert.strictEqual(notImported.length, 1, 'Non-built-in classes should still be reported');
+        assert.ok(notImported[0].message.includes('Controller'));
+    });
+
     test('should not report same-namespace class when cache has multiple entries', async () => {
         cache.addEntry('Event', 'App\\Events\\Event');
         cache.addEntry('Event', 'Illuminate\\Support\\Facades\\Event');

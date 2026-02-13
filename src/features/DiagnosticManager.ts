@@ -3,6 +3,7 @@ import { PhpClassDetector } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
 import { NamespaceCache } from '../core/NamespaceCache';
 import { DiagnosticCode, UseStatement } from '../types';
+import { builtInClasses } from '../data/builtInClasses';
 
 const DIAGNOSTIC_SOURCE = 'PHP Namespace Resolver';
 
@@ -86,7 +87,9 @@ export class DiagnosticManager implements vscode.Disposable {
     }
 
     private isInSameNamespace(className: string, currentNamespace: string | null): boolean {
-        if (!currentNamespace) { return false; }
+        if (!currentNamespace) {
+            return builtInClasses.has(className);
+        }
 
         const entries = this.cache.lookup(className);
         return entries.some(e => e.fqcn === `${currentNamespace}\\${className}`);
