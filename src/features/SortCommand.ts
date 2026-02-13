@@ -5,10 +5,10 @@ import { showStatusMessage } from '../utils/statusBar';
 export class SortCommand {
     constructor(private sortManager: SortManager) {}
 
-    execute(): void {
+    async execute(): Promise<void> {
         try {
             const editor = requireActiveEditor();
-            this.sortManager.sort(editor);
+            await this.sortManager.sort(editor);
             showStatusMessage('$(check) Imports are sorted.');
         } catch (error: any) {
             showStatusMessage(error.message);

@@ -7,7 +7,7 @@ import { showStatusMessage } from '../utils/statusBar';
 export class ImportManager {
     constructor(
         private parser: DeclarationParser,
-        private sortCallback: (editor: vscode.TextEditor) => void
+        private sortCallback: (editor: vscode.TextEditor) => void | Thenable<boolean>
     ) {}
 
     async importClass(
@@ -52,7 +52,7 @@ export class ImportManager {
         });
 
         if (getConfig('autoSort')) {
-            this.sortCallback(editor);
+            await this.sortCallback(editor);
         }
 
         showStatusMessage('$(check) The class is imported.');
@@ -107,7 +107,7 @@ export class ImportManager {
         });
 
         if (getConfig('autoSort')) {
-            this.sortCallback(editor);
+            await this.sortCallback(editor);
         }
     }
 

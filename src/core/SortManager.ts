@@ -6,7 +6,7 @@ import { getConfig } from '../utils/config';
 export class SortManager {
     constructor(private parser: DeclarationParser) {}
 
-    sort(editor: vscode.TextEditor): void {
+    sort(editor: vscode.TextEditor): Thenable<boolean> {
         const { useStatements } = this.parser.parse(editor.document);
 
         if (useStatements.length <= 1) {
@@ -16,7 +16,7 @@ export class SortManager {
         const mode = getConfig('sortMode');
         const sorted = this.sortStatements(useStatements, mode);
 
-        editor.edit(textEdit => {
+        return editor.edit(textEdit => {
             for (let i = 0; i < sorted.length; i++) {
                 const original = useStatements[i];
                 textEdit.replace(

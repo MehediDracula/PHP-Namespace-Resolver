@@ -14,8 +14,7 @@ suite('SortManager (VS Code Integration)', () => {
         );
 
         // Default config is sort by length
-        sortManager.sort(editor);
-        await wait();
+        await sortManager.sort(editor);
 
         const text = getText(editor);
         const lines = text.split('\n');
@@ -52,8 +51,7 @@ suite('SortManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App;\n\nuse Zzz\\Long\\ClassName;\nuse Aaa\\Short;\n\nclass Foo {}'
         );
 
-        sortManager.sort(editor);
-        await wait();
+        await sortManager.sort(editor);
 
         const text = getText(editor);
         assert.ok(text.includes('namespace App;'));
@@ -67,8 +65,7 @@ suite('SortManager (VS Code Integration)', () => {
             '<?php\n\nuse Illuminate\\Support\\Collection;\nuse App\\User;\n\nclass Foo {}'
         );
 
-        sortManager.sort(editor);
-        await wait();
+        await sortManager.sort(editor);
 
         const text = getText(editor);
         assert.ok(text.indexOf('App\\User') < text.indexOf('Illuminate\\Support\\Collection'));
@@ -83,8 +80,7 @@ suite('SortManager (VS Code Integration)', () => {
             '<?php\n\nuse Zzz\\Short;\nuse Aaa\\VeryLongClassName;\n\nclass Foo {}'
         );
 
-        sortManager.sort(editor);
-        await wait(500);
+        await sortManager.sort(editor);
 
         const text = getText(editor);
         // Alphabetical: Aaa before Zzz, regardless of length
@@ -104,8 +100,7 @@ suite('SortManager (VS Code Integration)', () => {
             '<?php\n\nuse App\\Handler10;\nuse App\\Handler2;\nuse App\\Handler1;\n\nclass Foo {}'
         );
 
-        sortManager.sort(editor);
-        await wait(500);
+        await sortManager.sort(editor);
 
         const text = getText(editor);
         assert.ok(text.indexOf('Handler1;') < text.indexOf('Handler2'),
