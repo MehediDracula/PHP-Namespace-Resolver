@@ -13,6 +13,7 @@ export class NamespaceCache implements vscode.Disposable {
     private initialized = false;
     private _indexed = true;
     private persistTimer: ReturnType<typeof setTimeout> | undefined;
+    private pendingChanges = new Map<string, ReturnType<typeof setTimeout>>();
 
     private readonly _onDidFinishIndexing = new vscode.EventEmitter<void>();
     readonly onDidFinishIndexing = this._onDidFinishIndexing.event;
@@ -61,6 +62,8 @@ export class NamespaceCache implements vscode.Disposable {
 
     dispose(): void {
         clearTimeout(this.persistTimer);
+        for (const timer of this.pendingChanges.values()) { clearTimeout(timer); }
+        this.pendingChanges.clear();
         this.watcher?.dispose();
         this._onDidFinishIndexing.dispose();
         this.cache.clear();
@@ -254,9 +257,17 @@ export class NamespaceCache implements vscode.Disposable {
         } catch {}
     }
 
-    private async onFileChange(uri: vscode.Uri): Promise<void> {
-        await this.indexFile(uri);
-        this.debouncedPersist();
+    private onFileChange(uri: vscode.Uri): void {
+        const key = uri.toString();
+        // Debounce per-file so rapid saves don't re-index the same file repeatedly
+        if (this.pendingChanges.has(key)) {
+            clearTimeout(this.pendingChanges.get(key));
+        }
+        this.pendingChanges.set(key, setTimeout(async () => {
+            this.pendingChanges.delete(key);
+            await this.indexFile(uri);
+            this.debouncedPersist();
+        }, 1000));
     }
 
     private async onFileDelete(uri: vscode.Uri): Promise<void> {
