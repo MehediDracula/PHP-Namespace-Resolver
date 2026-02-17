@@ -4,6 +4,7 @@ import { DeclarationParser } from '../core/DeclarationParser';
 import { NamespaceCache } from '../core/NamespaceCache';
 import { DiagnosticCode, UseStatement } from '../types';
 import { builtInClasses } from '../data/builtInClasses';
+import { getConfig } from '../utils/config';
 
 const DIAGNOSTIC_SOURCE = 'PHP Namespace Resolver';
 
@@ -52,18 +53,22 @@ export class DiagnosticManager implements vscode.Disposable {
         }
 
         const text = document.getText();
-        const detectedClasses = this.detector.detectAll(text);
+        const ignoreList = getConfig('ignoreList');
+        const detectedClasses = this.detector.detectAll(text).filter(cls => !ignoreList.includes(cls));
         const { useStatements } = this.parser.parse(document);
 
         const diagnostics: vscode.Diagnostic[] = [];
 
-        if (this.cache.indexed) {
+        if (this.cache.indexed && getConfig('highlightNotImported')) {
             const importedClasses = useStatements.map(s => s.className);
             const currentNamespace = this.parser.getNamespace(document);
             const declaredClasses = this.parser.getDeclaredClassNames(document);
             diagnostics.push(...this.getNotImportedDiagnostics(document, text, detectedClasses, importedClasses, currentNamespace, declaredClasses));
         }
-        diagnostics.push(...this.getNotUsedDiagnostics(document, text, detectedClasses, useStatements));
+        if (getConfig('highlightNotUsed')) {
+            const filteredUseStatements = useStatements.filter(s => !ignoreList.includes(s.className));
+            diagnostics.push(...this.getNotUsedDiagnostics(document, text, detectedClasses, filteredUseStatements));
+        }
 
         this.collection.set(document.uri, diagnostics);
     }
@@ -129,7 +134,7 @@ export class DiagnosticManager implements vscode.Disposable {
                     continue;
                 }
 
-                // Skip matches inside comments (not PHPDoc — handled by isInsideComment above)
+                // Defense-in-depth: skip lines that are clearly comment-only
                 const trimmedLine = textLine.text.trimStart();
                 if (
                     trimmedLine.startsWith('//') ||
@@ -207,25 +212,4 @@ export class DiagnosticManager implements vscode.Disposable {
 
 function escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-type CommentRange = [start: number, end: number];
-
-function getCommentRanges(text: string): CommentRange[] {
-    const ranges: CommentRange[] = [];
-    const regex = /\/\/[^\n]*|\/\*(?!\*)[\s\S]*?\*\/|#(?!\[)[^\n]*/g;
-    let match: RegExpExecArray | null;
-
-    while ((match = regex.exec(text)) !== null) {
-        ranges.push([match.index, match.index + match[0].length]);
-    }
-    return ranges;
-}
-
-function isInsideComment(offset: number, ranges: CommentRange[]): boolean {
-    for (const [start, end] of ranges) {
-        if (offset >= start && offset < end) { return true; }
-        if (start > offset) { break; }
-    }
-    return false;
 }
