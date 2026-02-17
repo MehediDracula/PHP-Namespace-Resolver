@@ -68,17 +68,18 @@ export class DiagnosticManager implements vscode.Disposable {
         const ignoreList = getConfig('ignoreList');
         const detectedClasses = this.detector.detectAll(text).filter(cls => !ignoreList.includes(cls));
         const { useStatements } = this.parser.parse(document);
+        const classUseStatements = useStatements.filter(s => s.kind === 'class');
 
         const diagnostics: vscode.Diagnostic[] = [];
 
         if (this.cache.indexed && getConfig('highlightNotImported')) {
-            const importedClasses = useStatements.map(s => s.className);
+            const importedClasses = classUseStatements.map(s => s.className);
             const currentNamespace = this.parser.getNamespace(document);
             const declaredClasses = this.parser.getDeclaredClassNames(document);
             diagnostics.push(...this.getNotImportedDiagnostics(document, text, detectedClasses, importedClasses, currentNamespace, declaredClasses));
         }
         if (getConfig('highlightNotUsed')) {
-            const filteredUseStatements = useStatements.filter(s => !ignoreList.includes(s.className));
+            const filteredUseStatements = classUseStatements.filter(s => !ignoreList.includes(s.className));
             diagnostics.push(...this.getNotUsedDiagnostics(document, text, detectedClasses, filteredUseStatements));
         }
 

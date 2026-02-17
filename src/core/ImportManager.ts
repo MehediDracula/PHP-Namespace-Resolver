@@ -59,7 +59,7 @@ export class ImportManager {
     }
 
     hasConflict(useStatements: UseStatement[], className: string): boolean {
-        return useStatements.some(stmt => stmt.className === className);
+        return useStatements.some(stmt => stmt.kind === 'class' && stmt.className === className);
     }
 
     private async insertAsAlias(

@@ -32,7 +32,8 @@ export class RemoveUnusedCommand {
 
         const ignoreList = getConfig('ignoreList');
         const unusedStatements = useStatements.filter(
-            stmt => !ignoreList.includes(stmt.className) &&
+            stmt => stmt.kind === 'class' &&
+                !ignoreList.includes(stmt.className) &&
                 !detectedClasses.includes(stmt.className) &&
                 !text.includes(`${stmt.className}\\`)
         );
