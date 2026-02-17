@@ -51,7 +51,7 @@ suite('ImportManager (VS Code Integration)', () => {
 
     test('hasConflict should detect conflicting class names', () => {
         const useStatements = [
-            { text: 'use App\\Models\\User;', line: 4, fqcn: 'App\\Models\\User', alias: null, className: 'User' },
+            { text: 'use App\\Models\\User;', line: 4, fqcn: 'App\\Models\\User', alias: null, className: 'User', kind: 'class' as const },
         ];
 
         assert.strictEqual(importManager.hasConflict(useStatements, 'User'), true);
@@ -60,7 +60,7 @@ suite('ImportManager (VS Code Integration)', () => {
 
     test('hasConflict should detect alias conflicts', () => {
         const useStatements = [
-            { text: 'use App\\Models\\User as AppUser;', line: 4, fqcn: 'App\\Models\\User', alias: 'AppUser', className: 'AppUser' },
+            { text: 'use App\\Models\\User as AppUser;', line: 4, fqcn: 'App\\Models\\User', alias: 'AppUser', className: 'AppUser', kind: 'class' as const },
         ];
 
         assert.strictEqual(importManager.hasConflict(useStatements, 'AppUser'), true);

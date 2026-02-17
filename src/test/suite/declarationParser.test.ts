@@ -328,22 +328,30 @@ suite('DeclarationParser (VS Code Integration)', () => {
         assert.strictEqual(declarationLines.classDeclaration, 3);
     });
 
-    test('should skip use function statements in parse()', async () => {
+    test('should parse use function statements with kind', async () => {
         const doc = await createDocument(
             '<?php\n\nuse App\\Models\\User;\nuse function App\\Helpers\\helper;\n\nclass Foo {}'
         );
         const { useStatements } = parser.parse(doc);
-        assert.strictEqual(useStatements.length, 1);
+        assert.strictEqual(useStatements.length, 2);
         assert.strictEqual(useStatements[0].className, 'User');
+        assert.strictEqual(useStatements[0].kind, 'class');
+        assert.strictEqual(useStatements[1].className, 'helper');
+        assert.strictEqual(useStatements[1].kind, 'function');
+        assert.strictEqual(useStatements[1].fqcn, 'App\\Helpers\\helper');
     });
 
-    test('should skip use const statements in parse()', async () => {
+    test('should parse use const statements with kind', async () => {
         const doc = await createDocument(
             '<?php\n\nuse App\\Models\\User;\nuse const App\\Config\\VERSION;\n\nclass Foo {}'
         );
         const { useStatements } = parser.parse(doc);
-        assert.strictEqual(useStatements.length, 1);
+        assert.strictEqual(useStatements.length, 2);
         assert.strictEqual(useStatements[0].className, 'User');
+        assert.strictEqual(useStatements[0].kind, 'class');
+        assert.strictEqual(useStatements[1].className, 'VERSION');
+        assert.strictEqual(useStatements[1].kind, 'const');
+        assert.strictEqual(useStatements[1].fqcn, 'App\\Config\\VERSION');
     });
 
     test('getImportedClassNames should skip use function statements', async () => {
