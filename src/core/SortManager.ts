@@ -7,24 +7,50 @@ export class SortManager {
     constructor(private parser: DeclarationParser) {}
 
     sort(editor: vscode.TextEditor): Thenable<boolean> {
-        const { useStatements } = this.parser.parse(editor.document);
+        const edits = this.computeSortEdits(editor.document);
 
-        if (useStatements.length <= 1) {
+        if (edits.length === 0) {
             throw new Error('Nothing to sort.');
         }
 
-        const mode = getConfig('sortMode');
-        const sorted = this.sortStatements(useStatements, mode);
-
         return editor.edit(textEdit => {
-            for (let i = 0; i < sorted.length; i++) {
-                const original = useStatements[i];
-                textEdit.replace(
-                    new vscode.Range(original.line, 0, original.line, original.text.length),
-                    sorted[i].text
-                );
+            for (const edit of edits) {
+                textEdit.replace(edit.range, edit.newText);
             }
         });
+    }
+
+    /**
+     * Compute sort edits as TextEdit[] without applying them.
+     * Returns empty array if nothing to sort.
+     * Accepts optional pre-filtered statements (e.g. after removing unused).
+     */
+    computeSortEdits(document: vscode.TextDocument, stmts?: UseStatement[]): vscode.TextEdit[] {
+        const { useStatements, declarationLines } = this.parser.parse(document);
+        const target = stmts ?? useStatements;
+
+        if (target.length <= 1) { return []; }
+
+        const mode = getConfig('sortMode');
+
+        const classStmts = this.sortStatements(target.filter(s => s.kind === 'class'), mode);
+        const funcStmts = this.sortStatements(target.filter(s => s.kind === 'function'), mode);
+        const constStmts = this.sortStatements(target.filter(s => s.kind === 'const'), mode);
+
+        const groups = [classStmts, funcStmts, constStmts].filter(g => g.length > 0);
+        const sortedLines = groups.map(g => g.map(s => s.text).join('\n')).join('\n\n');
+
+        // Replace the entire use block range (eliminates blank line gaps)
+        const firstLine = declarationLines.firstUseStatement! - 1;
+        const lastLine = declarationLines.lastUseStatement! - 1;
+        const lastLineText = document.lineAt(lastLine).text;
+
+        return [
+            vscode.TextEdit.replace(
+                new vscode.Range(firstLine, 0, lastLine, lastLineText.length),
+                sortedLines
+            )
+        ];
     }
 
     private sortStatements(statements: UseStatement[], mode: SortMode): UseStatement[] {
