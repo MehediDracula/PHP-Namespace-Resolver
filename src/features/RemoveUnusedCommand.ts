@@ -3,6 +3,7 @@ import { PhpClassDetector } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
 import { requireActiveEditor } from '../utils/editor';
 import { showStatusMessage } from '../utils/statusBar';
+import { getConfig } from '../utils/config';
 
 export class RemoveUnusedCommand {
     constructor(
@@ -29,8 +30,10 @@ export class RemoveUnusedCommand {
         const detectedClasses = this.detector.detectAll(text);
         const { useStatements } = this.parser.parse(editor.document);
 
+        const ignoreList = getConfig('ignoreList');
         const unusedStatements = useStatements.filter(
-            stmt => !detectedClasses.includes(stmt.className) &&
+            stmt => !ignoreList.includes(stmt.className) &&
+                !detectedClasses.includes(stmt.className) &&
                 !text.includes(`${stmt.className}\\`)
         );
 
