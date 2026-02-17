@@ -91,26 +91,53 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.workspace.onWillSaveTextDocument(event => {
             if (!event || event.document.languageId !== 'php') { return; }
 
-            const editor = vscode.window.activeTextEditor;
-            if (!editor || editor.document.uri.toString() !== event.document.uri.toString()) { return; }
-
             const needsRemove = getConfig('removeOnSave');
             const needsSort = getConfig('sortOnSave');
             if (!needsRemove && !needsSort) { return; }
 
-            event.waitUntil((async () => {
-                diagnosticManager.suppressUpdates = true;
+            diagnosticManager.suppressUpdates = true;
+
+            event.waitUntil(((): Promise<vscode.TextEdit[]> => {
                 try {
+                    const document = event.document;
+                    const { useStatements } = parser.parse(document);
+                    if (useStatements.length === 0) { return Promise.resolve([]); }
+
+                    let stmtsToKeep = useStatements;
+
+                    // Filter out unused class imports
                     if (needsRemove) {
-                        await removeUnusedCommand.removeUnused(editor);
+                        const text = document.getText();
+                        const detectedClasses = detector.detectAll(text);
+                        const ignoreList = getConfig('ignoreList');
+                        stmtsToKeep = useStatements.filter(stmt => {
+                            if (stmt.kind !== 'class') { return true; }
+                            if (ignoreList.includes(stmt.className)) { return true; }
+                            if (detectedClasses.includes(stmt.className)) { return true; }
+                            if (text.includes(`${stmt.className}\\`)) { return true; }
+                            return false;
+                        });
                     }
-                    if (needsSort) {
-                        await sortCommand.execute();
+
+                    // Sort remaining imports (or just sort without remove)
+                    if (needsSort && stmtsToKeep.length > 1) {
+                        return Promise.resolve(sortManager.computeSortEdits(document, stmtsToKeep));
                     }
+
+                    // Remove-only: delete unused lines (reverse order for stable line numbers)
+                    if (needsRemove && stmtsToKeep.length < useStatements.length) {
+                        const removed = useStatements.filter(s => !stmtsToKeep.includes(s));
+                        const edits = removed
+                            .sort((a, b) => b.line - a.line)
+                            .map(stmt => vscode.TextEdit.delete(document.lineAt(stmt.line).rangeIncludingLineBreak));
+                        return Promise.resolve(edits);
+                    }
+
+                    return Promise.resolve([]);
                 } finally {
-                    diagnosticManager.suppressUpdates = false;
+                    // Defer re-enabling so diagnostics don't fire during the save edit application
+                    setTimeout(() => { diagnosticManager.suppressUpdates = false; }, 100);
                 }
-                return [] as vscode.TextEdit[];
             })());
         })
     );
