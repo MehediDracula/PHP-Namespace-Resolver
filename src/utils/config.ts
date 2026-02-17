@@ -19,6 +19,9 @@ function getDefault<K extends keyof ExtensionConfig>(key: K): ExtensionConfig[K]
         leadingSeparator: true,
         removeOnSave: false,
         autoImportOnSave: false,
+        ignoreList: [],
+        highlightNotImported: true,
+        highlightNotUsed: true,
     };
     return defaults[key];
 }

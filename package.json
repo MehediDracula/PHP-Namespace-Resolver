@@ -121,6 +121,24 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Automatically import all detected classes when a file is saved"
+                },
+                "phpNamespaceResolver.ignoreList": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "description": "Class names to exclude from all diagnostics (e.g. [\"Yii\"])"
+                },
+                "phpNamespaceResolver.highlightNotImported": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable/disable 'Class X is not imported' warnings"
+                },
+                "phpNamespaceResolver.highlightNotUsed": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable/disable 'Imported class X is not used' warnings"
                 }
             }
         },

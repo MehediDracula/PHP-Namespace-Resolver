@@ -66,6 +66,9 @@ export interface ExtensionConfig {
     leadingSeparator: boolean;
     removeOnSave: boolean;
     autoImportOnSave: boolean;
+    ignoreList: string[];
+    highlightNotImported: boolean;
+    highlightNotUsed: boolean;
 }
 
 export interface PersistedFileEntry {
