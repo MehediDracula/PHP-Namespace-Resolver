@@ -588,6 +588,94 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         assert.strictEqual(exceptionDiags.length, 0, 'Should not report class name found inside string literal');
     });
 
+    test('should not produce "not imported" diagnostics for ignored classes', async () => {
+        const config = vscode.workspace.getConfiguration('phpNamespaceResolver');
+        await config.update('ignoreList', ['Yii'], vscode.ConfigurationTarget.Global);
+
+        try {
+            const doc = await createDocument(
+                '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    public function bar() {\n        return Yii::t("app", "hello");\n    }\n}'
+            );
+
+            manager.update(doc);
+            await wait();
+
+            const diagnostics = manager.getDiagnostics(doc.uri);
+            const yiiDiags = diagnostics.filter(
+                d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Yii')
+            );
+            assert.strictEqual(yiiDiags.length, 0, 'Ignored class should not produce "not imported" diagnostics');
+        } finally {
+            await config.update('ignoreList', undefined, vscode.ConfigurationTarget.Global);
+        }
+    });
+
+    test('should not produce "not used" diagnostics for ignored classes', async () => {
+        const config = vscode.workspace.getConfiguration('phpNamespaceResolver');
+        await config.update('ignoreList', ['Yii'], vscode.ConfigurationTarget.Global);
+
+        try {
+            const doc = await createDocument(
+                '<?php\n\nuse yii\\BaseYii as Yii;\n\nclass Foo {}'
+            );
+
+            manager.update(doc);
+            await wait();
+
+            const diagnostics = manager.getDiagnostics(doc.uri);
+            const yiiDiags = diagnostics.filter(
+                d => d.code === DiagnosticCode.ClassNotUsed && d.message.includes('Yii')
+            );
+            assert.strictEqual(yiiDiags.length, 0, 'Ignored class should not produce "not used" diagnostics');
+        } finally {
+            await config.update('ignoreList', undefined, vscode.ConfigurationTarget.Global);
+        }
+    });
+
+    test('highlightNotImported: false should suppress all not-imported diagnostics', async () => {
+        const config = vscode.workspace.getConfiguration('phpNamespaceResolver');
+        await config.update('highlightNotImported', false, vscode.ConfigurationTarget.Global);
+
+        try {
+            const doc = await createDocument(
+                '<?php\n\nclass Foo extends Controller {\n    public function bar(Request $request) {}\n}'
+            );
+
+            manager.update(doc);
+            await wait();
+
+            const diagnostics = manager.getDiagnostics(doc.uri);
+            const notImported = diagnostics.filter(
+                d => d.code === DiagnosticCode.ClassNotImported
+            );
+            assert.strictEqual(notImported.length, 0, 'No "not imported" diagnostics should appear when highlightNotImported is false');
+        } finally {
+            await config.update('highlightNotImported', undefined, vscode.ConfigurationTarget.Global);
+        }
+    });
+
+    test('highlightNotUsed: false should suppress all not-used diagnostics', async () => {
+        const config = vscode.workspace.getConfiguration('phpNamespaceResolver');
+        await config.update('highlightNotUsed', false, vscode.ConfigurationTarget.Global);
+
+        try {
+            const doc = await createDocument(
+                '<?php\n\nuse App\\Models\\User;\nuse App\\Models\\Post;\n\nclass Foo {}'
+            );
+
+            manager.update(doc);
+            await wait();
+
+            const diagnostics = manager.getDiagnostics(doc.uri);
+            const notUsed = diagnostics.filter(
+                d => d.code === DiagnosticCode.ClassNotUsed
+            );
+            assert.strictEqual(notUsed.length, 0, 'No "not used" diagnostics should appear when highlightNotUsed is false');
+        } finally {
+            await config.update('highlightNotUsed', undefined, vscode.ConfigurationTarget.Global);
+        }
+    });
+
     test('should not report same-namespace class when cache has multiple entries', async () => {
         cache.addEntry('Event', 'App\\Events\\Event');
         cache.addEntry('Event', 'Illuminate\\Support\\Facades\\Event');
