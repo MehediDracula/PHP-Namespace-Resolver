@@ -111,4 +111,70 @@ suite('SortManager (VS Code Integration)', () => {
         await config.update('sortMode', undefined, vscode.ConfigurationTarget.Global);
         await wait(500);
     });
+
+    test('should group use function after class imports', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nuse function Laravel\\Prompts\\info;\nuse Illuminate\\Http\\Request;\nuse App\\Models\\User;\n\nclass Foo {}'
+        );
+
+        await sortManager.sort(editor);
+
+        const text = getText(editor);
+        // Class imports should come first, then function imports
+        assert.ok(text.indexOf('App\\Models\\User') < text.indexOf('function Laravel\\Prompts\\info'),
+            `Expected class imports before function imports. Text:\n${text}`);
+        assert.ok(text.indexOf('Illuminate\\Http\\Request') < text.indexOf('function Laravel\\Prompts\\info'),
+            `Expected class imports before function imports. Text:\n${text}`);
+    });
+
+    test('should group use const after function imports', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nuse const App\\Config\\VERSION;\nuse function App\\Helpers\\helper;\nuse App\\Models\\User;\n\nclass Foo {}'
+        );
+
+        await sortManager.sort(editor);
+
+        const text = getText(editor);
+        // Order: class, function, const
+        assert.ok(text.indexOf('App\\Models\\User') < text.indexOf('function App\\Helpers\\helper'),
+            `Expected class before function. Text:\n${text}`);
+        assert.ok(text.indexOf('function App\\Helpers\\helper') < text.indexOf('const App\\Config\\VERSION'),
+            `Expected function before const. Text:\n${text}`);
+    });
+
+    test('should eliminate blank line gaps between class imports', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nuse Illuminate\\Http\\Request;\n\nuse App\\Models\\User;\nuse Illuminate\\Support\\Collection;\n\nclass Foo {}'
+        );
+
+        await sortManager.sort(editor);
+
+        const text = getText(editor);
+        const lines = text.split('\n');
+        // Find the use block — should have no blank lines within class group
+        const useLines = lines.filter(l => l.startsWith('use '));
+        assert.strictEqual(useLines.length, 3);
+
+        // Check there's no blank line between consecutive use statements
+        const firstUseIdx = lines.findIndex(l => l.startsWith('use '));
+        const lastUseIdx = lines.length - 1 - [...lines].reverse().findIndex(l => l.startsWith('use '));
+        for (let i = firstUseIdx; i <= lastUseIdx; i++) {
+            if (lines[i].trim() === '') {
+                assert.fail(`Unexpected blank line at index ${i} within use block. Text:\n${text}`);
+            }
+        }
+    });
+
+    test('should add blank line separator between kind groups', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nuse App\\Models\\User;\nuse function App\\Helpers\\helper;\n\nclass Foo {}'
+        );
+
+        await sortManager.sort(editor);
+
+        const text = getText(editor);
+        // Should have a blank line between class and function groups
+        assert.ok(text.includes('use App\\Models\\User;\n\nuse function App\\Helpers\\helper;'),
+            `Expected blank line between groups. Text:\n${text}`);
+    });
 });
