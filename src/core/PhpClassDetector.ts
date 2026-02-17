@@ -1,29 +1,32 @@
 import { DetectedClass } from '../types';
 
+// Pre-compiled regex patterns — compiled once at module load to avoid re-creating complex patterns on every keystroke
+const STRINGS_HEREDOC_COMMENTS =
+    `'(?:[^'\\\\]|\\\\.)*'` +          // Single-quoted strings
+    `|"(?:[^"\\\\]|\\\\.)*"` +         // Double-quoted strings
+    `|<<<[ \\t]*'?(\\w+)'?\\r?\\n[\\s\\S]*?\\r?\\n[ \\t]*\\1;?` + // Heredoc/Nowdoc
+    `|//[^\\n]*` +                      // // comments
+    `|#(?!\\[)[^\\n]*`;                 // # comments (not #[ attributes)
+
+const SANITIZE_ALL_RE = new RegExp(
+    STRINGS_HEREDOC_COMMENTS + `|/\\*[\\s\\S]*?\\*/`, 'g'       // All block comments
+);
+const SANITIZE_DIAG_RE = new RegExp(
+    STRINGS_HEREDOC_COMMENTS + `|/\\*(?!\\*)[\\s\\S]*?\\*/`, 'g' // Non-PHPDoc only
+);
+const BLANK_NON_NEWLINE = /[^\r\n]/g;
+
+function blankMatch(match: string): string {
+    return match.replace(BLANK_NON_NEWLINE, ' ');
+}
+
 /**
  * Blanks out string contents and all comments, preserving character positions
  * (newlines kept, other chars replaced with spaces). PHPDoc type extraction
  * is handled separately by getFromPhpDoc() which receives the original text.
  */
 export function sanitizePhpCode(text: string): string {
-    const pattern = new RegExp(
-        // Single-quoted strings (with \' escaping)
-        `'(?:[^'\\\\]|\\\\.)*'` +
-        // Double-quoted strings (with \" escaping)
-        `|"(?:[^"\\\\]|\\\\.)*"` +
-        // Heredoc/Nowdoc: <<<IDENTIFIER ... IDENTIFIER; (supports indented closing markers and CRLF)
-        `|<<<[ \\t]*'?(\\w+)'?\\r?\\n[\\s\\S]*?\\r?\\n[ \\t]*\\1;?` +
-        // Single-line comments: // and # (but not #[ attributes)
-        `|//[^\\n]*` +
-        `|#(?!\\[)[^\\n]*` +
-        // All block comments (including PHPDoc)
-        `|/\\*[\\s\\S]*?\\*/`,
-        'g'
-    );
-
-    return text.replace(pattern, (match) => {
-        return match.replace(/[^\r\n]/g, ' ');
-    });
+    return text.replace(SANITIZE_ALL_RE, blankMatch);
 }
 
 /**
@@ -33,24 +36,7 @@ export function sanitizePhpCode(text: string): string {
  * still need to be matched.
  */
 export function sanitizeForDiagnostics(text: string): string {
-    const pattern = new RegExp(
-        // Single-quoted strings (with \' escaping)
-        `'(?:[^'\\\\]|\\\\.)*'` +
-        // Double-quoted strings (with \" escaping)
-        `|"(?:[^"\\\\]|\\\\.)*"` +
-        // Heredoc/Nowdoc
-        `|<<<[ \\t]*'?(\\w+)'?\\r?\\n[\\s\\S]*?\\r?\\n[ \\t]*\\1;?` +
-        // Single-line comments: // and # (but not #[ attributes)
-        `|//[^\\n]*` +
-        `|#(?!\\[)[^\\n]*` +
-        // Non-PHPDoc block comments only
-        `|/\\*(?!\\*)[\\s\\S]*?\\*/`,
-        'g'
-    );
-
-    return text.replace(pattern, (match) => {
-        return match.replace(/[^\r\n]/g, ' ');
-    });
+    return text.replace(SANITIZE_DIAG_RE, blankMatch);
 }
 
 export class PhpClassDetector {
