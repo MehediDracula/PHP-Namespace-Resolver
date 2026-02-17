@@ -39,8 +39,11 @@ export class DeclarationParser {
                 declarationLines.declare = line + 1;
             } else if (/^\s*(namespace\s|<\?php\s+namespace\s)/.test(text)) {
                 declarationLines.namespace = line + 1;
-            } else if (/^\s*use\s+/.test(text) && !/^\s*use\s*\(/.test(text) && !/^\s*use\s+(?:function|const)\s/.test(text)) {
-                // Match 'use Foo\Bar;' but not 'use ($var)' (closure use) or 'use function/const'
+            } else if (/^\s*use\s+/.test(text) && !/^\s*use\s*\(/.test(text)) {
+                // Match 'use Foo\Bar;', 'use function ...', 'use const ...' but not 'use ($var)' (closure use)
+                const kindMatch = text.match(/^\s*use\s+(function|const)\s/);
+                const kind: 'class' | 'function' | 'const' = kindMatch ? kindMatch[1] as 'function' | 'const' : 'class';
+
                 let fullText = text;
                 const startLine = line;
 
@@ -55,7 +58,7 @@ export class DeclarationParser {
                     }
                 }
 
-                const parsed = this.parseUseStatement(fullText, startLine);
+                const parsed = this.parseUseStatement(fullText, startLine, kind);
                 for (const stmt of parsed) {
                     if (pickedClass !== null && pickedClass !== undefined) {
                         if (stmt.fqcn === pickedClass) {
@@ -161,8 +164,8 @@ export class DeclarationParser {
         return names;
     }
 
-    private parseUseStatement(text: string, line: number): UseStatement[] {
-        const match = text.match(/^\s*use\s+(.+);/);
+    private parseUseStatement(text: string, line: number, kind: 'class' | 'function' | 'const' = 'class'): UseStatement[] {
+        const match = text.match(/^\s*use\s+(?:function\s+|const\s+)?(.+);/);
         if (!match) { return []; }
 
         const raw = match[1].trim();
@@ -184,6 +187,7 @@ export class DeclarationParser {
                         fqcn: `${prefix}\\${entryPath}`,
                         alias,
                         className: alias,
+                        kind,
                     };
                 }
                 const entryParts = entry.split('\\');
@@ -193,6 +197,7 @@ export class DeclarationParser {
                     fqcn: `${prefix}\\${entry}`,
                     alias: null,
                     className: entryParts[entryParts.length - 1],
+                    kind,
                 };
             });
         }
@@ -215,6 +220,6 @@ export class DeclarationParser {
             className = parts[parts.length - 1];
         }
 
-        return [{ text: text.trimStart(), line, fqcn, alias, className }];
+        return [{ text: text.trimStart(), line, fqcn, alias, className, kind }];
     }
 }

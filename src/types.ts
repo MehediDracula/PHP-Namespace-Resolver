@@ -6,6 +6,7 @@ export interface UseStatement {
     fqcn: string;
     alias: string | null;
     className: string;
+    kind: 'class' | 'function' | 'const';
 }
 
 export interface DeclarationLines {
