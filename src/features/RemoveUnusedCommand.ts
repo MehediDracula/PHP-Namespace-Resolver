@@ -30,7 +30,8 @@ export class RemoveUnusedCommand {
         const { useStatements } = this.parser.parse(editor.document);
 
         const unusedStatements = useStatements.filter(
-            stmt => !detectedClasses.includes(stmt.className)
+            stmt => !detectedClasses.includes(stmt.className) &&
+                !text.includes(`${stmt.className}\\`)
         );
 
         if (unusedStatements.length === 0) {

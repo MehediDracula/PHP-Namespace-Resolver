@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { PhpClassDetector } from '../core/PhpClassDetector';
+import { PhpClassDetector, sanitizeForDiagnostics } from '../core/PhpClassDetector';
 import { DeclarationParser } from '../core/DeclarationParser';
 import { NamespaceCache } from '../core/NamespaceCache';
 import { DiagnosticCode, UseStatement } from '../types';
@@ -109,7 +109,7 @@ export class DiagnosticManager implements vscode.Disposable {
             !this.isInSameNamespace(cls, currentNamespace)
         );
 
-        const commentRanges = getCommentRanges(text);
+        const sanitized = sanitizeForDiagnostics(text);
         const diagnostics: vscode.Diagnostic[] = [];
 
         for (const className of notImported) {
@@ -119,10 +119,8 @@ export class DiagnosticManager implements vscode.Disposable {
             );
             let match: RegExpExecArray | null;
 
-            while ((match = regex.exec(text)) !== null) {
-                if (isInsideComment(match.index, commentRanges)) {
-                    continue;
-                }
+            // Scan sanitized text so matches inside strings/comments are already blanked out
+            while ((match = regex.exec(sanitized)) !== null) {
 
                 const startPos = document.positionAt(match.index);
                 const textLine = document.lineAt(startPos);
@@ -138,6 +136,11 @@ export class DiagnosticManager implements vscode.Disposable {
                     (trimmedLine.startsWith('/*') && !trimmedLine.startsWith('/**')) ||
                     (trimmedLine.startsWith('#') && !trimmedLine.startsWith('#['))
                 ) {
+                    continue;
+                }
+                // Skip PHPDoc description lines (e.g., "* Returns a Logger based on config")
+                // but keep @tag lines (e.g., "* @param Logger $logger")
+                if (trimmedLine.startsWith('*') && !/@[a-z]/.test(trimmedLine)) {
                     continue;
                 }
                 const textBeforeMatch = textLine.text.substring(0, startPos.character);

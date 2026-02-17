@@ -39,8 +39,8 @@ export class DeclarationParser {
                 declarationLines.declare = line + 1;
             } else if (/^\s*(namespace\s|<\?php\s+namespace\s)/.test(text)) {
                 declarationLines.namespace = line + 1;
-            } else if (/^\s*use\s+/.test(text) && !/^\s*use\s*\(/.test(text)) {
-                // Match 'use Foo\Bar;' but not 'use ($var)' (closure use)
+            } else if (/^\s*use\s+/.test(text) && !/^\s*use\s*\(/.test(text) && !/^\s*use\s+(?:function|const)\s/.test(text)) {
+                // Match 'use Foo\Bar;' but not 'use ($var)' (closure use) or 'use function/const'
                 let fullText = text;
                 const startLine = line;
 
@@ -86,7 +86,7 @@ export class DeclarationParser {
         for (let line = 0; line < document.lineCount; line++) {
             const text = document.lineAt(line).text;
 
-            if (/^\s*use\s+/.test(text) && !/^\s*use\s*\(/.test(text)) {
+            if (/^\s*use\s+/.test(text) && !/^\s*use\s*\(/.test(text) && !/^\s*use\s+(?:function|const)\s/.test(text)) {
                 let fullText = text;
 
                 // Handle multi-line grouped imports
@@ -151,7 +151,7 @@ export class DeclarationParser {
 
     getDeclaredClassNames(document: vscode.TextDocument): string[] {
         const names: string[] = [];
-        const regex = /^\s*(?:abstract\s+|final\s+)?(?:class|trait|interface|enum)\s+(\w+)/;
+        const regex = /^\s*(?:abstract\s+|final\s+|readonly\s+)*(?:class|trait|interface|enum)\s+(\w+)/;
         for (let line = 0; line < document.lineCount; line++) {
             const match = document.lineAt(line).text.match(regex);
             if (match) {

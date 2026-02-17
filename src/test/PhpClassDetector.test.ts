@@ -1,4 +1,4 @@
-import { PhpClassDetector } from '../core/PhpClassDetector';
+import { PhpClassDetector, sanitizePhpCode } from '../core/PhpClassDetector';
 import * as assert from 'assert';
 
 const detector = new PhpClassDetector();
@@ -734,6 +734,224 @@ class Foo {}`;
     $this->user = $value;
 }`;
             assert.ok(detector.getFromFunctionParameters(text).includes('User'));
+        });
+    });
+
+    describe('sanitizePhpCode', () => {
+        it('should blank out single-quoted strings', () => {
+            const text = `$x = 'new Foo()';`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Foo'));
+            assert.strictEqual(result.length, text.length);
+        });
+
+        it('should blank out double-quoted strings', () => {
+            const text = `$x = "new Bar()";`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Bar'));
+            assert.strictEqual(result.length, text.length);
+        });
+
+        it('should handle escaped quotes in strings', () => {
+            const text = `$x = 'it\\'s a Foo'; $y = "a \\"Bar\\"";`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Foo'));
+            assert.ok(!result.includes('Bar'));
+        });
+
+        it('should blank out single-line // comments', () => {
+            const text = `$x = 1; // new Foo()`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Foo'));
+            assert.ok(result.startsWith('$x = 1;'));
+        });
+
+        it('should blank out single-line # comments but not #[ attributes', () => {
+            const text = `# new Foo()\n#[Route]`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Foo'));
+            assert.ok(result.includes('#[Route]'));
+        });
+
+        it('should blank out all block comments including PHPDoc', () => {
+            const text = `/* new Foo() */\n/** @param Bar $b */`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Foo'));
+            assert.ok(!result.includes('Bar'));
+            assert.strictEqual(result.length, text.length);
+        });
+
+        it('should blank out entire PHPDoc blocks', () => {
+            const text = `/**\n * Returns a Logger or Formatter based on the config\n * @param Request $request\n */`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Logger'));
+            assert.ok(!result.includes('Formatter'));
+            assert.ok(!result.includes('Request'));
+            assert.strictEqual(result.length, text.length);
+        });
+
+        it('should blank out heredoc content', () => {
+            const text = `$x = <<<EOT\nnew Foo()\nEOT;`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Foo'));
+            assert.strictEqual(result.length, text.length);
+        });
+
+        it('should blank out nowdoc content', () => {
+            const text = `$x = <<<'EOT'\nnew Foo()\nEOT;`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Foo'));
+        });
+
+        it('should blank out indented heredoc (PHP 7.3+ flexible syntax)', () => {
+            const text = `$x = <<<EOT\n    new Foo()\n    EOT;`;
+            const result = sanitizePhpCode(text);
+            assert.ok(!result.includes('Foo'));
+            assert.strictEqual(result.length, text.length);
+        });
+
+        it('should preserve newlines for position accuracy', () => {
+            const text = `"line1\nline2"\n$real = 1;`;
+            const result = sanitizePhpCode(text);
+            const originalLines = text.split('\n').length;
+            const resultLines = result.split('\n').length;
+            assert.strictEqual(resultLines, originalLines);
+        });
+
+        it('should preserve same length as original', () => {
+            const text = `$x = "Foo"; // Bar\n/* Baz */\n/** @param Qux $q */`;
+            const result = sanitizePhpCode(text);
+            assert.strictEqual(result.length, text.length);
+        });
+    });
+
+    describe('detectAll - string/comment filtering', () => {
+        it('should not detect class names inside single-quoted strings', () => {
+            const text = `<?php\n$x = 'new Foo()';`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('Foo'));
+        });
+
+        it('should not detect class names inside double-quoted strings', () => {
+            const text = `<?php\n$x = "Carbon::now()";`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('Carbon'));
+        });
+
+        it('should not detect class names in single-line comments', () => {
+            const text = `<?php\n// new Foo()\n$x = new Bar();`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('Foo'));
+            assert.ok(result.includes('Bar'));
+        });
+
+        it('should not detect class names in block comments', () => {
+            const text = `<?php\n/* new Foo() */\n$x = new Bar();`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('Foo'));
+            assert.ok(result.includes('Bar'));
+        });
+
+        it('should still detect class names in PHPDoc comments', () => {
+            const text = `<?php\n/** @param Foo $f */\nfunction test(Bar $b) {}`;
+            const result = detector.detectAll(text);
+            assert.ok(result.includes('Foo'));
+            assert.ok(result.includes('Bar'));
+        });
+
+        it('should not detect class names in heredoc', () => {
+            const text = `<?php\n$x = <<<EOT\nnew Foo()\nEOT;\n$y = new Bar();`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('Foo'));
+            assert.ok(result.includes('Bar'));
+        });
+
+        it('should not detect class names in # comments', () => {
+            const text = `<?php\n# Carbon::now()\n$x = new Bar();`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('Carbon'));
+            assert.ok(result.includes('Bar'));
+        });
+
+        it('should not detect class names in PHPDoc free-text descriptions (#124)', () => {
+            const text = `<?php
+/**
+ * Returns a Logger or Formatter based on the config
+ */
+public function getHandler()
+{
+    $h = new Logger();
+}`;
+            const result = detector.detectAll(text);
+            // Logger is detected from `new Logger()` in code
+            assert.ok(result.includes('Logger'));
+            // Formatter only appears in PHPDoc free-text, should NOT be detected
+            assert.ok(!result.includes('Formatter'));
+        });
+
+        it('should not detect class names from code patterns in PHPDoc @tag lines', () => {
+            const text = `<?php
+/**
+ * @deprecated Use NewService::create() instead
+ */
+class Foo {}`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('NewService'));
+        });
+
+        it('should handle mixed strings, comments, and real code', () => {
+            const text = `<?php
+class Foo extends Controller {
+    public function test(Request $req): Response {
+        // Logger::info("test")
+        $msg = "instanceof Admin";
+        /* new Cache() */
+        $x = new Service();
+    }
+}`;
+            const result = detector.detectAll(text);
+            assert.ok(result.includes('Controller'));
+            assert.ok(result.includes('Request'));
+            assert.ok(result.includes('Response'));
+            assert.ok(result.includes('Service'));
+            assert.ok(!result.includes('Logger'));
+            assert.ok(!result.includes('Admin'));
+            assert.ok(!result.includes('Cache'));
+        });
+    });
+
+    describe('detectAllWithPositions - string/comment filtering', () => {
+        it('should not return positions for class names inside strings', () => {
+            const text = `<?php\n$x = "new Foo()";\n$y = new Foo();`;
+            const results = detector.detectAllWithPositions(text);
+            const fooResults = results.filter(r => r.name === 'Foo');
+            // Should only find Foo on line 2 (the real code), not line 1 (the string)
+            assert.strictEqual(fooResults.length, 1);
+            assert.strictEqual(fooResults[0].line, 2);
+        });
+
+        it('should not return positions for class names inside comments', () => {
+            const text = `<?php\n// new Bar()\n$y = new Bar();`;
+            const results = detector.detectAllWithPositions(text);
+            const barResults = results.filter(r => r.name === 'Bar');
+            assert.strictEqual(barResults.length, 1);
+            assert.strictEqual(barResults[0].line, 2);
+        });
+
+        it('should not return positions for class names in PHPDoc free-text (#124)', () => {
+            const text = `<?php
+/**
+ * Returns a Logger or Formatter based on the config
+ */
+public function getHandler()
+{
+    $h = new Logger();
+}`;
+            const results = detector.detectAllWithPositions(text);
+            const loggerResults = results.filter(r => r.name === 'Logger');
+            // Logger should only appear from line 6 (new Logger()), not line 2 (PHPDoc description)
+            assert.strictEqual(loggerResults.length, 1);
+            assert.strictEqual(loggerResults[0].line, 6);
         });
     });
 

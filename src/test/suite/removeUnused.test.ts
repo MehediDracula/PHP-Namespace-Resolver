@@ -97,6 +97,17 @@ suite('RemoveUnusedCommand (VS Code Integration)', () => {
         assert.ok(!text.match(/use App\\Models\\Post;\n\n\n/), 'Should not have triple newlines after cleanup');
     });
 
+    test('should not remove import used as namespace prefix', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nnamespace App\\Services;\n\nuse App\\Models;\n\nclass Foo {\n    public function bar() {\n        return Models\\User::query();\n    }\n}'
+        );
+
+        const removed = await command.removeUnused(editor);
+        assert.strictEqual(removed, 0);
+        const text = getText(editor);
+        assert.ok(text.includes('use App\\Models;'));
+    });
+
     test('should correctly remove imports in reverse order to avoid line shifting', async () => {
         const { editor } = await openEditor(
             '<?php\n\nnamespace App;\n\nuse App\\A;\nuse App\\B;\nuse App\\C;\nuse App\\D;\n\nclass Foo {\n    public function bar(): B {}\n}'

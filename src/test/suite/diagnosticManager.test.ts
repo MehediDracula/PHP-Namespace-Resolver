@@ -526,6 +526,68 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         assert.ok(notImported[0].message.includes('Controller'));
     });
 
+    test('should not report class names in PHPDoc free-text descriptions', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /**\n     * Returns a Logger based on config\n     */\n    public function bar() {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const loggerDiags = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Logger')
+        );
+        assert.strictEqual(loggerDiags.length, 0, 'Should not report class names in PHPDoc free-text lines');
+    });
+
+    test('should still report class names in PHPDoc @tag lines', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /**\n     * Some description\n     * @param Logger $logger\n     */\n    public function bar($logger) {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const loggerDiags = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Logger')
+        );
+        assert.strictEqual(loggerDiags.length, 1, 'Should still report class names in PHPDoc @tag lines');
+    });
+
+    test('should not report self-reference for readonly class', async () => {
+        cache.addEntry('ValueObject', 'App\\Services\\ValueObject');
+
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nreadonly class ValueObject {\n    public function clone(): ValueObject {}\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const notImported = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('ValueObject')
+        );
+        assert.strictEqual(notImported.length, 0, 'Should not report readonly class as not imported when referencing itself');
+    });
+
+    test('should not report class name inside string literals (#125)', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    public function bar() {\n        try {} catch (\\Exception $e) {\n            log(\'Exception while creating refund: \' . $e->getMessage());\n        }\n    }\n}'
+        );
+
+        manager.update(doc);
+        await wait();
+
+        const diagnostics = manager.getDiagnostics(doc.uri);
+        const exceptionDiags = diagnostics.filter(
+            d => d.code === DiagnosticCode.ClassNotImported && d.message.includes('Exception')
+        );
+        assert.strictEqual(exceptionDiags.length, 0, 'Should not report class name found inside string literal');
+    });
+
     test('should not report same-namespace class when cache has multiple entries', async () => {
         cache.addEntry('Event', 'App\\Events\\Event');
         cache.addEntry('Event', 'Illuminate\\Support\\Facades\\Event');

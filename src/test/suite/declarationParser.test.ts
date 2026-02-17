@@ -304,6 +304,64 @@ suite('DeclarationParser (VS Code Integration)', () => {
         assert.deepStrictEqual(names, ['AppUser', 'Post']);
     });
 
+    test('getDeclaredClassNames should detect readonly class', async () => {
+        const doc = await createDocument(
+            '<?php\n\nreadonly class ValueObject {}'
+        );
+        const names = parser.getDeclaredClassNames(doc);
+        assert.deepStrictEqual(names, ['ValueObject']);
+    });
+
+    test('getDeclaredClassNames should detect final readonly class', async () => {
+        const doc = await createDocument(
+            '<?php\n\nfinal readonly class UserDTO {}'
+        );
+        const names = parser.getDeclaredClassNames(doc);
+        assert.deepStrictEqual(names, ['UserDTO']);
+    });
+
+    test('should detect readonly class declaration line', async () => {
+        const doc = await createDocument(
+            '<?php\n\nreadonly class Foo {}'
+        );
+        const { declarationLines } = parser.parse(doc);
+        assert.strictEqual(declarationLines.classDeclaration, 3);
+    });
+
+    test('should skip use function statements in parse()', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\User;\nuse function App\\Helpers\\helper;\n\nclass Foo {}'
+        );
+        const { useStatements } = parser.parse(doc);
+        assert.strictEqual(useStatements.length, 1);
+        assert.strictEqual(useStatements[0].className, 'User');
+    });
+
+    test('should skip use const statements in parse()', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\User;\nuse const App\\Config\\VERSION;\n\nclass Foo {}'
+        );
+        const { useStatements } = parser.parse(doc);
+        assert.strictEqual(useStatements.length, 1);
+        assert.strictEqual(useStatements[0].className, 'User');
+    });
+
+    test('getImportedClassNames should skip use function statements', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\User;\nuse function App\\Helpers\\helper;\n\nclass Foo {}'
+        );
+        const names = parser.getImportedClassNames(doc);
+        assert.deepStrictEqual(names, ['User']);
+    });
+
+    test('getImportedClassNames should skip use const statements', async () => {
+        const doc = await createDocument(
+            '<?php\n\nuse App\\Models\\User;\nuse const App\\Config\\VERSION;\n\nclass Foo {}'
+        );
+        const names = parser.getImportedClassNames(doc);
+        assert.deepStrictEqual(names, ['User']);
+    });
+
     test('should throw when class in grouped import is already imported', async () => {
         const doc = await createDocument(
             '<?php\n\nuse App\\Models\\{User, Post};\n\nclass Foo {}'

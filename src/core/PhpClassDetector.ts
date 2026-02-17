@@ -1,41 +1,79 @@
 import { DetectedClass } from '../types';
 
+/**
+ * Blanks out string contents and all comments, preserving character positions
+ * (newlines kept, other chars replaced with spaces). PHPDoc type extraction
+ * is handled separately by getFromPhpDoc() which receives the original text.
+ */
+export function sanitizePhpCode(text: string): string {
+    const pattern = new RegExp(
+        // Single-quoted strings (with \' escaping)
+        `'(?:[^'\\\\]|\\\\.)*'` +
+        // Double-quoted strings (with \" escaping)
+        `|"(?:[^"\\\\]|\\\\.)*"` +
+        // Heredoc/Nowdoc: <<<IDENTIFIER ... IDENTIFIER; (supports indented closing markers and CRLF)
+        `|<<<[ \\t]*'?(\\w+)'?\\r?\\n[\\s\\S]*?\\r?\\n[ \\t]*\\1;?` +
+        // Single-line comments: // and # (but not #[ attributes)
+        `|//[^\\n]*` +
+        `|#(?!\\[)[^\\n]*` +
+        // All block comments (including PHPDoc)
+        `|/\\*[\\s\\S]*?\\*/`,
+        'g'
+    );
+
+    return text.replace(pattern, (match) => {
+        return match.replace(/[^\r\n]/g, ' ');
+    });
+}
+
+/**
+ * Like sanitizePhpCode but preserves PHPDoc block content, only blanking
+ * strings, non-PHPDoc comments, and PHPDoc free-text description lines.
+ * Used by DiagnosticManager for position scanning where PHPDoc @tag types
+ * still need to be matched.
+ */
+export function sanitizeForDiagnostics(text: string): string {
+    const pattern = new RegExp(
+        // Single-quoted strings (with \' escaping)
+        `'(?:[^'\\\\]|\\\\.)*'` +
+        // Double-quoted strings (with \" escaping)
+        `|"(?:[^"\\\\]|\\\\.)*"` +
+        // Heredoc/Nowdoc
+        `|<<<[ \\t]*'?(\\w+)'?\\r?\\n[\\s\\S]*?\\r?\\n[ \\t]*\\1;?` +
+        // Single-line comments: // and # (but not #[ attributes)
+        `|//[^\\n]*` +
+        `|#(?!\\[)[^\\n]*` +
+        // Non-PHPDoc block comments only
+        `|/\\*(?!\\*)[\\s\\S]*?\\*/`,
+        'g'
+    );
+
+    return text.replace(pattern, (match) => {
+        return match.replace(/[^\r\n]/g, ' ');
+    });
+}
+
 export class PhpClassDetector {
     private static readonly CLASS_NAME = '[A-Z][A-Za-z0-9_]*';
 
     detectAll(text: string): string[] {
-        const classes = new Set<string>();
-
-        for (const name of this.getExtended(text)) { classes.add(name); }
-        for (const name of this.getImplemented(text)) { classes.add(name); }
-        for (const name of this.getFromFunctionParameters(text)) { classes.add(name); }
-        for (const name of this.getReturnTypes(text)) { classes.add(name); }
-        for (const name of this.getPropertyTypes(text)) { classes.add(name); }
-        for (const name of this.getInitializedWithNew(text)) { classes.add(name); }
-        for (const name of this.getFromStaticCalls(text)) { classes.add(name); }
-        for (const name of this.getFromInstanceof(text)) { classes.add(name); }
-        for (const name of this.getFromCatchBlocks(text)) { classes.add(name); }
-        for (const name of this.getFromAttributes(text)) { classes.add(name); }
-        for (const name of this.getFromTraitUse(text)) { classes.add(name); }
-        for (const name of this.getEnumImplements(text)) { classes.add(name); }
-        for (const name of this.getFromPhpDoc(text)) { classes.add(name); }
-        for (const name of this.getFromTypedConstants(text)) { classes.add(name); }
-
-        return Array.from(classes);
+        const sanitized = sanitizePhpCode(text);
+        return this.detectAllFromSanitized(text, sanitized);
     }
 
     detectAllWithPositions(text: string): DetectedClass[] {
         const results: DetectedClass[] = [];
         const seen = new Map<string, boolean>();
+        const sanitized = sanitizePhpCode(text);
         const lines = text.split('\n');
 
-        const classNames = this.detectAll(text);
+        const classNames = this.detectAllFromSanitized(text, sanitized);
 
         for (const name of classNames) {
             const pattern = new RegExp(`(?<![a-zA-Z0-9_\\\\])${escapeRegex(name)}(?![a-zA-Z0-9_\\\\])`, 'g');
             let match: RegExpExecArray | null;
 
-            while ((match = pattern.exec(text)) !== null) {
+            while ((match = pattern.exec(sanitized)) !== null) {
                 const offset = match.index;
                 const pos = offsetToPosition(text, offset, lines);
 
@@ -58,6 +96,27 @@ export class PhpClassDetector {
         }
 
         return results;
+    }
+
+    private detectAllFromSanitized(originalText: string, sanitized: string): string[] {
+        const classes = new Set<string>();
+
+        for (const name of this.getExtended(sanitized)) { classes.add(name); }
+        for (const name of this.getImplemented(sanitized)) { classes.add(name); }
+        for (const name of this.getFromFunctionParameters(sanitized)) { classes.add(name); }
+        for (const name of this.getReturnTypes(sanitized)) { classes.add(name); }
+        for (const name of this.getPropertyTypes(sanitized)) { classes.add(name); }
+        for (const name of this.getInitializedWithNew(sanitized)) { classes.add(name); }
+        for (const name of this.getFromStaticCalls(sanitized)) { classes.add(name); }
+        for (const name of this.getFromInstanceof(sanitized)) { classes.add(name); }
+        for (const name of this.getFromCatchBlocks(sanitized)) { classes.add(name); }
+        for (const name of this.getFromAttributes(sanitized)) { classes.add(name); }
+        for (const name of this.getFromTraitUse(sanitized)) { classes.add(name); }
+        for (const name of this.getEnumImplements(sanitized)) { classes.add(name); }
+        for (const name of this.getFromPhpDoc(originalText)) { classes.add(name); }
+        for (const name of this.getFromTypedConstants(sanitized)) { classes.add(name); }
+
+        return Array.from(classes);
     }
 
     getExtended(text: string): string[] {
