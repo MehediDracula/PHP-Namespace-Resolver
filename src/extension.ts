@@ -94,13 +94,24 @@ export function activate(context: vscode.ExtensionContext): void {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.uri.toString() !== event.document.uri.toString()) { return; }
 
-            if (getConfig('removeOnSave')) {
-                removeUnusedCommand.removeUnused(editor);
-            }
+            const needsRemove = getConfig('removeOnSave');
+            const needsSort = getConfig('sortOnSave');
+            if (!needsRemove && !needsSort) { return; }
 
-            if (getConfig('sortOnSave')) {
-                sortCommand.execute();
-            }
+            event.waitUntil((async () => {
+                diagnosticManager.suppressUpdates = true;
+                try {
+                    if (needsRemove) {
+                        await removeUnusedCommand.removeUnused(editor);
+                    }
+                    if (needsSort) {
+                        await sortCommand.execute();
+                    }
+                } finally {
+                    diagnosticManager.suppressUpdates = false;
+                }
+                return [] as vscode.TextEdit[];
+            })());
         })
     );
 
