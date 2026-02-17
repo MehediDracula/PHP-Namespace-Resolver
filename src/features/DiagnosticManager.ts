@@ -12,6 +12,11 @@ export class DiagnosticManager implements vscode.Disposable {
     private collection: vscode.DiagnosticCollection;
     private disposables: vscode.Disposable[] = [];
     private debounceTimer: ReturnType<typeof setTimeout> | undefined;
+    private _suppressUpdates = false;
+    private lastVersion = new Map<string, number>();
+
+    /** Suppress diagnostic updates during programmatic edits (e.g. save operations). */
+    set suppressUpdates(value: boolean) { this._suppressUpdates = value; }
 
     constructor(
         private detector: PhpClassDetector,
@@ -28,9 +33,10 @@ export class DiagnosticManager implements vscode.Disposable {
             }),
             vscode.workspace.onDidChangeTextDocument(event => {
                 if (event.document.languageId !== 'php') { return; }
+                if (this._suppressUpdates) { return; }
                 clearTimeout(this.debounceTimer);
                 const doc = event.document;
-                this.debounceTimer = setTimeout(() => this.update(doc), 300);
+                this.debounceTimer = setTimeout(() => this.update(doc), 800);
             }),
             vscode.workspace.onDidCloseTextDocument(document => {
                 this.clear(document.uri);
@@ -51,6 +57,12 @@ export class DiagnosticManager implements vscode.Disposable {
             this.collection.delete(document.uri);
             return;
         }
+
+        // Skip if document hasn't changed since last update
+        const key = document.uri.toString();
+        const version = document.version;
+        if (this.lastVersion.get(key) === version) { return; }
+        this.lastVersion.set(key, version);
 
         const text = document.getText();
         const ignoreList = getConfig('ignoreList');
@@ -79,10 +91,12 @@ export class DiagnosticManager implements vscode.Disposable {
 
     clear(uri: vscode.Uri): void {
         this.collection.delete(uri);
+        this.lastVersion.delete(uri.toString());
     }
 
     clearAll(): void {
         this.collection.clear();
+        this.lastVersion.clear();
     }
 
     dispose(): void {
