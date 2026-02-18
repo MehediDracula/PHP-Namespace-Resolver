@@ -67,6 +67,25 @@ describe('PhpClassDetector', () => {
             const text = 'function foo(string $a, int $b) {}';
             assert.deepStrictEqual(detector.getFromFunctionParameters(text), []);
         });
+
+        it('should detect types after PHP attributes', () => {
+            const text = 'function show(Request $request, #[CurrentUser] ?User $user) {}';
+            const result = detector.getFromFunctionParameters(text);
+            assert.ok(result.includes('Request'));
+            assert.ok(result.includes('User'));
+        });
+
+        it('should detect types after multiple PHP attributes', () => {
+            const text = 'function handle(#[MapEntity] #[CurrentUser] User $user) {}';
+            const result = detector.getFromFunctionParameters(text);
+            assert.ok(result.includes('User'));
+        });
+
+        it('should detect types after attribute with arguments', () => {
+            const text = 'function show(#[MapQueryString(validationGroups: ["strict"])] SearchFilter $filter) {}';
+            const result = detector.getFromFunctionParameters(text);
+            assert.ok(result.includes('SearchFilter'));
+        });
     });
 
     describe('getReturnTypes', () => {
