@@ -377,6 +377,14 @@ class UserController extends Controller {
             assert.ok(result.includes('A'));
             assert.ok(result.includes('B'));
         });
+
+        it('should detect multi-line trait use statements', () => {
+            const text = `class Foo {\n    use Sluggable,\n        HasMedia,\n        HasPreferences;\n}`;
+            const result = detector.getFromTraitUse(text);
+            assert.ok(result.includes('Sluggable'));
+            assert.ok(result.includes('HasMedia'));
+            assert.ok(result.includes('HasPreferences'));
+        });
     });
 
     describe('edge cases - empty and boundary inputs', () => {
@@ -892,7 +900,7 @@ class Foo {}`;
             assert.ok(result.includes('Bar'));
         });
 
-        it('should not detect class names in PHPDoc free-text descriptions (#124)', () => {
+        it('should not detect class names in PHPDoc free-text descriptions', () => {
             const text = `<?php
 /**
  * Returns a Logger or Formatter based on the config

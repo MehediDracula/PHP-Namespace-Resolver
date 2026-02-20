@@ -323,7 +323,8 @@ export class PhpClassDetector {
         const lines = text.split('\n');
         let pastClassDeclaration = false;
 
-        for (const line of lines) {
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
             if (!pastClassDeclaration) {
                 if (/^\s*(?:abstract\s+|final\s+|readonly\s+)*(?:class|trait|interface|enum)\s+\w+/.test(line)) {
                     pastClassDeclaration = true;
@@ -332,7 +333,19 @@ export class PhpClassDetector {
             }
 
             if (/^\s*use\s+/.test(line) && !/^\s*use\s*\(/.test(line)) {
-                const match = line.match(/^\s*use\s+(.+?)\s*[;{]/);
+                // Handle multi-line trait use statements
+                let fullLine = line;
+                if (!line.match(/[;{]/)) {
+                    for (let j = i + 1; j < lines.length; j++) {
+                        fullLine += ' ' + lines[j].trim();
+                        if (lines[j].match(/[;{]/)) {
+                            i = j;
+                            break;
+                        }
+                    }
+                }
+
+                const match = fullLine.match(/^\s*use\s+(.+?)\s*[;{]/);
                 if (match) {
                     const traits = match[1].split(',');
                     for (const trait of traits) {
