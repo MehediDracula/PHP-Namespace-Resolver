@@ -11,12 +11,7 @@ const DIAGNOSTIC_SOURCE = 'PHP Namespace Resolver';
 export class DiagnosticManager implements vscode.Disposable {
     private collection: vscode.DiagnosticCollection;
     private disposables: vscode.Disposable[] = [];
-    private debounceTimer: ReturnType<typeof setTimeout> | undefined;
-    private _suppressUpdates = false;
     private lastVersion = new Map<string, number>();
-
-    /** Suppress diagnostic updates during programmatic edits (e.g. save operations). */
-    set suppressUpdates(value: boolean) { this._suppressUpdates = value; }
 
     constructor(
         private detector: PhpClassDetector,
@@ -27,16 +22,9 @@ export class DiagnosticManager implements vscode.Disposable {
 
         this.disposables.push(
             cache.onDidFinishIndexing(() => this.refreshVisible()),
-            vscode.window.onDidChangeActiveTextEditor(editor => {
-                if (!editor || editor.document.languageId !== 'php') { return; }
-                this.update(editor.document);
-            }),
-            vscode.workspace.onDidChangeTextDocument(event => {
-                if (event.document.languageId !== 'php') { return; }
-                if (this._suppressUpdates) { return; }
-                clearTimeout(this.debounceTimer);
-                const doc = event.document;
-                this.debounceTimer = setTimeout(() => this.update(doc), 800);
+            vscode.workspace.onDidSaveTextDocument(document => {
+                if (document.languageId !== 'php') { return; }
+                this.update(document);
             }),
             vscode.workspace.onDidCloseTextDocument(document => {
                 this.clear(document.uri);
@@ -101,7 +89,6 @@ export class DiagnosticManager implements vscode.Disposable {
     }
 
     dispose(): void {
-        clearTimeout(this.debounceTimer);
         this.disposables.forEach(d => d.dispose());
         this.collection.dispose();
     }
