@@ -5,7 +5,7 @@ import { DeclarationParser } from '../../core/DeclarationParser';
 import { NamespaceCache } from '../../core/NamespaceCache';
 import { DiagnosticManager } from '../../features/DiagnosticManager';
 import { DiagnosticCode, CacheEntry } from '../../types';
-import { createDocument, wait } from './helper';
+import { createDocument } from './helper';
 
 class FakeNamespaceCache extends NamespaceCache {
     private entries = new Map<string, CacheEntry[]>();
@@ -47,7 +47,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -72,7 +71,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -97,7 +95,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const userDiags = diagnostics.filter(d => d.message.includes('User'));
@@ -110,7 +107,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
 
@@ -127,13 +123,11 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         let diagnostics = manager.getDiagnostics(doc.uri);
         assert.ok(diagnostics.length > 0);
 
         manager.clear(doc.uri);
-        await wait();
 
         diagnostics = manager.getDiagnostics(doc.uri);
         assert.strictEqual(diagnostics.length, 0);
@@ -147,7 +141,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         });
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         assert.strictEqual(diagnostics.length, 0);
@@ -157,7 +150,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         const doc = await createDocument('<?php\n');
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         assert.strictEqual(diagnostics.length, 0);
@@ -169,7 +161,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const controllerDiags = diagnostics.filter(
@@ -185,7 +176,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const requestDiags = diagnostics.filter(
@@ -200,7 +190,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -215,7 +204,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -234,13 +222,11 @@ suite('DiagnosticManager (VS Code Integration)', () => {
 
         manager.update(doc1);
         manager.update(doc2);
-        await wait();
 
         assert.ok(manager.getDiagnostics(doc1.uri).length > 0);
         assert.ok(manager.getDiagnostics(doc2.uri).length > 0);
 
         manager.clearAll();
-        await wait();
 
         assert.strictEqual(manager.getDiagnostics(doc1.uri).length, 0);
         assert.strictEqual(manager.getDiagnostics(doc2.uri).length, 0);
@@ -252,7 +238,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const hiddenDiags = diagnostics.filter(
@@ -267,7 +252,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const hiddenDiags = diagnostics.filter(
@@ -282,7 +266,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -302,7 +285,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -317,7 +299,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -332,7 +313,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -347,7 +327,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -362,7 +341,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const controllerDiags = diagnostics.filter(
@@ -377,7 +355,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const hiddenDiags = diagnostics.filter(
@@ -392,7 +369,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const routeDiags = diagnostics.filter(
@@ -407,7 +383,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -422,7 +397,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -437,7 +411,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -452,7 +425,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -469,7 +441,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -486,7 +457,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -501,7 +471,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -516,7 +485,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -532,7 +500,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const loggerDiags = diagnostics.filter(
@@ -547,7 +514,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const loggerDiags = diagnostics.filter(
@@ -564,7 +530,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -579,7 +544,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const exceptionDiags = diagnostics.filter(
@@ -598,7 +562,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             );
 
             manager.update(doc);
-            await wait();
 
             const diagnostics = manager.getDiagnostics(doc.uri);
             const yiiDiags = diagnostics.filter(
@@ -620,7 +583,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             );
 
             manager.update(doc);
-            await wait();
 
             const diagnostics = manager.getDiagnostics(doc.uri);
             const yiiDiags = diagnostics.filter(
@@ -642,7 +604,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             );
 
             manager.update(doc);
-            await wait();
 
             const diagnostics = manager.getDiagnostics(doc.uri);
             const notImported = diagnostics.filter(
@@ -664,7 +625,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             );
 
             manager.update(doc);
-            await wait();
 
             const diagnostics = manager.getDiagnostics(doc.uri);
             const notUsed = diagnostics.filter(
@@ -685,7 +645,6 @@ suite('DiagnosticManager (VS Code Integration)', () => {
         );
 
         manager.update(doc);
-        await wait();
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(

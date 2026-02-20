@@ -375,8 +375,8 @@ export class PhpClassDetector {
             let trimmed = part.trim();
             if (!trimmed) { continue; }
 
-            // Strip PHP 8 attributes (e.g. #[CurrentUser])
-            trimmed = trimmed.replace(/#\[[^\]]*\]\s*/g, '');
+            // Strip PHP 8 attributes (e.g. #[CurrentUser], #[MapQueryString(validationGroups: ["strict"])])
+            trimmed = trimmed.replace(/#\[(?:[^\[\]]|\[(?:[^\[\]]|\[[^\[\]]*\])*\])*\]\s*/g, '');
 
             // Strip constructor promotion modifiers
             trimmed = trimmed.replace(/^(?:public|protected|private)\s+/, '');
@@ -401,13 +401,14 @@ function matchAll(text: string, regex: RegExp): string[] {
     return results;
 }
 
+const SCALAR_TYPES = new Set([
+    'String', 'Int', 'Float', 'Bool', 'Array', 'Object',
+    'Null', 'Void', 'Never', 'Mixed', 'Self', 'Static', 'Parent',
+    'True', 'False', 'Iterable', 'Callable',
+]);
+
 function isScalarType(name: string): boolean {
-    const scalars = new Set([
-        'String', 'Int', 'Float', 'Bool', 'Array', 'Object',
-        'Null', 'Void', 'Never', 'Mixed', 'Self', 'Static', 'Parent',
-        'True', 'False', 'Iterable', 'Callable',
-    ]);
-    return scalars.has(name);
+    return SCALAR_TYPES.has(name);
 }
 
 function escapeRegex(str: string): string {
