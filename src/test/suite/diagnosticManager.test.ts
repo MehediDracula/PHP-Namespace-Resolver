@@ -5,7 +5,7 @@ import { DeclarationParser } from '../../core/DeclarationParser';
 import { NamespaceCache } from '../../core/NamespaceCache';
 import { DiagnosticManager } from '../../features/DiagnosticManager';
 import { DiagnosticCode, CacheEntry } from '../../types';
-import { createDocument, wait } from './helper';
+import { createDocument } from './helper';
 
 class FakeNamespaceCache extends NamespaceCache {
     private entries = new Map<string, CacheEntry[]>();
@@ -46,7 +46,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nclass Foo extends Controller {\n    public function bar(Request $request) {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -70,7 +70,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nuse App\\Models\\User;\nuse App\\Models\\Post;\n\nclass Foo {}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -94,7 +94,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nuse App\\Models\\User;\n\nclass Foo {\n    public function bar(): User {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const userDiags = diagnostics.filter(d => d.message.includes('User'));
@@ -106,7 +106,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nuse App\\Models\\Post;\n\nclass Foo extends Controller {\n    public function bar(): User {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
 
@@ -122,13 +122,12 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nuse App\\Models\\User;\n\nclass Foo {}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         let diagnostics = manager.getDiagnostics(doc.uri);
         assert.ok(diagnostics.length > 0);
 
         manager.clear(doc.uri);
-        await wait();
 
         diagnostics = manager.getDiagnostics(doc.uri);
         assert.strictEqual(diagnostics.length, 0);
@@ -141,7 +140,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             content: 'use App\\Models\\User;\nclass Foo extends Controller {}',
         });
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         assert.strictEqual(diagnostics.length, 0);
@@ -150,7 +149,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
     test('should handle empty PHP file', async () => {
         const doc = await createDocument('<?php\n');
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         assert.strictEqual(diagnostics.length, 0);
@@ -161,7 +160,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nclass Foo {\n    // TestController is not the same as Controller\n    public function getController(): Controller {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const controllerDiags = diagnostics.filter(
@@ -176,7 +175,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nclass Foo {\n    public function bar(Request $r): Request {}\n    public function baz(Request $r2) {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const requestDiags = diagnostics.filter(
@@ -190,7 +189,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nuse Example1\\Example2\\Models\\{SomeClass};\n\nclass Foo {\n    public function example(): SomeClass {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -204,7 +203,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nuse App\\Models\\{User, Post};\n\nclass Foo {\n    public function bar(): User {}\n    public function baz(): Post {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -221,14 +220,13 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nuse App\\Models\\Post;\n\nclass Bar {}'
         );
 
-        await manager.update(doc1);
-        await manager.update(doc2);
+        manager.update(doc1);
+        manager.update(doc2);
 
         assert.ok(manager.getDiagnostics(doc1.uri).length > 0);
         assert.ok(manager.getDiagnostics(doc2.uri).length > 0);
 
         manager.clearAll();
-        await wait();
 
         assert.strictEqual(manager.getDiagnostics(doc1.uri).length, 0);
         assert.strictEqual(manager.getDiagnostics(doc2.uri).length, 0);
@@ -239,7 +237,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nclass Foo {\n    // Hidden is used here\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const hiddenDiags = diagnostics.filter(
@@ -253,7 +251,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nclass Foo {\n    /* Hidden block comment */\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const hiddenDiags = diagnostics.filter(
@@ -267,7 +265,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    // Hidden is used here\n    /* Hidden block comment */\n    /** @var Hidden $h */\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -286,7 +284,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /**\n     * @param Request $request\n     */\n    public function bar($request) {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -300,7 +298,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /**\n     * @return Collection\n     */\n    public function bar() {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -314,7 +312,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /** @var Request $r */\n    private $r;\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -328,7 +326,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nuse Illuminate\\Http\\Request;\n\nclass Foo {\n    /**\n     * @param Request $request\n     * @return Request\n     */\n    public function bar($request) {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -342,7 +340,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nuse Illuminate\\Http\\Request;\n\nclass Foo {\n    public function bar(Request $r) {} // Controller handles this\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const controllerDiags = diagnostics.filter(
@@ -356,7 +354,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nclass Foo {\n    # Hidden in hash comment\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const hiddenDiags = diagnostics.filter(
@@ -370,7 +368,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nclass Foo {\n    #[Route("/api")]\n    public function index() {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const routeDiags = diagnostics.filter(
@@ -384,7 +382,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nuse App\\Models;\n\nclass Foo {\n    public function bar() {\n        return Models\\User::query();\n    }\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -398,7 +396,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nuse App\\Models;\n\nclass Foo {\n    public function bar() {\n        return new Models\\User();\n    }\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -412,7 +410,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nuse App\\Traits\\HasLogger;\n\nclass UserService {\n    use HasLogger;\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -426,7 +424,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Models;\n\nuse App\\Traits\\HasLogger;\nuse App\\Traits\\SoftDeletes;\n\nclass User {\n    use HasLogger, SoftDeletes;\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notUsed = diagnostics.filter(
@@ -442,7 +440,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nclass UserService {\n    public function find(): UserRepository {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -458,7 +456,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nclass UserService {\n    public function find(): User {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -472,7 +470,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nclass Foo {\n    public function bar(): DateTime {\n        throw new Exception("error");\n    }\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -486,7 +484,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nclass Foo extends Controller {\n    public function bar(): DateTime {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -501,7 +499,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /**\n     * Returns a Logger based on config\n     */\n    public function bar() {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const loggerDiags = diagnostics.filter(
@@ -515,7 +513,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    /**\n     * Some description\n     * @param Logger $logger\n     */\n    public function bar($logger) {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const loggerDiags = diagnostics.filter(
@@ -531,7 +529,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nreadonly class ValueObject {\n    public function clone(): ValueObject {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(
@@ -545,7 +543,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    public function bar() {\n        try {} catch (\\Exception $e) {\n            log(\'Exception while creating refund: \' . $e->getMessage());\n        }\n    }\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const exceptionDiags = diagnostics.filter(
@@ -563,7 +561,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
                 '<?php\n\nnamespace App\\Services;\n\nclass Foo {\n    public function bar() {\n        return Yii::t("app", "hello");\n    }\n}'
             );
 
-            await manager.update(doc);
+            manager.update(doc);
 
             const diagnostics = manager.getDiagnostics(doc.uri);
             const yiiDiags = diagnostics.filter(
@@ -584,7 +582,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
                 '<?php\n\nuse yii\\BaseYii as Yii;\n\nclass Foo {}'
             );
 
-            await manager.update(doc);
+            manager.update(doc);
 
             const diagnostics = manager.getDiagnostics(doc.uri);
             const yiiDiags = diagnostics.filter(
@@ -605,7 +603,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
                 '<?php\n\nclass Foo extends Controller {\n    public function bar(Request $request) {}\n}'
             );
 
-            await manager.update(doc);
+            manager.update(doc);
 
             const diagnostics = manager.getDiagnostics(doc.uri);
             const notImported = diagnostics.filter(
@@ -626,7 +624,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
                 '<?php\n\nuse App\\Models\\User;\nuse App\\Models\\Post;\n\nclass Foo {}'
             );
 
-            await manager.update(doc);
+            manager.update(doc);
 
             const diagnostics = manager.getDiagnostics(doc.uri);
             const notUsed = diagnostics.filter(
@@ -646,7 +644,7 @@ suite('DiagnosticManager (VS Code Integration)', () => {
             '<?php\n\nnamespace App\\Events;\n\nclass OrderCreated {\n    public function dispatch(): Event {}\n}'
         );
 
-        await manager.update(doc);
+        manager.update(doc);
 
         const diagnostics = manager.getDiagnostics(doc.uri);
         const notImported = diagnostics.filter(

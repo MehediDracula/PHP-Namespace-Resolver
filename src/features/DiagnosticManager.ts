@@ -8,22 +8,10 @@ import { getConfig } from '../utils/config';
 
 const DIAGNOSTIC_SOURCE = 'PHP Namespace Resolver';
 
-/** Yield control to the event loop so other extensions and UI remain responsive. */
-function yieldToEventLoop(): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, 0));
-}
-
 export class DiagnosticManager implements vscode.Disposable {
     private collection: vscode.DiagnosticCollection;
     private disposables: vscode.Disposable[] = [];
-    private debounceTimer: ReturnType<typeof setTimeout> | undefined;
-    private _suppressUpdates = false;
     private lastVersion = new Map<string, number>();
-    /** Incremented on every update call; used to cancel stale async work. */
-    private updateId = 0;
-
-    /** Suppress diagnostic updates during programmatic edits (e.g. save operations). */
-    set suppressUpdates(value: boolean) { this._suppressUpdates = value; }
 
     constructor(
         private detector: PhpClassDetector,
@@ -38,12 +26,9 @@ export class DiagnosticManager implements vscode.Disposable {
                 if (!editor || editor.document.languageId !== 'php') { return; }
                 this.update(editor.document);
             }),
-            vscode.workspace.onDidChangeTextDocument(event => {
-                if (event.document.languageId !== 'php') { return; }
-                if (this._suppressUpdates) { return; }
-                clearTimeout(this.debounceTimer);
-                const doc = event.document;
-                this.debounceTimer = setTimeout(() => this.update(doc), 800);
+            vscode.workspace.onDidSaveTextDocument(document => {
+                if (document.languageId !== 'php') { return; }
+                this.update(document);
             }),
             vscode.workspace.onDidCloseTextDocument(document => {
                 this.clear(document.uri);
@@ -59,7 +44,7 @@ export class DiagnosticManager implements vscode.Disposable {
         }
     }
 
-    async update(document: vscode.TextDocument): Promise<void> {
+    update(document: vscode.TextDocument): void {
         if (document.languageId !== 'php') {
             this.collection.delete(document.uri);
             return;
@@ -71,16 +56,9 @@ export class DiagnosticManager implements vscode.Disposable {
         if (this.lastVersion.get(key) === version) { return; }
         this.lastVersion.set(key, version);
 
-        const currentUpdateId = ++this.updateId;
-
         const text = document.getText();
         const ignoreList = getConfig('ignoreList');
         const detectedClasses = this.detector.detectAll(text).filter(cls => !ignoreList.includes(cls));
-
-        // Yield after the expensive detectAll pass
-        await yieldToEventLoop();
-        if (this.updateId !== currentUpdateId) { return; }
-
         const { useStatements } = this.parser.parse(document);
         const classUseStatements = useStatements.filter(s => s.kind === 'class');
 
@@ -90,22 +68,12 @@ export class DiagnosticManager implements vscode.Disposable {
             const importedClasses = classUseStatements.map(s => s.className);
             const currentNamespace = this.parser.getNamespace(document);
             const declaredClasses = this.parser.getDeclaredClassNames(document);
-
-            // Yield before the second expensive pass
-            await yieldToEventLoop();
-            if (this.updateId !== currentUpdateId) { return; }
-
             diagnostics.push(...this.getNotImportedDiagnostics(document, text, detectedClasses, importedClasses, currentNamespace, declaredClasses));
         }
-
-        if (this.updateId !== currentUpdateId) { return; }
-
         if (getConfig('highlightNotUsed')) {
             const filteredUseStatements = classUseStatements.filter(s => !ignoreList.includes(s.className));
             diagnostics.push(...this.getNotUsedDiagnostics(document, text, detectedClasses, filteredUseStatements));
         }
-
-        if (this.updateId !== currentUpdateId) { return; }
 
         this.collection.set(document.uri, diagnostics);
     }
@@ -125,8 +93,6 @@ export class DiagnosticManager implements vscode.Disposable {
     }
 
     dispose(): void {
-        clearTimeout(this.debounceTimer);
-        this.updateId++; // cancel any in-flight async update
         this.disposables.forEach(d => d.dispose());
         this.collection.dispose();
     }

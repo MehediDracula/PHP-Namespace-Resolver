@@ -95,49 +95,42 @@ export function activate(context: vscode.ExtensionContext): void {
             const needsSort = getConfig('sortOnSave');
             if (!needsRemove && !needsSort) { return; }
 
-            diagnosticManager.suppressUpdates = true;
-
             event.waitUntil(((): Promise<vscode.TextEdit[]> => {
-                try {
-                    const document = event.document;
-                    const { useStatements } = parser.parse(document);
-                    if (useStatements.length === 0) { return Promise.resolve([]); }
+                const document = event.document;
+                const { useStatements } = parser.parse(document);
+                if (useStatements.length === 0) { return Promise.resolve([]); }
 
-                    let stmtsToKeep = useStatements;
+                let stmtsToKeep = useStatements;
 
-                    // Filter out unused class imports
-                    if (needsRemove) {
-                        const text = document.getText();
-                        const detectedClasses = detector.detectAll(text);
-                        const ignoreList = getConfig('ignoreList');
-                        stmtsToKeep = useStatements.filter(stmt => {
-                            if (stmt.kind !== 'class') { return true; }
-                            if (ignoreList.includes(stmt.className)) { return true; }
-                            if (detectedClasses.includes(stmt.className)) { return true; }
-                            if (text.includes(`${stmt.className}\\`)) { return true; }
-                            return false;
-                        });
-                    }
-
-                    // Sort remaining imports (or just sort without remove)
-                    if (needsSort && stmtsToKeep.length > 1) {
-                        return Promise.resolve(sortManager.computeSortEdits(document, stmtsToKeep));
-                    }
-
-                    // Remove-only: delete unused lines (reverse order for stable line numbers)
-                    if (needsRemove && stmtsToKeep.length < useStatements.length) {
-                        const removed = useStatements.filter(s => !stmtsToKeep.includes(s));
-                        const edits = removed
-                            .sort((a, b) => b.line - a.line)
-                            .map(stmt => vscode.TextEdit.delete(document.lineAt(stmt.line).rangeIncludingLineBreak));
-                        return Promise.resolve(edits);
-                    }
-
-                    return Promise.resolve([]);
-                } finally {
-                    // Defer re-enabling so diagnostics don't fire during the save edit application
-                    setTimeout(() => { diagnosticManager.suppressUpdates = false; }, 100);
+                // Filter out unused class imports
+                if (needsRemove) {
+                    const text = document.getText();
+                    const detectedClasses = detector.detectAll(text);
+                    const ignoreList = getConfig('ignoreList');
+                    stmtsToKeep = useStatements.filter(stmt => {
+                        if (stmt.kind !== 'class') { return true; }
+                        if (ignoreList.includes(stmt.className)) { return true; }
+                        if (detectedClasses.includes(stmt.className)) { return true; }
+                        if (text.includes(`${stmt.className}\\`)) { return true; }
+                        return false;
+                    });
                 }
+
+                // Sort remaining imports (or just sort without remove)
+                if (needsSort && stmtsToKeep.length > 1) {
+                    return Promise.resolve(sortManager.computeSortEdits(document, stmtsToKeep));
+                }
+
+                // Remove-only: delete unused lines (reverse order for stable line numbers)
+                if (needsRemove && stmtsToKeep.length < useStatements.length) {
+                    const removed = useStatements.filter(s => !stmtsToKeep.includes(s));
+                    const edits = removed
+                        .sort((a, b) => b.line - a.line)
+                        .map(stmt => vscode.TextEdit.delete(document.lineAt(stmt.line).rangeIncludingLineBreak));
+                    return Promise.resolve(edits);
+                }
+
+                return Promise.resolve([]);
             })());
         })
     );
