@@ -144,7 +144,8 @@ export class ImportManager {
             textEdit.replace(wordRange, prefix + fqcn);
         });
 
-        const newPos = new vscode.Position(selection.active.line, selection.active.character);
+        const endCol = wordRange.start.character + (prefix + fqcn).length;
+        const newPos = new vscode.Position(wordRange.start.line, endCol);
         editor.selection = new vscode.Selection(newPos, newPos);
     }
 
