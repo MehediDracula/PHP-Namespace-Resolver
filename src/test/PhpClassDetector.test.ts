@@ -1033,4 +1033,66 @@ class User extends Model {
             assert.ok(result.includes('Post'));
         });
     });
+
+    describe('detectAll - FQCN filtering', () => {
+        it('should not detect classes only used as fully qualified names', () => {
+            const text = `<?php
+namespace App\\Http;
+
+class Kernel extends HttpKernel {
+    protected $middleware = [
+        \\App\\Http\\Middleware\\CheckForMaintenanceMode::class,
+        \\Illuminate\\Foundation\\Http\\Middleware\\ValidatePostSize::class,
+    ];
+}`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('CheckForMaintenanceMode'));
+            assert.ok(!result.includes('ValidatePostSize'));
+            assert.ok(result.includes('HttpKernel'));
+        });
+
+        it('should detect class used both as FQCN and short name', () => {
+            const text = `<?php
+class Foo {
+    protected $list = [
+        \\App\\Models\\User::class,
+    ];
+    public function bar(User $user) {}
+}`;
+            const result = detector.detectAll(text);
+            assert.ok(result.includes('User'));
+        });
+
+        it('should detect class used only as short name', () => {
+            const text = `<?php
+class Foo {
+    public function bar(): Response {
+        return Response::make();
+    }
+}`;
+            const result = detector.detectAll(text);
+            assert.ok(result.includes('Response'));
+        });
+
+        it('should not detect classes from FQCN type hints', () => {
+            const text = `<?php
+class Foo {
+    public function bar(\\App\\Models\\User $user): \\App\\Http\\Response {}
+}`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('User'));
+            assert.ok(!result.includes('Response'));
+        });
+
+        it('should not detect classes from FQCN in catch blocks', () => {
+            const text = `<?php
+class Foo {
+    public function bar() {
+        try {} catch (\\App\\Exceptions\\CustomException $e) {}
+    }
+}`;
+            const result = detector.detectAll(text);
+            assert.ok(!result.includes('CustomException'));
+        });
+    });
 });

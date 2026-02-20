@@ -102,7 +102,17 @@ export class PhpClassDetector {
         for (const name of this.getFromPhpDoc(originalText)) { classes.add(name); }
         for (const name of this.getFromTypedConstants(sanitized)) { classes.add(name); }
 
-        return Array.from(classes);
+        // Filter out names that only appear as part of fully qualified names (preceded by \)
+        return Array.from(classes).filter(name => {
+            const pattern = new RegExp(`(?<![a-zA-Z0-9_\\\\])${escapeRegex(name)}(?![a-zA-Z0-9_\\\\])`, 'g');
+            let match;
+            while ((match = pattern.exec(originalText)) !== null) {
+                if (match.index === 0 || originalText[match.index - 1] !== '\\') {
+                    return true;
+                }
+            }
+            return false;
+        });
     }
 
     getExtended(text: string): string[] {
