@@ -38,7 +38,16 @@ export class SortManager {
         const constStmts = this.sortStatements(target.filter(s => s.kind === 'const'), mode);
 
         const groups = [classStmts, funcStmts, constStmts].filter(g => g.length > 0);
-        const sortedLines = groups.map(g => g.map(s => s.text).join('\n')).join('\n\n');
+        // Deduplicate grouped imports (e.g. use App\{Foo, Bar}; produces multiple statements with the same line)
+        const dedupe = (stmts: UseStatement[]) => {
+            const seen = new Set<number>();
+            return stmts.filter(s => {
+                if (seen.has(s.line)) { return false; }
+                seen.add(s.line);
+                return true;
+            });
+        };
+        const sortedLines = groups.map(g => dedupe(g).map(s => s.text).join('\n')).join('\n\n');
 
         // Replace the entire use block range (eliminates blank line gaps)
         const firstLine = declarationLines.firstUseStatement! - 1;

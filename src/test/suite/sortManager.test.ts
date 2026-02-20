@@ -177,4 +177,17 @@ suite('SortManager (VS Code Integration)', () => {
         assert.ok(text.includes('use App\\Models\\User;\n\nuse function App\\Helpers\\helper;'),
             `Expected blank line between groups. Text:\n${text}`);
     });
+
+    test('should not duplicate grouped imports when sorting', async () => {
+        const { editor } = await openEditor(
+            '<?php\n\nuse App\\Models\\User;\nuse function Laravel\\Prompts\\{outro, info};\n\nclass Foo {}'
+        );
+
+        await sortManager.sort(editor);
+
+        const text = getText(editor);
+        const funcLines = text.split('\n').filter(l => l.includes('use function'));
+        assert.strictEqual(funcLines.length, 1,
+            `Expected one function import line, got ${funcLines.length}. Text:\n${text}`);
+    });
 });
