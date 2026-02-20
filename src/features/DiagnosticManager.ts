@@ -67,6 +67,11 @@ export class DiagnosticManager implements vscode.Disposable {
         const text = document.getText();
         const ignoreList = getConfig('ignoreList');
         const detectedClasses = this.detector.detectAll(text).filter(cls => !ignoreList.includes(cls));
+
+        // Bail out if the document was modified while we were computing classes.
+        // This avoids wasting further work on a stale version.
+        if (document.version !== version) { return; }
+
         const { useStatements } = this.parser.parse(document);
         const classUseStatements = useStatements.filter(s => s.kind === 'class');
 
