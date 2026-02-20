@@ -13,7 +13,7 @@ export class NamespaceResolver {
         const cached = this.cache.lookup(className);
         if (cached.length > 0) {
             for (const entry of cached) {
-                const source = entry.uri.fsPath.includes('/vendor/') ? 'vendor' : 'project';
+                const source = entry.uri.fsPath.replace(/\\/g, '/').includes('/vendor/') ? 'vendor' : 'project';
                 results.push({ fqcn: entry.fqcn, source });
             }
         } else {
@@ -91,7 +91,7 @@ export class NamespaceResolver {
                     const fqcn = `${namespace}\\${className}`;
                     if (!seen.has(fqcn)) {
                         seen.add(fqcn);
-                        const source = file.fsPath.includes('/vendor/') ? 'vendor' : 'project';
+                        const source = file.fsPath.replace(/\\/g, '/').includes('/vendor/') ? 'vendor' : 'project';
                         results.push({ fqcn, source });
                     }
                 }

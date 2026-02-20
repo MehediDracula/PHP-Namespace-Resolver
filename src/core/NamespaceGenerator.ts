@@ -9,10 +9,8 @@ export class NamespaceGenerator {
     async generate(editor: vscode.TextEditor): Promise<void> {
         const currentUri = editor.document.uri;
         const currentFile = currentUri.fsPath;
-        const currentPath = currentFile.substring(0, currentFile.lastIndexOf('/'));
-
-        const normalizedCurrentPath = currentPath.replace(/\\/g, '/');
         const normalizedCurrentFile = currentFile.replace(/\\/g, '/');
+        const normalizedCurrentPath = normalizedCurrentFile.substring(0, normalizedCurrentFile.lastIndexOf('/'));
 
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(currentUri);
         if (!workspaceFolder) {
