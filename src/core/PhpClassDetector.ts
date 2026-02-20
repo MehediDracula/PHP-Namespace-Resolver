@@ -251,11 +251,19 @@ export class PhpClassDetector {
 
     getFromPhpDoc(text: string): string[] {
         const results: string[] = [];
+        const templateParams = new Set<string>();
         const docBlockRegex = /\/\*\*[\s\S]*?\*\//g;
         let blockMatch: RegExpExecArray | null;
 
         while ((blockMatch = docBlockRegex.exec(text)) !== null) {
             const block = blockMatch[0];
+
+            // Collect @template parameter names to exclude from results
+            const templateDeclRegex = /@template\s+(\w+)/gm;
+            let templateMatch: RegExpExecArray | null;
+            while ((templateMatch = templateDeclRegex.exec(block)) !== null) {
+                templateParams.add(templateMatch[1]);
+            }
 
             // @param Type $var, @var Type [$var], @property[-read|-write] Type $name
             const paramRegex = /@(?:param|var|property(?:-read|-write)?)\s+(.+?)\s+\$/gm;
@@ -304,7 +312,9 @@ export class PhpClassDetector {
             }
         }
 
-        return results;
+        return templateParams.size > 0
+            ? results.filter(name => !templateParams.has(name))
+            : results;
     }
 
     getFromTypedConstants(text: string): string[] {

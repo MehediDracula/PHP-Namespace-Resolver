@@ -502,6 +502,27 @@ class Foo extends Bar {
             assert.ok(detector.getFromPhpDoc(text).includes('Model'));
         });
 
+        it('should not detect @template parameter names as classes (#126)', () => {
+            const text = `/**
+ * @template TValue
+ * @param TValue[] $array
+ * @return TValue[]
+ */`;
+            const result = detector.getFromPhpDoc(text);
+            assert.ok(!result.includes('TValue'));
+        });
+
+        it('should detect constraint but not param name in @template T of Type', () => {
+            const text = `/**
+ * @template TModel of Model
+ * @param TModel $model
+ * @return TModel
+ */`;
+            const result = detector.getFromPhpDoc(text);
+            assert.ok(result.includes('Model'));
+            assert.ok(!result.includes('TModel'));
+        });
+
         it('should detect @method types', () => {
             const text = `/**
  * @method static Builder query()
