@@ -22,10 +22,6 @@ export class DiagnosticManager implements vscode.Disposable {
 
         this.disposables.push(
             cache.onDidFinishIndexing(() => this.refreshVisible()),
-            vscode.window.onDidChangeActiveTextEditor(editor => {
-                if (!editor || editor.document.languageId !== 'php') { return; }
-                this.update(editor.document);
-            }),
             vscode.workspace.onDidSaveTextDocument(document => {
                 if (document.languageId !== 'php') { return; }
                 this.update(document);
