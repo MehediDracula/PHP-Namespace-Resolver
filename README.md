@@ -49,14 +49,14 @@ Search these commands by the title on command palette.
 
 You can override these defaults in your `keybindings.json`.
 
-| Shortcut | Command |
-|----------|---------|
-| `Ctrl+Alt+I` | Import Class |
-| `Ctrl+Alt+A` | Import All Classes |
-| `Ctrl+Alt+E` | Expand Class |
-| `Ctrl+Alt+S` | Sort Imports |
-| `Ctrl+Alt+R` | Remove Unused Imports |
-| `Ctrl+Alt+G` | Generate Namespace |
+| Command | Windows / Linux | Mac |
+|---------|-----------------|-----|
+| Import Class | `Ctrl+Alt+I` | `⌃⌥I` |
+| Import All Classes | `Ctrl+Alt+A` | `⌃⌥A` |
+| Expand Class | `Ctrl+Alt+E` | `⌃⌥E` |
+| Sort Imports | `Ctrl+Alt+S` | `⌃⌥S` |
+| Remove Unused Imports | `Ctrl+Alt+R` | `⌃⌥R` |
+| Generate Namespace | `Ctrl+Alt+G` | `⌃⌥G` |
 
 ## Settings
 
@@ -70,7 +70,10 @@ You can override these defaults in your VS Code settings.
     "phpNamespaceResolver.sortMode": "natural",            // Sort mode: "natural", "length", or "alphabetical"
     "phpNamespaceResolver.leadingSeparator": true,         // Prepend leading backslash when expanding
     "phpNamespaceResolver.removeOnSave": false,            // Remove unused imports on save
-    "phpNamespaceResolver.autoImportOnSave": false         // Auto import all detected classes on save
+    "phpNamespaceResolver.autoImportOnSave": false,        // Auto import all detected classes on save
+    "phpNamespaceResolver.ignoreList": [],                 // Class names to exclude from diagnostics (e.g. ["Yii"])
+    "phpNamespaceResolver.highlightNotImported": true,     // Show warnings for unimported classes
+    "phpNamespaceResolver.highlightNotUsed": true          // Show hints for unused imports
 }
 ```
 
