@@ -39,7 +39,7 @@ export class DeclarationParser {
                 declarationLines.declare = line + 1;
             } else if (/^\s*(namespace\s|<\?php\s+namespace\s)/.test(text)) {
                 declarationLines.namespace = line + 1;
-            } else if (/^\s*use\s+/.test(text) && !/^\s*use\s*\(/.test(text)) {
+            } else if (declarationLines.classDeclaration === null && /^\s*use\s+/.test(text) && !/^\s*use\s*\(/.test(text)) {
                 // Match 'use Foo\Bar;', 'use function ...', 'use const ...' but not 'use ($var)' (closure use)
                 const kindMatch = text.match(/^\s*use\s+(function|const)\s/);
                 const kind: 'class' | 'function' | 'const' = kindMatch ? kindMatch[1] as 'function' | 'const' : 'class';

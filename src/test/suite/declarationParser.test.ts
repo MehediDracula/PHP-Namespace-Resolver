@@ -370,6 +370,24 @@ suite('DeclarationParser (VS Code Integration)', () => {
         assert.deepStrictEqual(names, ['User']);
     });
 
+    test('should not parse trait use statements as namespace imports (#133)', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Models;\n\nclass Project extends Model {\n    use \\App\\Traits\\Validation;\n}'
+        );
+        const { useStatements, declarationLines } = parser.parse(doc);
+        assert.strictEqual(useStatements.length, 0);
+        assert.strictEqual(declarationLines.lastUseStatement, null);
+    });
+
+    test('should not parse trait use when namespace imports exist (#133)', async () => {
+        const doc = await createDocument(
+            '<?php\n\nnamespace App\\Models;\n\nuse Illuminate\\Support\\Carbon;\n\nclass Project extends Model {\n    use \\App\\Traits\\Validation;\n}'
+        );
+        const { useStatements } = parser.parse(doc);
+        assert.strictEqual(useStatements.length, 1);
+        assert.strictEqual(useStatements[0].className, 'Carbon');
+    });
+
     test('should throw when class in grouped import is already imported', async () => {
         const doc = await createDocument(
             '<?php\n\nuse App\\Models\\{User, Post};\n\nclass Foo {}'
