@@ -80,20 +80,6 @@ You can override these defaults in your VS Code settings.
 
 `sortSeparateNamespaceGroups` applies per kind block (`use` classes, then `use function`, then `use const`). Grouped imports such as `use Foo\{A, B};` stay a single line, so spacing is unchanged inside that line.
 
-## Running tests
-
-From the repository root, after `npm install`:
-
-| Command | What it runs |
-|---------|----------------|
-| `npm run compile` | TypeScript build (`out/`) |
-| `npm run test:unit` | Mocha unit tests (`out/test/*.test.js`), no VS Code |
-| `npm run test:integration` | Extension tests inside a downloaded VS Code instance (`@vscode/test-electron`) |
-| `npm test` | Unit tests, then integration tests |
-| `npm run lint` | ESLint on `src/` |
-
-**Validate locally:** run `npm run compile && npm run test:unit && npm run lint`. Integration tests need a GUI-capable environment compatible with your installed `@vscode/test-electron` and VS Code build; if the Electron process fails to start, update dev dependencies or run tests in CI.
-
 ## Author
 
 - [@MehediDracula](https://twitter.com/MehediDracula)
