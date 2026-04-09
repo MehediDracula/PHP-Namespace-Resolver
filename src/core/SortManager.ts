@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { UseStatement, SortMode } from '../types';
 import { DeclarationParser } from './DeclarationParser';
+import { joinUseLinesWithOptionalNamespaceGaps } from './joinUseLines';
 import { getConfig } from '../utils/config';
 
 export class SortManager {
@@ -32,6 +33,7 @@ export class SortManager {
         if (target.length <= 1) { return []; }
 
         const mode = getConfig('sortMode');
+        const separateNamespaceGroups = getConfig('sortSeparateNamespaceGroups');
 
         const classStmts = this.sortStatements(target.filter(s => s.kind === 'class'), mode);
         const funcStmts = this.sortStatements(target.filter(s => s.kind === 'function'), mode);
@@ -47,7 +49,9 @@ export class SortManager {
                 return true;
             });
         };
-        const sortedLines = groups.map(g => dedupe(g).map(s => s.text).join('\n')).join('\n\n');
+        const sortedLines = groups
+            .map(g => joinUseLinesWithOptionalNamespaceGaps(dedupe(g), separateNamespaceGroups))
+            .join('\n\n');
 
         // Replace the entire use block range (eliminates blank line gaps)
         const firstLine = declarationLines.firstUseStatement! - 1;

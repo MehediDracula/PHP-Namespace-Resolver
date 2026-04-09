@@ -16,6 +16,7 @@ function getDefault<K extends keyof ExtensionConfig>(key: K): ExtensionConfig[K]
         autoSort: true,
         sortOnSave: false,
         sortMode: 'natural',
+        sortSeparateNamespaceGroups: false,
         leadingSeparator: true,
         removeOnSave: false,
         autoImportOnSave: false,

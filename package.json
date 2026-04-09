@@ -107,6 +107,11 @@
                     "default": "natural",
                     "description": "How to sort imports: natural order, line length, or alphabetically"
                 },
+                "phpNamespaceResolver.sortSeparateNamespaceGroups": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Insert a blank line between use groups that differ in the first namespace segment."
+                },
                 "phpNamespaceResolver.leadingSeparator": {
                     "type": "boolean",
                     "default": true,

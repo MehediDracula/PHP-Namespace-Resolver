@@ -190,4 +190,75 @@ suite('SortManager (VS Code Integration)', () => {
         assert.strictEqual(funcLines.length, 1,
             `Expected one function import line, got ${funcLines.length}. Text:\n${text}`);
     });
+
+    test('should not insert namespace-group blank lines when sortSeparateNamespaceGroups is off', async () => {
+        const config = vscode.workspace.getConfiguration('phpNamespaceResolver');
+        await config.update('sortSeparateNamespaceGroups', false, vscode.ConfigurationTarget.Global);
+        await wait(500);
+
+        const { editor } = await openEditor(
+            '<?php\n\nuse Illuminate\\Http\\Request;\nuse App\\Models\\User;\nuse Illuminate\\Support\\Collection;\n\nclass Foo {}'
+        );
+
+        await sortManager.sort(editor);
+
+        const text = getText(editor);
+        const lines = text.split('\n');
+        const firstUseIdx = lines.findIndex(l => l.startsWith('use '));
+        const lastUseIdx = lines.length - 1 - [...lines].reverse().findIndex(l => l.startsWith('use '));
+        for (let i = firstUseIdx; i <= lastUseIdx; i++) {
+            if (lines[i].trim() === '') {
+                assert.fail(`Unexpected blank line at index ${i} within class use block. Text:\n${text}`);
+            }
+        }
+
+        await config.update('sortSeparateNamespaceGroups', undefined, vscode.ConfigurationTarget.Global);
+        await wait(500);
+    });
+
+    test('should insert blank line between different namespace roots when sortSeparateNamespaceGroups is on', async () => {
+        const config = vscode.workspace.getConfiguration('phpNamespaceResolver');
+        await config.update('sortSeparateNamespaceGroups', true, vscode.ConfigurationTarget.Global);
+        await wait(500);
+
+        const { editor } = await openEditor(
+            '<?php\n\nuse Illuminate\\Http\\Request;\nuse App\\Models\\User;\nuse Illuminate\\Support\\Collection;\n\nclass Foo {}'
+        );
+
+        await sortManager.sort(editor);
+
+        const text = getText(editor);
+        assert.ok(
+            text.includes('use App\\Models\\User;\n\nuse Illuminate\\'),
+            `Expected blank line after App group before Illuminate. Text:\n${text}`
+        );
+        assert.ok(
+            text.includes('Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Collection'),
+            `Expected no blank between two Illuminate lines. Text:\n${text}`
+        );
+
+        await config.update('sortSeparateNamespaceGroups', undefined, vscode.ConfigurationTarget.Global);
+        await wait(500);
+    });
+
+    test('should separate function imports by root when sortSeparateNamespaceGroups is on', async () => {
+        const config = vscode.workspace.getConfiguration('phpNamespaceResolver');
+        await config.update('sortSeparateNamespaceGroups', true, vscode.ConfigurationTarget.Global);
+        await wait(500);
+
+        const { editor } = await openEditor(
+            '<?php\n\nuse function Illuminate\\Support\\func_b;\nuse function App\\Helpers\\func_a;\n\nclass Foo {}'
+        );
+
+        await sortManager.sort(editor);
+
+        const text = getText(editor);
+        assert.ok(
+            text.includes('use function App\\Helpers\\func_a;\n\nuse function Illuminate\\Support\\func_b;'),
+            `Expected blank between App and Illuminate function imports. Text:\n${text}`
+        );
+
+        await config.update('sortSeparateNamespaceGroups', undefined, vscode.ConfigurationTarget.Global);
+        await wait(500);
+    });
 });

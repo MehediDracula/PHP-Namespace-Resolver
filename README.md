@@ -15,7 +15,7 @@ Import, expand, sort, and manage PHP namespaces with full PHP 8+ support. Detect
 - **Import Class** — resolve and add `use` statements for any class
 - **Import All Classes** — detect and import every unresolved class in one go
 - **Expand Class** — replace a short class name with its fully qualified name inline
-- **Sort Imports** — sort `use` statements by length, alphabetically, or with natural ordering
+- **Sort Imports** — sort `use` statements by length, alphabetically, or with natural ordering; optionally insert a blank line between groups that differ in the first namespace segment (see `sortSeparateNamespaceGroups`)
 - **Remove Unused Imports** — strip all unused `use` statements with one command
 - **Generate Namespace** — generate a PSR-4/PSR-0 namespace from the file path and `composer.json`
 - **Diagnostics** — unimported classes appear as warnings and unused imports as hints in the Problems panel
@@ -64,18 +64,21 @@ You can override these defaults in your VS Code settings.
 
 ```jsonc
 {
-    "phpNamespaceResolver.exclude": "**/node_modules/**",  // Glob pattern to exclude when searching files
-    "phpNamespaceResolver.autoSort": true,                 // Auto sort after importing a class
-    "phpNamespaceResolver.sortOnSave": false,              // Sort imports when a file is saved
-    "phpNamespaceResolver.sortMode": "natural",            // Sort mode: "natural", "length", or "alphabetical"
-    "phpNamespaceResolver.leadingSeparator": true,         // Prepend leading backslash when expanding
-    "phpNamespaceResolver.removeOnSave": false,            // Remove unused imports on save
-    "phpNamespaceResolver.autoImportOnSave": false,        // Auto import all detected classes on save
-    "phpNamespaceResolver.ignoreList": [],                 // Class names to exclude from diagnostics (e.g. ["Yii"])
-    "phpNamespaceResolver.highlightNotImported": true,     // Show warnings for unimported classes
-    "phpNamespaceResolver.highlightNotUsed": true          // Show hints for unused imports
+    "phpNamespaceResolver.exclude": "**/node_modules/**",      // Glob pattern to exclude when searching files
+    "phpNamespaceResolver.autoSort": true,                     // Auto sort after importing a class
+    "phpNamespaceResolver.sortOnSave": false,                  // Sort imports when a file is saved
+    "phpNamespaceResolver.sortMode": "natural",                // Sort mode: "natural", "length", or "alphabetical"
+    "phpNamespaceResolver.sortSeparateNamespaceGroups": false, // When true, blank line between adjacent uses whose FQCN root (first segment) differs; roots compared case-insensitively (e.g. App and app stay one group)
+    "phpNamespaceResolver.leadingSeparator": true,             // Prepend leading backslash when expanding
+    "phpNamespaceResolver.removeOnSave": false,                // Remove unused imports on save
+    "phpNamespaceResolver.autoImportOnSave": false,            // Auto import all detected classes on save
+    "phpNamespaceResolver.ignoreList": [],                     // Class names to exclude from diagnostics (e.g. ["Yii"])
+    "phpNamespaceResolver.highlightNotImported": true,         // Show warnings for unimported classes
+    "phpNamespaceResolver.highlightNotUsed": true              // Show hints for unused imports
 }
 ```
+
+`sortSeparateNamespaceGroups` applies per kind block (`use` classes, then `use function`, then `use const`). Grouped imports such as `use Foo\{A, B};` stay a single line, so spacing is unchanged inside that line.
 
 ## Author
 

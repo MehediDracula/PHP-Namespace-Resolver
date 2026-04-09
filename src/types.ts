@@ -64,6 +64,7 @@ export interface ExtensionConfig {
     autoSort: boolean;
     sortOnSave: boolean;
     sortMode: SortMode;
+    sortSeparateNamespaceGroups: boolean;
     leadingSeparator: boolean;
     removeOnSave: boolean;
     autoImportOnSave: boolean;
