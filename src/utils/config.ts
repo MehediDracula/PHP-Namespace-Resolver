@@ -22,6 +22,7 @@ function getDefault<K extends keyof ExtensionConfig>(key: K): ExtensionConfig[K]
         ignoreList: [],
         highlightNotImported: true,
         highlightNotUsed: true,
+        namespaceCase: 'original',
     };
     return defaults[key];
 }

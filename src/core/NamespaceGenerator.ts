@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
+import { getConfig } from '../utils/config';
+import { showStatusMessage } from '../utils/statusBar';
 import { DeclarationParser } from './DeclarationParser';
 import { parseAutoload, resolveNamespace } from './composerParser';
-import { showStatusMessage } from '../utils/statusBar';
 
 export class NamespaceGenerator {
-    constructor(private parser: DeclarationParser) {}
+    constructor(private parser: DeclarationParser) { }
 
     async generate(editor: vscode.TextEditor): Promise<void> {
         const currentUri = editor.document.uri;
@@ -33,7 +34,13 @@ export class NamespaceGenerator {
         const composerDir = composerFile.fsPath.replace(/\\/g, '/').replace(/\/composer\.json$/, '');
         const relativePath = normalizedCurrentPath.substring(composerDir.length);
 
-        const namespace = resolveNamespace(relativePath, autoload);
+        const namespaceCase = getConfig('namespaceCase');
+
+        const namespace = resolveNamespace(
+            relativePath,
+            autoload,
+            namespaceCase
+        );
         if (!namespace) {
             return void showStatusMessage('Could not resolve namespace from composer.json autoload configuration');
         }

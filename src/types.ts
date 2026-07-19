@@ -70,6 +70,7 @@ export interface ExtensionConfig {
     ignoreList: string[];
     highlightNotImported: boolean;
     highlightNotUsed: boolean;
+    namespaceCase: 'original' | 'pascal' | 'camel' | 'lower' | 'upper';
 }
 
 export interface PersistedFileEntry {
