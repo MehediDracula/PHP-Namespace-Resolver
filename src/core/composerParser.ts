@@ -27,8 +27,42 @@ export function parseAutoload(composerJson: any): ComposerAutoload {
 
     return { psr4, psr0 };
 }
+type NamespaceCase =
+    | 'original'
+    | 'pascal'
+    | 'camel'
+    | 'lower'
+    | 'upper';
 
-export function resolveNamespace(relativePath: string, autoload: ComposerAutoload): string | null {
+function convertNamespacePart(
+    name: string,
+    mode: NamespaceCase
+): string {
+
+    switch (mode) {
+
+        case 'pascal':
+            return name.charAt(0).toUpperCase() + name.slice(1);
+
+        case 'camel':
+            return name.charAt(0).toLowerCase() + name.slice(1);
+
+        case 'lower':
+            return name.toLowerCase();
+
+        case 'upper':
+            return name.toUpperCase();
+
+        case 'original':
+        default:
+            return name;
+    }
+}
+export function resolveNamespace(
+    relativePath: string,
+    autoload: ComposerAutoload,
+    namespaceCase: NamespaceCase = 'original'
+): string | null {
     const normalizedRelPath = relativePath.endsWith('/') ? relativePath : relativePath + '/';
 
     for (const mapping of autoload.psr4) {
@@ -41,7 +75,9 @@ export function resolveNamespace(relativePath: string, autoload: ComposerAutoloa
                 const namespaceSuffix = remaining
                     .replace(/^\//, '')
                     .replace(/\/$/, '')
-                    .replace(/\//g, '\\');
+                    .split('/')
+                    .map(part => convertNamespacePart(part, namespaceCase))
+                    .join('\\');
 
                 return namespaceSuffix
                     ? `${mapping.namespace}\\${namespaceSuffix}`
@@ -60,7 +96,9 @@ export function resolveNamespace(relativePath: string, autoload: ComposerAutoloa
                 const namespaceSuffix = remaining
                     .replace(/^\//, '')
                     .replace(/\/$/, '')
-                    .replace(/\//g, '\\');
+                    .split('/')
+                    .map(part => convertNamespacePart(part, namespaceCase))
+                    .join('\\');
 
                 return namespaceSuffix || mapping.namespace;
             }
