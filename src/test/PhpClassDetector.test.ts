@@ -495,6 +495,13 @@ class Foo extends Bar {
             assert.ok(result.includes('Post'));
         });
 
+        it('should detect @use trait types (generic trait import)', () => {
+            const text = `/** @use HasFactory<UserFactory> */`;
+            const result = detector.getFromPhpDoc(text);
+            assert.ok(result.includes('HasFactory'));
+            assert.ok(result.includes('UserFactory'));
+        });
+
         it('should detect @template of constraint', () => {
             const text = `/**
  * @template T of Model

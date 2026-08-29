@@ -284,8 +284,8 @@ export class PhpClassDetector {
                 results.push(...this.extractClassNamesFromDocType(match[1]));
             }
 
-            // @extends Type<...>, @implements Type<...>
-            const extendsRegex = /@(?:extends|implements|template-extends|template-implements)\s+(\S+)/gm;
+            // @extends Type<...>, @implements Type<...>, @use Trait<...> (and template-* variants)
+            const extendsRegex = /@(?:extends|implements|use|template-extends|template-implements|template-use)\s+(\S+)/gm;
             while ((match = extendsRegex.exec(block)) !== null) {
                 results.push(...this.extractClassNamesFromDocType(match[1]));
             }
