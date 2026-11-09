@@ -116,7 +116,8 @@ export class PhpClassDetector {
     }
 
     getExtended(text: string): string[] {
-        const regex = /extends\s+([A-Z][A-Za-z0-9_,\s\\]+?)(?:\s*\{|\s*implements\s|\s*$)/gm;
+        // Match a comma-separated name list directly so lists split across lines are fully captured
+        const regex = /extends\s+([A-Z][\w\\]*(?:\s*,\s*[A-Z][\w\\]*)*)/gm;
         const results: string[] = [];
         let match: RegExpExecArray | null;
 
@@ -133,7 +134,8 @@ export class PhpClassDetector {
     }
 
     getImplemented(text: string): string[] {
-        const regex = /implements\s+([A-Z][A-Za-z0-9_,\s\\]+?)(?:\s*\{|\s*$)/gm;
+        // Match a comma-separated name list directly so lists split across lines are fully captured
+        const regex = /implements\s+([A-Z][\w\\]*(?:\s*,\s*[A-Z][\w\\]*)*)/gm;
         const results: string[] = [];
         let match: RegExpExecArray | null;
 
