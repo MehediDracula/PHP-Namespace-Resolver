@@ -14,6 +14,22 @@ describe('PhpClassDetector', () => {
             const text = `class A extends Base {}\nclass B extends Other {}`;
             assert.deepStrictEqual(detector.getExtended(text), ['Base', 'Other']);
         });
+
+        it('should detect multiple interface parents split across lines', () => {
+            const text = `interface Agent extends\n    Conversational,\n    HasTools,\n    HasProviderOptions\n{\n}`;
+            assert.deepStrictEqual(detector.getExtended(text), ['Conversational', 'HasTools', 'HasProviderOptions']);
+        });
+
+        it('should detect multi-line extends list with CRLF line endings', () => {
+            const text = `interface Agent extends\r\n    Conversational,\r\n    HasTools\r\n{\r\n}`;
+            assert.deepStrictEqual(detector.getExtended(text), ['Conversational', 'HasTools']);
+        });
+
+        it('should stop extends list before implements', () => {
+            const text = `class A extends Base\n    implements Countable,\n    Serializable\n{`;
+            assert.deepStrictEqual(detector.getExtended(text), ['Base']);
+            assert.deepStrictEqual(detector.getImplemented(text), ['Countable', 'Serializable']);
+        });
     });
 
     describe('getImplemented', () => {
@@ -27,6 +43,51 @@ describe('PhpClassDetector', () => {
             const result = detector.getImplemented(text);
             assert.ok(result.includes('Countable'));
             assert.ok(result.includes('Serializable'));
+        });
+
+        it('should detect interfaces listed one per line', () => {
+            const text = `class PatientAssistant implements\n    Agent,\n    Conversational,\n    HasTools,\n    HasProviderOptions\n{\n}`;
+            assert.deepStrictEqual(
+                detector.getImplemented(text),
+                ['Agent', 'Conversational', 'HasTools', 'HasProviderOptions']
+            );
+        });
+
+        it('should detect interfaces listed one per line with CRLF line endings', () => {
+            const text = `class PatientAssistant implements\r\n    Agent,\r\n    Conversational,\r\n    HasTools\r\n{\r\n}`;
+            assert.deepStrictEqual(detector.getImplemented(text), ['Agent', 'Conversational', 'HasTools']);
+        });
+
+        it('should detect interfaces split across lines with the brace on the same line', () => {
+            const text = `class User implements Countable,\n    Serializable {`;
+            assert.deepStrictEqual(detector.getImplemented(text), ['Countable', 'Serializable']);
+        });
+
+        it('should keep the last segment of qualified interface names in a multi-line list', () => {
+            const text = `class User implements\n    Contracts\\Agent,\n    Contracts\\HasTools\n{`;
+            assert.deepStrictEqual(detector.getImplemented(text), ['Agent', 'HasTools']);
+        });
+
+        it('should detect all multi-line interfaces through detectAll', () => {
+            const text = `<?php
+namespace App\\Ai\\Agents;
+
+use Laravel\\Ai\\Contracts\\Agent;
+use Laravel\\Ai\\Contracts\\Conversational;
+use Laravel\\Ai\\Contracts\\HasProviderOptions;
+use Laravel\\Ai\\Contracts\\HasTools;
+
+class PatientAssistant implements
+    Agent,
+    Conversational,
+    HasTools,
+    HasProviderOptions
+{
+}`;
+            const result = detector.detectAll(text);
+            for (const name of ['Agent', 'Conversational', 'HasTools', 'HasProviderOptions']) {
+                assert.ok(result.includes(name), `expected ${name} to be detected`);
+            }
         });
     });
 
